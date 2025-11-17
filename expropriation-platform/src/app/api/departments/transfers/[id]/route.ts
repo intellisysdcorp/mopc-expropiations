@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
+import { logger } from '@/lib/logger';
 
 // Schema for transfer approval/rejection
 const transferActionSchema = z.object({
@@ -190,7 +191,7 @@ export async function POST(
       );
     }
 
-    console.error('Error processing department transfer action:', error);
+    logger.error('Error processing department transfer action:', error);
     return NextResponse.json(
       { error: 'Error al procesar acción de transferencia' },
       { status: 500 }
@@ -318,7 +319,7 @@ export async function PUT(
       transfer: updatedTransfer,
     });
   } catch (error) {
-    console.error('Error updating department transfer:', error);
+    logger.error('Error updating department transfer:', error);
     return NextResponse.json(
       { error: 'Error al actualizar transferencia' },
       { status: 500 }
@@ -414,7 +415,7 @@ export async function DELETE(
       message: 'Transferencia cancelada correctamente',
     });
   } catch (error) {
-    console.error('Error cancelling department transfer:', error);
+    logger.error('Error cancelling department transfer:', error);
     return NextResponse.json(
       { error: 'Error al cancelar transferencia' },
       { status: 500 }

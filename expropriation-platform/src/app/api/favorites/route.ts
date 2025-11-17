@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const favoriteSchema = z.object({
   type: z.enum(['case', 'document', 'user', 'department']),
@@ -62,7 +63,7 @@ export async function GET(request: NextRequest) {
       total: favorites.length,
     });
   } catch (error) {
-    console.error('Error fetching favorites:', error);
+    logger.error('Error fetching favorites:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -199,7 +200,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error creating favorite:', error);
+    logger.error('Error creating favorite:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

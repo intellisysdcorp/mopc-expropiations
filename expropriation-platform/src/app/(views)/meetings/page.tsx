@@ -16,6 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ResponsiveContainer } from '@/components/ui/responsive-container'
 import { toast } from 'react-hot-toast'
 
+import clientLogger from '@/lib/client-logger';
 import { Meeting, MeetingSearchInput } from '@/types/client'
 
 const MEETING_STATUSES = [
@@ -93,7 +94,7 @@ export default function MeetingsPage() {
       setMeetings(data.meetings)
       setPagination(data.pagination)
     } catch (error) {
-      console.error('Error fetching meetings:', error)
+      clientLogger.error('Error fetching meetings:', error)
       toast.error('Error al cargar las reuniones')
     } finally {
       setLoading(false)

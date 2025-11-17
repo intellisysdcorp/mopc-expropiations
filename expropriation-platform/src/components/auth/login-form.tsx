@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { getAuthErrorMessage } from '@/lib/auth-utils';
 import { Loader2, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import clientLogger from '@/lib/client-logger';
 
 const loginSchema = z.object({
   email: z.string().email('Correo electrónico no válido'),
@@ -100,7 +101,7 @@ export function LoginForm() {
         setError('Error inesperado al iniciar sesión');
       }
     } catch (err) {
-      console.error('Login error:', err);
+      clientLogger.error('Login error:', err);
       setError('Error de conexión. Por favor, intente nuevamente.');
     } finally {
       setIsLoading(false);

@@ -1,5 +1,6 @@
 
 import { PrismaClient } from "@prisma/client";
+import { logger } from '@/lib/logger';
 
 const prisma = new PrismaClient();
 
@@ -26,11 +27,11 @@ async function createTestCase() {
       },
     });
 
-    console.log("Test case created:", testCase);
-    console.log("Case ID:", testCase.id);
+    logger.info("Test case created:", testCase);
+    logger.info("Case ID:", testCase.id);
     return testCase;
   } catch (error) {
-    console.error("Error creating test case:", error);
+    logger.error("Error creating test case:", error);
   } finally {
     await prisma.$disconnect();
   }

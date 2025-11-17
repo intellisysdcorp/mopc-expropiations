@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { logger } from '@/lib/logger';
 
 // GET /api/meetings/[id]/participants - Get meeting participants
 export async function GET(
@@ -77,7 +78,7 @@ export async function GET(
 
     return NextResponse.json({ participants });
   } catch (error) {
-    console.error("Error fetching participants:", error);
+    logger.error("Error fetching participants:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -270,7 +271,7 @@ export async function POST(
 
         addedParticipants.push(participant);
       } catch (error) {
-        console.error("Error adding participant:", error);
+        logger.error("Error adding participant:", error);
         errors.push({
           participant: participantData.email || participantData.userId,
           error: "Failed to add participant",
@@ -298,7 +299,7 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error("Error adding participants:", error);
+    logger.error("Error adding participants:", error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Validation failed", details: error.errors },

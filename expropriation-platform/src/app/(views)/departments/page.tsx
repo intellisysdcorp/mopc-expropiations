@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Department, User } from '@/lib/types/department';
+import clientLogger from '@/lib/client-logger';
 
 export default function DepartmentsManagementPage() {
   const { data: session, status } = useSession();
@@ -80,7 +81,7 @@ export default function DepartmentsManagementPage() {
       ]);
     } catch (error) {
       toast.error('Error al cargar los datos');
-      console.error('Error loading data:', error);
+      clientLogger.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
@@ -104,7 +105,7 @@ export default function DepartmentsManagementPage() {
 
   const handleCreateDepartment = async (departmentData: any) => {
     try {
-      console.log('Creating department with data:', departmentData);
+      clientLogger.info('Creating department with data:', departmentData);
 
       const response = await fetch('/api/departments', {
         method: 'POST',
@@ -112,11 +113,11 @@ export default function DepartmentsManagementPage() {
         body: JSON.stringify(departmentData),
       });
 
-      console.log('Department creation response status:', response.status);
+      clientLogger.info('Department creation response status:', response.status);
 
       if (!response.ok) {
         const error = await response.json();
-        console.error('Department creation error:', error);
+        clientLogger.error('Department creation error:', error);
 
         // Provide more specific error messages
         let errorMessage = 'Error al crear departamento';
@@ -130,14 +131,14 @@ export default function DepartmentsManagementPage() {
       }
 
       const newDepartment = await response.json();
-      console.log('Department created successfully:', newDepartment);
+      clientLogger.info('Department created successfully:', newDepartment);
 
       toast.success('Departamento creado correctamente');
       setShowCreateDialog(false);
       setCreateParentId(undefined);
       await fetchDepartments();
     } catch (error) {
-      console.error('Department creation failed:', error);
+      clientLogger.error('Department creation failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error al crear departamento';
       toast.error(errorMessage);
       throw error;

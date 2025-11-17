@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 import bcrypt from 'bcryptjs';
+import { logger } from '@/lib/logger';
 
 // Schema for bulk operations
 const bulkOperationSchema = z.object({
@@ -318,7 +319,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Error in bulk operation:', error);
+    logger.error('Error in bulk operation:', error);
     return NextResponse.json(
       { error: 'Error en operación masiva' },
       { status: 500 }

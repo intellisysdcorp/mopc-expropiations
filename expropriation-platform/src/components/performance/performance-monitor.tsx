@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import clientLogger from '@/lib/client-logger';
 
 interface PerformanceMetrics {
   fcp: number; // First Contentful Paint
@@ -68,7 +69,7 @@ export function PerformanceMonitor() {
           };
         }
       } catch (error) {
-        console.warn('Error measuring performance:', error);
+        clientLogger.warn('Error measuring performance:', error);
       }
     };
 
@@ -84,12 +85,12 @@ export function PerformanceMonitor() {
   // Log metrics in development
   useEffect(() => {
     if (process.env.NODE_ENV === 'development' && Object.keys(metrics).length > 0) {
-      console.group('🚀 Performance Metrics');
+      clientLogger.info('🚀 Performance Metrics');
       Object.entries(metrics).forEach(([key, value]) => {
         const formattedValue = typeof value === 'number' ? `${value}ms` : 'N/A';
-        console.log(`${key.toUpperCase()}: ${formattedValue}`);
+        clientLogger.info(`${key.toUpperCase()}: ${formattedValue}`);
       });
-      console.groupEnd();
+      clientLogger.info('Performance Metrics End');
     }
   }, [metrics]);
 

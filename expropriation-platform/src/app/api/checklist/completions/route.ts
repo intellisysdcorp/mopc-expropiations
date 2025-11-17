@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { ActivityType } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const updateCompletionSchema = z.object({
@@ -85,7 +86,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(completions);
   } catch (error) {
-    console.error('Error fetching checklist completions:', error);
+    logger.error('Error fetching checklist completions:', error);
     return NextResponse.json(
       { error: 'Failed to fetch checklist completions' },
       { status: 500 }
@@ -187,7 +188,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Error updating checklist completions:', error);
+    logger.error('Error updating checklist completions:', error);
     return NextResponse.json(
       { error: 'Failed to update checklist completions' },
       { status: 500 }

@@ -21,15 +21,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
+import clientLogger from '@/lib/client-logger';
 
 interface CalendarEvent {
   id: string;
@@ -80,7 +74,7 @@ export function CaseCalendar({ className }: CaseCalendarProps) {
         })));
       }
     } catch (error) {
-      console.error('Failed to load events:', error);
+      clientLogger.error('Failed to load events:', error);
     } finally {
       setIsLoading(false);
     }

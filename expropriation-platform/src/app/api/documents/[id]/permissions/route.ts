@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { DocumentActionType } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const createPermissionSchema = z.object({
@@ -119,7 +120,7 @@ export async function GET(
       documentTitle: document.title,
     });
   } catch (error) {
-    console.error('Error fetching document permissions:', error);
+    logger.error('Error fetching document permissions:', error);
     return NextResponse.json(
       { error: 'Failed to fetch document permissions' },
       { status: 500 }
@@ -312,7 +313,7 @@ export async function POST(
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
-    console.error('Error creating document permission:', error);
+    logger.error('Error creating document permission:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -458,7 +459,7 @@ export async function PUT(
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error updating document permission:', error);
+    logger.error('Error updating document permission:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -555,7 +556,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Permission deleted successfully' });
   } catch (error) {
-    console.error('Error deleting document permission:', error);
+    logger.error('Error deleting document permission:', error);
     return NextResponse.json(
       { error: 'Failed to delete document permission' },
       { status: 500 }

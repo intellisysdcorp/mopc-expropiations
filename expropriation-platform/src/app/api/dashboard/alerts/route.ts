@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { subDays, startOfDay, endOfDay } from 'date-fns';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('Error fetching alerts:', error);
+    logger.error('Error fetching alerts:', error);
     return NextResponse.json(
       { error: 'Failed to fetch alerts' },
       { status: 500 }

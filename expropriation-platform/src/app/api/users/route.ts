@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { logActivity } from '@/lib/activity-logger';
+import { logger } from '@/lib/logger';
 
 // Schema for user creation
 const createUserSchema = z.object({
@@ -135,7 +136,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching users:', error);
+    logger.error('Error fetching users:', error);
     return NextResponse.json(
       { error: 'Error al obtener usuarios' },
       { status: 500 }
@@ -252,7 +253,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Error creating user:', error);
+    logger.error('Error creating user:', error);
     return NextResponse.json(
       { error: 'Error al crear usuario' },
       { status: 500 }

@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { DocumentFormData } from '@/types/client';
+import { logger } from '@/lib/logger';
+import { createDocumentWithFile } from '@/lib/documents';
 
 // Validation schemas
 const createCaseDocumentSchema = z.object({
@@ -172,7 +174,7 @@ export async function GET(
       stats,
     });
   } catch (error) {
-    console.error('Error fetching case documents:', error);
+    logger.error('Error fetching case documents:', error);
     return NextResponse.json(
       { error: 'Failed to fetch documents' },
       { status: 500 }
@@ -232,9 +234,6 @@ export async function POST(
 
     // Validate document data
     const validatedData = createCaseDocumentSchema.parse(rawDocumentData);
-
-    // Import document creation logic
-    const { createDocumentWithFile } = await import('@/lib/documents');
 
     // Build document data object to handle exactOptionalPropertyTypes
     const documentData: Partial<DocumentFormData> = {
@@ -302,7 +301,7 @@ export async function POST(
 
     return NextResponse.json(document, { status: 201 });
   } catch (error) {
-    console.error('Error uploading case document:', error);
+    logger.error('Error uploading case document:', error);
     return NextResponse.json(
       { error: 'Failed to upload document' },
       { status: 500 }

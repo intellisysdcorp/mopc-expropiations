@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -88,7 +89,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(allAlerts)
   } catch (error) {
-    console.error('Error fetching system alerts:', error)
+    logger.error('Error fetching system alerts:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -137,7 +138,7 @@ export async function POST(request: NextRequest) {
       message: 'Alert created successfully'
     })
   } catch (error) {
-    console.error('Error creating alert:', error)
+    logger.error('Error creating alert:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

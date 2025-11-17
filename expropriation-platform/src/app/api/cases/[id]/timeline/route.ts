@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma';
 import { CaseStage } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 interface TimelineEvent {
   id: string;
@@ -268,7 +269,7 @@ export async function GET(
     return NextResponse.json(timeline);
 
   } catch (error) {
-    console.error('Error fetching case timeline:', error);
+    logger.error('Error fetching case timeline:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

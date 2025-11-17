@@ -4,6 +4,7 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma';
 import { CaseStage } from '@prisma/client';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const stageReturnSchema = z.object({
   toStage: z.nativeEnum(CaseStage),
@@ -140,7 +141,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Error fetching return options:', error);
+    logger.error('Error fetching return options:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -382,7 +383,7 @@ export async function POST(
     });
 
   } catch (error) {
-    console.error('Error processing stage return:', error);
+    logger.error('Error processing stage return:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -455,7 +456,7 @@ async function createReturnNotifications(
     });
 
   } catch (error) {
-    console.error('Error creating return notifications:', error);
+    logger.error('Error creating return notifications:', error);
   }
 }
 
@@ -504,6 +505,6 @@ async function createApprovalNotification(
     });
 
   } catch (error) {
-    console.error('Error creating approval notification:', error);
+    logger.error('Error creating approval notification:', error);
   }
 }

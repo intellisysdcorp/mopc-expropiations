@@ -46,6 +46,7 @@ import {
   X,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import clientLogger from '@/lib/client-logger';
 
 // Types
 interface User {
@@ -171,7 +172,7 @@ export default function UsersManagementPage() {
       ]);
     } catch (error) {
       toast.error('Error al cargar los datos');
-      console.error('Error loading data:', error);
+      clientLogger.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }

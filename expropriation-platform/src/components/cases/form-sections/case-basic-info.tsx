@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { RefreshCw } from 'lucide-react'
+import clientLogger from '@/lib/client-logger'
 
 interface FormSectionProps {
   register: UseFormRegister<any>
@@ -56,7 +57,7 @@ export function CaseBasicInfo({ register, errors, setValue, watch }: FormSection
       const data = await response.json()
       index = data.count + 1 // Next case number
     } catch (error) {
-      console.error('Error getting number of cases:', error)
+      clientLogger.error('Error getting number of cases:', error)
     }
     const caseNumber = `EXP-${year}${month}${day}-${index.toString().padStart(3, '0')}`
     setValue('fileNumber', caseNumber)

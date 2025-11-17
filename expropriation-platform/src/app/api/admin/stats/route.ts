@@ -1,6 +1,9 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import fs from 'fs/promises'
+import path from 'path'
 
 export async function GET(request: NextRequest) {
   try {
@@ -111,7 +114,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(stats)
   } catch (error) {
-    console.error('Error fetching admin stats:', error)
+    logger.error('Error fetching admin stats:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -122,20 +125,15 @@ export async function GET(request: NextRequest) {
 async function getDatabaseSize(): Promise<string> {
   try {
     // For SQLite, we can get the file size
-    const fs = require('fs')
-    const path = require('path')
     const dbPath = path.join(process.cwd(), 'prisma', 'dev.db')
 
-    if (fs.existsSync(dbPath)) {
-      const stats = fs.statSync(dbPath)
-      const sizeInBytes = stats.size
-      const sizeInMB = sizeInBytes / (1024 * 1024)
-      return `${sizeInMB.toFixed(2)} MB`
-    }
-
-    return 'N/A'
+    // Use fs.promises for async operations
+    const stats = await fs.stat(dbPath)
+    const sizeInBytes = stats.size
+    const sizeInMB = sizeInBytes / (1024 * 1024)
+    return `${sizeInMB.toFixed(2)} MB`
   } catch (error) {
-    console.error('Error getting database size:', error)
+    logger.error('Error getting database size:', error)
     return 'N/A'
   }
 }

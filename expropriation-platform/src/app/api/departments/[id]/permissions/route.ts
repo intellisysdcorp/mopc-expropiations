@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
+import { logger } from '@/lib/logger';
 
 // Schema for permission assignment
 const permissionAssignmentSchema = z.object({
@@ -74,7 +75,7 @@ export async function GET(
       roleBasedPermissions,
     });
   } catch (error) {
-    console.error('Error fetching department permissions:', error);
+    logger.error('Error fetching department permissions:', error);
     return NextResponse.json(
       { error: 'Error al obtener permisos del departamento' },
       { status: 500 }
@@ -211,7 +212,7 @@ export async function POST(
       );
     }
 
-    console.error('Error assigning department permissions:', error);
+    logger.error('Error assigning department permissions:', error);
     return NextResponse.json(
       { error: 'Error al asignar permisos al departamento' },
       { status: 500 }
@@ -338,7 +339,7 @@ export async function PUT(
       );
     }
 
-    console.error('Error updating department permission:', error);
+    logger.error('Error updating department permission:', error);
     return NextResponse.json(
       { error: 'Error al actualizar permiso del departamento' },
       { status: 500 }
@@ -434,7 +435,7 @@ export async function DELETE(
       message: `Permiso ${permission.name} eliminado correctamente`,
     });
   } catch (error) {
-    console.error('Error removing department permission:', error);
+    logger.error('Error removing department permission:', error);
     return NextResponse.json(
       { error: 'Error al eliminar permiso del departamento' },
       { status: 500 }

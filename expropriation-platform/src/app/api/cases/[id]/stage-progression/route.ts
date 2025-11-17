@@ -4,6 +4,7 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma';
 import { CaseStage } from '@prisma/client';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const progressionSchema = z.object({
   toStage: z.nativeEnum(CaseStage),
@@ -93,7 +94,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Error fetching stage progression:', error);
+    logger.error('Error fetching stage progression:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -346,7 +347,7 @@ export async function POST(
     });
 
   } catch (error) {
-    console.error('Error in stage progression:', error);
+    logger.error('Error in stage progression:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -415,6 +416,6 @@ async function createStageNotifications(
     });
 
   } catch (error) {
-    console.error('Error creating notifications:', error);
+    logger.error('Error creating notifications:', error);
   }
 }

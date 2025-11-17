@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Save, Users, Calendar, Clock, Video, MapPin, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Save, Video, MapPin } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,7 +12,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Separator } from '@/components/ui/separator'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -21,6 +20,7 @@ import { toast } from 'react-hot-toast'
 
 import { MeetingFormData } from '@/types/client'
 import { User, Case } from '@/types/client'
+import clientLogger from '@/lib/client-logger';
 
 const MEETING_TYPES = [
   { value: 'SITE_VISIT', label: 'Visita al Sitio', description: 'Inspección física del predio' },
@@ -105,7 +105,7 @@ export default function CreateMeetingPage() {
           setCases(casesData.cases || [])
         })
         .catch(error => {
-          console.error('Error fetching data:', error)
+          clientLogger.error('Error fetching data:', error)
           toast.error('Error al cargar datos necesarios')
         })
     }
@@ -218,7 +218,7 @@ export default function CreateMeetingPage() {
       router.push(`/meetings/${meeting.id}`)
 
     } catch (error: any) {
-      console.error('Error creating meeting:', error)
+      clientLogger.error('Error creating meeting:', error)
       toast.error(error.message || 'Error al crear la reunión')
     } finally {
       setLoading(false)

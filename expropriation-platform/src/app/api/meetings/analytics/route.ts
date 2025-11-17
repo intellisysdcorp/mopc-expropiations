@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { logger } from '@/lib/logger';
 
 // GET /api/meetings/analytics - Get meeting analytics and insights
 export async function GET(request: NextRequest) {
@@ -283,7 +284,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(analytics);
   } catch (error) {
-    console.error("Error generating analytics:", error);
+    logger.error("Error generating analytics:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // GET /api/departments/transfers - Get department transfers
 export async function GET(request: NextRequest) {
@@ -114,7 +115,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error fetching department transfers:', error);
+    logger.error('Error fetching department transfers:', error);
     return NextResponse.json(
       { error: 'Error al obtener transferencias de departamento' },
       { status: 500 }

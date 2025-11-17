@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
+import { toast } from 'react-hot-toast'
 import {
   FileText,
   Plus,
@@ -23,7 +24,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
-import { toast } from 'react-hot-toast'
+import clientLogger from '@/lib/client-logger';
 
 interface DocumentTemplate {
   id: string
@@ -89,7 +90,7 @@ export function DocumentTemplates({ caseId, onDocumentCreated }: DocumentTemplat
       setTemplates(data.templates)
       setCaseContext(data.caseContext)
     } catch (error) {
-      console.error('Error fetching templates:', error)
+      clientLogger.error('Error fetching templates:', error)
       toast.error('Error al cargar las plantillas')
     } finally {
       setLoading(false)
@@ -146,7 +147,7 @@ export function DocumentTemplates({ caseId, onDocumentCreated }: DocumentTemplat
       setIsCreateDialogOpen(false)
       setSelectedTemplate(null)
     } catch (error) {
-      console.error('Error creating document:', error)
+      clientLogger.error('Error creating document:', error)
       toast.error('Error al crear el documento')
     } finally {
       setIsCreating(false)

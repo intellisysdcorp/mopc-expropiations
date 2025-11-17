@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { resetPassword, verifyPasswordResetToken } from '@/lib/auth-utils';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const resetPasswordSchema = z.object({
   token: z.string().min(1, 'Token es requerido'),
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Reset password error:', error);
+    logger.error('Reset password error:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

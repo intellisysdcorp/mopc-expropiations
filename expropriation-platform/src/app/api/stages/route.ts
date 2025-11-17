@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // Get all stages
 export async function GET(request: NextRequest) {
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(stages);
 
   } catch (error) {
-    console.error('Error fetching stages:', error);
+    logger.error('Error fetching stages:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error creating stage:', error);
+    logger.error('Error creating stage:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

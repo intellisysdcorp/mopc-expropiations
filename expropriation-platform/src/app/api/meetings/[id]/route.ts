@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { logger } from '@/lib/logger';
 
 // GET /api/meetings/[id] - Get a specific meeting
 export async function GET(
@@ -190,7 +191,7 @@ export async function GET(
 
     return NextResponse.json(meeting);
   } catch (error) {
-    console.error("Error fetching meeting:", error);
+    logger.error("Error fetching meeting:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -372,7 +373,7 @@ export async function PUT(
 
     return NextResponse.json(meeting);
   } catch (error) {
-    console.error("Error updating meeting:", error);
+    logger.error("Error updating meeting:", error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Validation failed", details: error.errors },
@@ -447,7 +448,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Meeting cancelled successfully" });
   } catch (error) {
-    console.error("Error deleting meeting:", error);
+    logger.error("Error deleting meeting:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

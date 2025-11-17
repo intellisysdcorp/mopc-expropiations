@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import path from 'path';
 import fs from 'fs/promises';
+import { logger } from '@/lib/logger';
 
 // GET /api/cases/[id]/documents/[documentId]/preview - Preview document
 export async function GET(
@@ -177,7 +178,7 @@ export async function GET(
       });
     }
   } catch (error) {
-    console.error('Error previewing document:', error);
+    logger.error('Error previewing document:', error);
     return NextResponse.json(
       { error: 'Failed to preview document' },
       { status: 500 }

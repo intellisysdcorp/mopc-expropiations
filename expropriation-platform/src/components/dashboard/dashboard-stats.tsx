@@ -17,6 +17,7 @@ import {
   Calendar
 } from 'lucide-react';
 import { format } from 'date-fns';
+import clientLogger from '@/lib/client-logger';
 
 interface DashboardStats {
   overview: {
@@ -153,7 +154,7 @@ export function DashboardStats({ departmentId }: { departmentId?: string }) {
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error loading statistics');
-      console.error('Error fetching dashboard stats:', err);
+      clientLogger.error('Error fetching dashboard stats:', err);
     } finally {
       setLoading(false);
     }

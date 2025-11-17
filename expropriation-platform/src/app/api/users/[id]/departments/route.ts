@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { logActivity } from '@/lib/activity-logger';
+import { logger } from '@/lib/logger';
 
 // GET /api/users/[id]/departments - Get user department assignments
 export async function GET(
@@ -48,7 +49,7 @@ export async function GET(
 
     return NextResponse.json(assignments);
   } catch (error) {
-    console.error('Error fetching department assignments:', error);
+    logger.error('Error fetching department assignments:', error);
     return NextResponse.json(
       { error: 'Error al obtener asignaciones de departamento' },
       { status: 500 }
@@ -174,7 +175,7 @@ export async function POST(
 
     return NextResponse.json(assignment, { status: 201 });
   } catch (error) {
-    console.error('Error assigning department:', error);
+    logger.error('Error assigning department:', error);
     return NextResponse.json(
       { error: 'Error al asignar departamento' },
       { status: 500 }

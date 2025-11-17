@@ -1,6 +1,7 @@
 import * as crypto from 'crypto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { logger } from '@/lib/logger';
 
 // File signatures (magic bytes) for validation
 export const FILE_SIGNATURES = {
@@ -131,7 +132,7 @@ export async function validateFileMagicBytes(filePath: string, expectedMimeType:
 
     return false;
   } catch (error) {
-    console.error('Error validating magic bytes:', error);
+    logger.error('Error validating magic bytes:', error);
     return false;
   }
 }
@@ -160,7 +161,7 @@ export async function detectFileType(filePath: string): Promise<string[]> {
 
     return detectedTypes;
   } catch (error) {
-    console.error('Error detecting file type:', error);
+    logger.error('Error detecting file type:', error);
     return [];
   }
 }
@@ -223,7 +224,7 @@ export async function scanForSuspiciousContent(filePath: string, mimeType: strin
       }
     }
   } catch (error) {
-    console.error('Error scanning for suspicious content:', error);
+    logger.error('Error scanning for suspicious content:', error);
   }
 
   return suspiciousPatterns;
@@ -253,7 +254,7 @@ export async function validateZipSecurity(filePath: string): Promise<string[]> {
     // - Scan for malicious file names within archive
 
   } catch (error) {
-    console.error('Error validating ZIP security:', error);
+    logger.error('Error validating ZIP security:', error);
     issues.push('Failed to validate ZIP file security');
   }
 
@@ -332,7 +333,7 @@ export async function validateFileSecurity(
     result.isValid = result.errors.length === 0;
 
   } catch (error) {
-    console.error('Error during file security validation:', error);
+    logger.error('Error during file security validation:', error);
     result.errors.push('Security validation failed due to system error');
     result.isValid = false;
   }

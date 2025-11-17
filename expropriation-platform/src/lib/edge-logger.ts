@@ -1,6 +1,10 @@
+/* eslint-disable no-console */
 /**
  * Edge Runtime-compatible logger for Next.js middleware
- * This logger uses only Web APIs that are available in the Edge Runtime
+ *
+ * NOTE: This logger uses console methods because Winston is not compatible with Edge Runtime.
+ * The actual security logging with Winston should be handled in API routes where Node.js runtime is available.
+ * This logger provides structured logging for middleware-only scenarios.
  */
 
 interface LogEntry {
@@ -18,9 +22,9 @@ class EdgeLogger {
   private version: string;
 
   constructor() {
-    this.isProduction = typeof window === 'undefined' && process.env.NODE_ENV === 'production';
+    this.isProduction = (globalThis as any).process?.env?.NODE_ENV === 'production';
     this.serviceName = 'expropriation-platform';
-    this.version = process.env.npm_package_version || '1.0.0';
+    this.version = (globalThis as any).process?.env?.npm_package_version || '1.0.0';
   }
 
   private formatMessage(entry: LogEntry): string {
@@ -67,7 +71,7 @@ class EdgeLogger {
 
     const formattedMessage = this.formatMessage(entry);
 
-    // Use appropriate console method based on level
+    // Use structured console logging for Edge Runtime
     switch (level) {
       case 'error':
         console.error(formattedMessage);

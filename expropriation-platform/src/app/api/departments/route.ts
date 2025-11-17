@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 import { departmentSchema, updateDepartmentSchema } from '@/lib/validators/department-validator';
+import { logger } from '@/lib/logger';
 
 // GET /api/departments - List departments with filtering and hierarchy
 export async function GET(request: NextRequest) {
@@ -99,7 +100,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(sanitizedDepartments);
   } catch (error) {
-    console.error('Error fetching departments:', error);
+    logger.error('Error fetching departments:', error);
     return NextResponse.json(
       { error: 'Error al obtener departamentos' },
       { status: 500 }
@@ -197,7 +198,7 @@ export async function POST(request: NextRequest) {
         },
       });
     } catch (dbError) {
-      console.error('Database error creating department:', dbError);
+      logger.error('Database error creating department:', dbError);
       return NextResponse.json(
         { error: 'Error de base de datos al crear departamento' },
         { status: 500 }
@@ -219,7 +220,7 @@ export async function POST(request: NextRequest) {
         },
       });
     } catch (logError) {
-      console.error('Error logging department creation:', logError);
+      logger.error('Error logging department creation:', logError);
       // Don't fail the request if logging fails
     }
 
@@ -241,7 +242,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Error creating department:', error);
+    logger.error('Error creating department:', error);
     return NextResponse.json(
       { error: 'Error al crear departamento' },
       { status: 500 }

@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { CreateCaseInput, UpdateCaseInput } from '@/lib/validations/case'
 import { User, Department, Document, Case } from '@/types/client'
 import { formatDate } from '@/constants/case-constants'
+import { logger } from '@/lib/logger';
 
 interface CaseFormState {
   loading: boolean
@@ -191,7 +192,7 @@ export function useCaseForm(mode: 'create' | 'edit', caseId?: string, initialDat
         isDraft: false
       })
     } catch (error) {
-      console.error('Error fetching case:', error)
+      logger.error('Error fetching case:', error)
       throw error
     }
   }
@@ -207,7 +208,7 @@ export function useCaseForm(mode: 'create' | 'edit', caseId?: string, initialDat
         departments: Array.isArray(data) ? data : (data.departments || [])
       })
     } catch (error) {
-      console.error('Error fetching departments:', error)
+      logger.error('Error fetching departments:', error)
       throw error
     }
   }
@@ -230,7 +231,7 @@ export function useCaseForm(mode: 'create' | 'edit', caseId?: string, initialDat
         }))
       }
     } catch (error) {
-      console.error('Error fetching users:', error)
+      logger.error('Error fetching users:', error)
       throw error
     }
   }
@@ -243,7 +244,7 @@ export function useCaseForm(mode: 'create' | 'edit', caseId?: string, initialDat
         updateState({ existingDocuments: data.documents || [] })
       }
     } catch (error) {
-      console.error('Error fetching existing documents:', error)
+      logger.error('Error fetching existing documents:', error)
     }
   }
 
@@ -270,7 +271,7 @@ export function useCaseForm(mode: 'create' | 'edit', caseId?: string, initialDat
         index = (data.cases?.length || 0) + 1
       }
     } catch (error) {
-      console.error('Couldn\'t get today\'s case count:', error)
+      logger.error('Couldn\'t get today\'s case count:', error)
     }
     const indexString = index.toString().padStart(2, '0')
     return `EXP-${year}-${month}-${day}-${indexString}`

@@ -37,6 +37,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
+import clientLogger from '@/lib/client-logger';
 
 interface Notification {
   id: string;
@@ -96,7 +97,7 @@ export function NotificationCenter({ className, onNotificationClick }: Notificat
         byType: data.statistics.byType
       });
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      clientLogger.error('Error fetching notifications:', error);
       toast.error('Error al cargar notificaciones');
     } finally {
       setLoading(false);

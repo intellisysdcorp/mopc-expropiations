@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 import { normalizePermissions } from '@/types/permissions';
+import { logger } from '@/lib/logger';
 
 // Base role schema
 const baseRoleSchema = z.object({
@@ -131,7 +132,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(sanitizedRoles);
   } catch (error) {
-    console.error('Error fetching roles:', error);
+    logger.error('Error fetching roles:', error);
     return NextResponse.json(
       { error: 'Error al obtener roles' },
       { status: 500 }
@@ -144,7 +145,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
-      console.log('No session user found');
+      logger.info('No session user found');
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
@@ -196,7 +197,7 @@ export async function POST(request: NextRequest) {
       return handleZodError(error);
     }
 
-    console.error('Error creating role:', error);
+    logger.error('Error creating role:', error);
     return NextResponse.json(
       { error: 'Error al crear rol', message: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
@@ -315,7 +316,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    console.error('Error updating role:', error);
+    logger.error('Error updating role:', error);
     return NextResponse.json(
       { error: 'Error al actualizar rol' },
       { status: 500 }
@@ -406,7 +407,7 @@ export async function DELETE(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('Error deleting role:', error);
+    logger.error('Error deleting role:', error);
     return NextResponse.json(
       { error: 'Error al eliminar rol' },
       { status: 500 }

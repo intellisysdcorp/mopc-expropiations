@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import clientLogger from '@/lib/client-logger';
 
 // Performance monitoring utilities
 export const performanceMonitor = {
@@ -79,7 +80,7 @@ export const performanceMonitor = {
   // Log performance data
   logPerformance: (data: any) => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('Performance Metrics:', data);
+      clientLogger.info('Performance Metrics:', data);
     }
 
     // Send to analytics service in production

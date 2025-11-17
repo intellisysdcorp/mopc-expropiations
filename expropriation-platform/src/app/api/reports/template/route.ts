@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
 
     throw new Error('Invalid template type');
   } catch (error) {
-    console.error('Template generation error:', error);
+    logger.error('Template generation error:', error);
     return NextResponse.json(
       { error: 'Failed to generate template' },
       { status: 500 }

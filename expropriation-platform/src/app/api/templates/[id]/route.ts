@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { DocumentSecurityLevel } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const updateTemplateSchema = z.object({
@@ -132,7 +133,7 @@ export async function GET(
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error fetching template:', error);
+    logger.error('Error fetching template:', error);
     return NextResponse.json(
       { error: 'Failed to fetch template' },
       { status: 500 }
@@ -248,7 +249,7 @@ export async function PUT(
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error updating template:', error);
+    logger.error('Error updating template:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -316,7 +317,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Template deleted successfully' });
   } catch (error) {
-    console.error('Error deleting template:', error);
+    logger.error('Error deleting template:', error);
     return NextResponse.json(
       { error: 'Failed to delete template' },
       { status: 500 }
@@ -404,7 +405,7 @@ export async function POST_VERSION(
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
-    console.error('Error creating template version:', error);
+    logger.error('Error creating template version:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -497,7 +498,7 @@ export async function POST_USE(
       },
     });
   } catch (error) {
-    console.error('Error using template:', error);
+    logger.error('Error using template:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -589,7 +590,7 @@ export async function GET_PREVIEW(
       requiredFields: template.requiredFields,
     });
   } catch (error) {
-    console.error('Error previewing template:', error);
+    logger.error('Error previewing template:', error);
     return NextResponse.json(
       { error: 'Failed to preview template' },
       { status: 500 }

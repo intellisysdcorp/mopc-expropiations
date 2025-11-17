@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(configs)
   } catch (error) {
-    console.error('Error fetching system configurations:', error)
+    logger.error('Error fetching system configurations:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -139,7 +140,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(config, { status: 201 })
   } catch (error) {
-    console.error('Error creating system configuration:', error)
+    logger.error('Error creating system configuration:', error)
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Validation error', details: error.errors },

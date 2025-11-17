@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -115,7 +116,7 @@ export async function POST(
       )
     }
 
-    console.error('Error linking document to case:', error)
+    logger.error('Error linking document to case:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

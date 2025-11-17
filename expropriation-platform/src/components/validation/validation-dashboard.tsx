@@ -34,6 +34,7 @@ import { ApprovalMatrix } from './approval-matrix';
 import { ObservationSystem } from './observation-system';
 import { ValidationEngine } from './validation-engine';
 import { RiskAssessment } from './risk-assessment';
+import clientLogger from '@/lib/client-logger';
 
 // Types
 interface CaseValidationSummary {
@@ -86,7 +87,7 @@ export function ValidationDashboard({
         setSummary(data);
       }
     } catch (error) {
-      console.error('Error fetching validation summary:', error);
+      clientLogger.error('Error fetching validation summary:', error);
     }
   };
 

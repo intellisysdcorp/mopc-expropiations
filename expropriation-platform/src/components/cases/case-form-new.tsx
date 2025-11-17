@@ -33,6 +33,7 @@ import { useCaseForm } from '@/hooks/use-case-form'
 import { useCaseFormNavigation } from '@/hooks/use-case-form-navigation'
 import { useDocumentSubmission } from '@/hooks/use-document-submission'
 import { useEnhancedToast } from '@/components/notifications/enhanced-toast-provider'
+import clientLogger from '@/lib/client-logger';
 
 // Constants
 import { CREATE_STEPS, EDIT_STEPS, REQUIRED_FIELDS } from '@/constants/case-constants'
@@ -147,7 +148,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
   }
 
   const handleDocumentSelect = (document: any) => {
-    console.log('Selected document:', document)
+    clientLogger.info('Selected document:', document)
   }
 
   // Check if form has any data entered (for create mode)
@@ -184,7 +185,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
       success('Borrador guardado exitosamente')
       router.push(`/cases/${newDraft.id}`)
     } catch (error) {
-      console.error('Error saving draft:', error)
+      clientLogger.error('Error saving draft:', error)
       showError(error instanceof Error ? error.message : 'Error al guardar el borrador')
     } finally {
       setSavingDraft(false)
@@ -271,7 +272,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
         router.push(`/cases/${savedCase.id}`)
       }, 500)
     } catch (error) {
-      console.error('Error saving case:', error)
+      clientLogger.error('Error saving case:', error)
       showError(error instanceof Error ? error.message : 'Error al guardar el caso')
     } finally {
       setLoading(false)

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useSession } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
+import clientLogger from '@/lib/client-logger';
 
 export interface NotificationData {
   id: string;
@@ -78,12 +79,12 @@ export const useWebSocket = (options: UseWebSocketOptions = {}): UseWebSocketRet
 
   const connect = useCallback(() => {
     if (!session?.user) {
-      console.warn('Cannot connect WebSocket: no session');
+      clientLogger.warn('Cannot connect WebSocket: no session');
       return;
     }
 
     if (socketRef.current?.connected) {
-      console.log('WebSocket already connected');
+      clientLogger.info('WebSocket already connected');
       return;
     }
 
@@ -108,7 +109,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}): UseWebSocketRet
 
       // Connection events
       newSocket.on('connect', () => {
-        console.log('WebSocket connected');
+        clientLogger.info('WebSocket connected');
         setIsConnected(true);
         setConnectionStatus('connected');
         setError(null);
@@ -124,7 +125,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}): UseWebSocketRet
       });
 
       newSocket.on('disconnect', (reason) => {
-        console.log('WebSocket disconnected:', reason);
+        clientLogger.info('WebSocket disconnected:', reason);
         setIsConnected(false);
         setConnectionStatus('disconnected');
         stopHeartbeat();
@@ -136,7 +137,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}): UseWebSocketRet
       });
 
       newSocket.on('connect_error', (err) => {
-        console.error('WebSocket connection error:', err);
+        clientLogger.error('WebSocket connection error:', err);
         setIsConnected(false);
         setConnectionStatus('error');
         setError(err.message);
@@ -149,7 +150,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}): UseWebSocketRet
 
       // Notification events
       newSocket.on('notification', (data: { type: string; data: NotificationData; timestamp: Date; id: string }) => {
-        console.log('Received notification:', data);
+        clientLogger.info('Received notification:', data);
 
         const notification = data.data;
         setNotifications(prev => [notification, ...prev]);
@@ -173,7 +174,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}): UseWebSocketRet
 
       // System messages
       newSocket.on('system', (message: WebSocketMessage) => {
-        console.log('System message:', message);
+        clientLogger.info('System message:', message);
 
         if (message.data.level === 'error') {
           toast.error(message.data.message);
@@ -234,22 +235,22 @@ export const useWebSocket = (options: UseWebSocketOptions = {}): UseWebSocketRet
 
       // Room events
       newSocket.on('room-joined', (data: { room: string }) => {
-        console.log(`Joined room: ${data.room}`);
+        clientLogger.info(`Joined room: ${data.room}`);
       });
 
       newSocket.on('room-left', (data: { room: string }) => {
-        console.log(`Left room: ${data.room}`);
+        clientLogger.info(`Left room: ${data.room}`);
       });
 
       // Error handling
       newSocket.on('error', (err: any) => {
-        console.error('WebSocket error:', err);
+        clientLogger.error('WebSocket error:', err);
         toast.error('Error de conexión en tiempo real');
         setError(err.message || 'Unknown error');
       });
 
     } catch (err) {
-      console.error('Error creating WebSocket connection:', err);
+      clientLogger.error('Error creating WebSocket connection:', err);
       setConnectionStatus('error');
       setError('Failed to create WebSocket connection');
     }
@@ -275,7 +276,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}): UseWebSocketRet
     if (reconnectTimeoutRef.current) return;
 
     reconnectTimeoutRef.current = setTimeout(() => {
-      console.log('Attempting to reconnect WebSocket...');
+      clientLogger.info('Attempting to reconnect WebSocket...');
       connect();
     }, reconnectionDelay);
   }, [connect, reconnectionDelay]);

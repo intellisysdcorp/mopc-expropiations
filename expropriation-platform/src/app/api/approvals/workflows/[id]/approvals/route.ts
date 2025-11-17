@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { ActivityType, ApprovalStatus } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 const updateApprovalSchema = z.object({
   decision: z.nativeEnum(ApprovalStatus),
@@ -68,7 +69,7 @@ export async function GET(
 
     return NextResponse.json(workflow.approvals);
   } catch (error) {
-    console.error('Error fetching workflow approvals:', error);
+    logger.error('Error fetching workflow approvals:', error);
     return NextResponse.json(
       { error: 'Failed to fetch workflow approvals' },
       { status: 500 }
@@ -239,7 +240,7 @@ export async function POST(
       );
     }
 
-    console.error('Error submitting approval decision:', error);
+    logger.error('Error submitting approval decision:', error);
     return NextResponse.json(
       { error: 'Failed to submit approval decision' },
       { status: 500 }

@@ -37,6 +37,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import clientLogger from '@/lib/client-logger';
 
 interface Session {
   id: string;
@@ -81,7 +82,7 @@ export function UserSessions({ userId, userName }: UserSessionsProps) {
       const data = await response.json();
       setSessions(data);
     } catch (error) {
-      console.error('Error fetching sessions:', error);
+      clientLogger.error('Error fetching sessions:', error);
       toast.error('Error al cargar las sesiones');
     } finally {
       setLoading(false);

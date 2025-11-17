@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'react-hot-toast'
 import { CaseFormModular } from '@/components/dynamic'
 import { Case } from '@/types/client'
+import clientLogger from '@/lib/client-logger';
 
 export default function EditCasePage() {
   const { data: session, status } = useSession()
@@ -40,7 +41,7 @@ export default function EditCasePage() {
       const data: Case = await response.json()
       setCaseData(data)
     } catch (error) {
-      console.error('Error fetching case:', error)
+      clientLogger.error('Error fetching case:', error)
       toast.error('Error al cargar los detalles del caso')
       router.push('/cases')
     } finally {
@@ -107,7 +108,7 @@ export default function EditCasePage() {
       toast.success('Caso actualizado exitosamente')
       router.push('/cases')
     } catch (error) {
-      console.error('Error updating case:', error)
+      clientLogger.error('Error updating case:', error)
       toast.error('Error al actualizar el caso')
       // Re-throw to let the form component handle the error display
       throw error

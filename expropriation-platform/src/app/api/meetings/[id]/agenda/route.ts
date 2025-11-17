@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { logger } from '@/lib/logger';
 
 // GET /api/meetings/[id]/agenda - Get meeting agenda items
 export async function GET(
@@ -124,7 +125,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error("Error fetching agenda:", error);
+    logger.error("Error fetching agenda:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -348,7 +349,7 @@ export async function POST(
 
         addedItems.push(agendaItem);
       } catch (error) {
-        console.error("Error adding agenda item:", error);
+        logger.error("Error adding agenda item:", error);
         errors.push({
           item: itemData.title,
           error: "Failed to create agenda item",
@@ -366,7 +367,7 @@ export async function POST(
       },
     });
   } catch (error) {
-    console.error("Error creating agenda:", error);
+    logger.error("Error creating agenda:", error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Validation failed", details: error.errors },

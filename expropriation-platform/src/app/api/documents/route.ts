@@ -10,6 +10,7 @@ import { DocumentType, DocumentCategory, DocumentStatus, DocumentSecurityLevel }
 import { secureFileUpload, getSecurityHeaders } from '@/lib/file-upload-security';
 import { edgeLogger } from '@/lib/edge-logger';
 import { AtomicUploadOptions } from '@/lib/atomic-upload';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const createDocumentSchema = z.object({
@@ -233,7 +234,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching documents:', error);
+    logger.error('Error fetching documents:', error);
     return NextResponse.json(
       { error: 'Failed to fetch documents' },
       { status: 500 }
@@ -316,7 +317,7 @@ export async function POST(request: NextRequest) {
       }
       // TODO: Add text extraction for PDF, DOCX, etc.
     } catch (error) {
-      console.error('Error extracting text content:', error);
+      logger.error('Error extracting text content:', error);
     }
 
     // Determine actual MIME type from validation
@@ -449,7 +450,7 @@ export async function POST(request: NextRequest) {
 
     return jsonResponse;
   } catch (error) {
-    console.error('Error uploading document:', error);
+    logger.error('Error uploading document:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

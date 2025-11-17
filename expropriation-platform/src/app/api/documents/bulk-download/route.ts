@@ -8,6 +8,7 @@ import path from 'path';
 import archiver from 'archiver';
 import { Writable } from 'stream';
 import { DocumentActionType } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 // Validation schema
 const bulkDownloadSchema = z.object({
@@ -178,7 +179,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unsupported format' }, { status: 400 });
     }
   } catch (error) {
-    console.error('Error creating bulk download:', error);
+    logger.error('Error creating bulk download:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

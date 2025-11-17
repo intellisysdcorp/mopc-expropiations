@@ -37,6 +37,7 @@ import {
   Download,
   X
 } from 'lucide-react';
+import clientLogger from '@/lib/client-logger';
 
 // Types
 interface DigitalSignature {
@@ -240,7 +241,7 @@ export function DigitalSignature({
         throw new Error(error.error || 'Failed to create signature');
       }
     } catch (error) {
-      console.error('Error creating signature:', error);
+      clientLogger.error('Error creating signature:', error);
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to create signature',
@@ -270,7 +271,7 @@ export function DigitalSignature({
         throw new Error('Failed to revoke signature');
       }
     } catch (error) {
-      console.error('Error revoking signature:', error);
+      clientLogger.error('Error revoking signature:', error);
       toast({
         title: 'Error',
         description: 'Failed to revoke signature',

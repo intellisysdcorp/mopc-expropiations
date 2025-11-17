@@ -1,30 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Separator } from '@/components/ui/separator';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { BarChart3 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import {
   Shield,
   Users,
   Settings,
   Clock,
-  AlertTriangle,
   CheckCircle2,
   Search,
-  Filter,
   RefreshCw,
-  Lock,
-  Unlock,
   Calendar,
   UserCheck,
   Building,
@@ -34,6 +20,17 @@ import {
   Edit,
   Trash2,
 } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import clientLogger from '@/lib/client-logger';
 
 interface Permission {
   id: string;
@@ -108,7 +105,7 @@ export function DepartmentPermissions({
       setRoleBasedPermissions(data.roleBasedPermissions || []);
     } catch (error) {
       toast.error('Error al cargar permisos');
-      console.error('Error fetching permissions:', error);
+      clientLogger.error('Error fetching permissions:', error);
     } finally {
       setLoading(false);
     }
@@ -670,5 +667,3 @@ export function DepartmentPermissions({
   );
 }
 
-// Fix import for BarChart3
-import { BarChart3 } from 'lucide-react';

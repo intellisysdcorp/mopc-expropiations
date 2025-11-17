@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // GET /api/users/[id]/activity - Get user activity history
 export async function GET(
@@ -204,7 +205,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error fetching user activity:', error);
+    logger.error('Error fetching user activity:', error);
     return NextResponse.json(
       { error: 'Error al obtener historial de actividad' },
       { status: 500 }

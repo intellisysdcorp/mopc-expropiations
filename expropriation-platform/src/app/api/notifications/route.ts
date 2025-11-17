@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const createNotificationSchema = z.object({
   type: z.enum(['INFO', 'WARNING', 'ERROR', 'SUCCESS', 'TASK_ASSIGNED', 'DEADLINE_REMINDER', 'STATUS_UPDATE', 'SYSTEM_ANNOUNCEMENT']),
@@ -110,7 +111,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching notifications:', error);
+    logger.error('Error fetching notifications:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -202,7 +203,7 @@ export async function POST(request: NextRequest) {
     // TODO: Send email if requested
     if (validatedData.sendEmail) {
       // Implementation for email sending would go here
-      console.log(`Email notification would be sent to ${recipient.email}`);
+      logger.info(`Email notification would be sent to ${recipient.email}`);
     }
 
     return NextResponse.json({
@@ -211,7 +212,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error creating notification:', error);
+    logger.error('Error creating notification:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

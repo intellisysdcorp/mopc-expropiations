@@ -42,6 +42,7 @@ import {
   CheckCircle2,
   Plus
 } from 'lucide-react';
+import clientLogger from '@/lib/client-logger';
 
 // Types
 interface TimeEntry {
@@ -152,7 +153,7 @@ export function TimeTrackingDashboard({
         setAnalytics(analyticsData);
       }
     } catch (error) {
-      console.error('Error fetching time tracking data:', error);
+      clientLogger.error('Error fetching time tracking data:', error);
       toast({
         title: 'Error',
         description: 'Failed to fetch time tracking data',
@@ -223,7 +224,7 @@ export function TimeTrackingDashboard({
         throw new Error(error.error || 'Failed to create time entry');
       }
     } catch (error) {
-      console.error('Error creating time entry:', error);
+      clientLogger.error('Error creating time entry:', error);
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to create time entry',

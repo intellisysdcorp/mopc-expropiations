@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { ActivityType, SignatureType } from '@prisma/client';
 import crypto from 'crypto';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const createSignatureSchema = z.object({
@@ -80,7 +81,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(sanitizedSignatures);
   } catch (error) {
-    console.error('Error fetching signatures:', error);
+    logger.error('Error fetching signatures:', error);
     return NextResponse.json(
       { error: 'Failed to fetch signatures' },
       { status: 500 }
@@ -179,7 +180,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Error creating digital signature:', error);
+    logger.error('Error creating digital signature:', error);
     return NextResponse.json(
       { error: 'Failed to create digital signature' },
       { status: 500 }
@@ -263,7 +264,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    console.error('Error verifying digital signature:', error);
+    logger.error('Error verifying digital signature:', error);
     return NextResponse.json(
       { error: 'Failed to verify digital signature' },
       { status: 500 }

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const searchSchema = z.object({
   q: z.string().min(1).max(100),
@@ -376,7 +377,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Search error:', error);
+    logger.error('Search error:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

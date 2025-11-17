@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
+import { logger } from '@/lib/logger';
 
 // Schema for status changes
 const statusChangeSchema = z.object({
@@ -242,7 +243,7 @@ export async function PATCH(
       );
     }
 
-    console.error('Error updating department status:', error);
+    logger.error('Error updating department status:', error);
     return NextResponse.json(
       { error: 'Error al actualizar estado del departamento' },
       { status: 500 }
@@ -330,7 +331,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error fetching department status history:', error);
+    logger.error('Error fetching department status history:', error);
     return NextResponse.json(
       { error: 'Error al obtener historial de estado del departamento' },
       { status: 500 }

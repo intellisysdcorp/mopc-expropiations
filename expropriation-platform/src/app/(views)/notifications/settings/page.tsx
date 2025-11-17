@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { useAuth } from '@/hooks/use-auth'
+import clientLogger from '@/lib/client-logger';
 
 interface NotificationPreferences {
   id?: string
@@ -85,7 +86,7 @@ export default function NotificationSettingsPage() {
       const data = await response.json()
       setPreferences(data.preferences)
     } catch (error) {
-      console.error('Error fetching preferences:', error)
+      clientLogger.error('Error fetching preferences:', error)
       toast.error('Error al cargar preferencias')
     } finally {
       setLoading(false)
@@ -125,7 +126,7 @@ export default function NotificationSettingsPage() {
       const data = await response.json()
       return data.preferences
     } catch (error) {
-      console.error('Error creating default preferences:', error)
+      clientLogger.error('Error creating default preferences:', error)
       toast.error('Error al crear preferencias por defecto')
       return null
     }
@@ -148,7 +149,7 @@ export default function NotificationSettingsPage() {
       setPreferences(data.preferences)
       toast.success('Preferencias actualizadas')
     } catch (error) {
-      console.error('Error updating preferences:', error)
+      clientLogger.error('Error updating preferences:', error)
       toast.error('Error al actualizar preferencias')
     } finally {
       setSaving(false)

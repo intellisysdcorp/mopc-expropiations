@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { TemplateType, DocumentCategory, DocumentSecurityLevel } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const createTemplateSchema = z.object({
@@ -151,7 +152,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error fetching templates:', error);
+    logger.error('Error fetching templates:', error);
     return NextResponse.json(
       { error: 'Failed to fetch templates' },
       { status: 500 }
@@ -238,7 +239,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
-    console.error('Error creating template:', error);
+    logger.error('Error creating template:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -270,7 +271,7 @@ export async function GET_TYPES() {
 
     return NextResponse.json({ templateTypes });
   } catch (error) {
-    console.error('Error fetching template types:', error);
+    logger.error('Error fetching template types:', error);
     return NextResponse.json(
       { error: 'Failed to fetch template types' },
       { status: 500 }
@@ -294,7 +295,7 @@ export async function GET_CATEGORIES() {
 
     return NextResponse.json({ categories });
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    logger.error('Error fetching categories:', error);
     return NextResponse.json(
       { error: 'Failed to fetch categories' },
       { status: 500 }

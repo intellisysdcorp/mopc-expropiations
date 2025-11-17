@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { queryMonitor } from '@/lib/query-monitor';
+import { logger } from '@/lib/logger';
 
 interface DashboardStats {
   totalCases: number
@@ -256,7 +257,7 @@ export async function GET(request: NextRequest) {
     }, { departmentId, startDate, endDate }); // End of query tracking
 
   } catch (error) {
-    console.error('Error fetching dashboard statistics:', error);
+    logger.error('Error fetching dashboard statistics:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to fetch dashboard statistics' },
       { status: 500 }

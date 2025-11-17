@@ -31,6 +31,7 @@ import { ChecklistManager } from './checklist-manager';
 import { StageReturnDialog } from './stage-return-dialog';
 import { StageProgressionControl } from './stage-progression-control';
 import { NotificationCenter } from '@/components/notifications/notification-center';
+import clientLogger from '@/lib/client-logger';
 
 interface CaseData {
   id: string;
@@ -131,7 +132,7 @@ export function WorkflowManager({ caseId, className }: WorkflowManagerProps) {
       const data = await response.json();
       setWorkflowStats(data);
     } catch (err) {
-      console.error('Error fetching workflow stats:', err);
+      clientLogger.error('Error fetching workflow stats:', err);
     }
   };
 

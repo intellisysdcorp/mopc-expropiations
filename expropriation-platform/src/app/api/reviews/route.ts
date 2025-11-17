@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { ActivityType } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const createReviewSchema = z.object({
@@ -143,7 +144,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Error creating review:', error);
+    logger.error('Error creating review:', error);
     return NextResponse.json(
       { error: 'Failed to create review' },
       { status: 500 }
@@ -207,7 +208,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(reviews);
   } catch (error) {
-    console.error('Error fetching reviews:', error);
+    logger.error('Error fetching reviews:', error);
     return NextResponse.json(
       { error: 'Failed to fetch reviews' },
       { status: 500 }

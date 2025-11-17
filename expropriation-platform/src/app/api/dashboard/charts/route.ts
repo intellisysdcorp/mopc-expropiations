@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -36,7 +37,7 @@ export async function GET(request: NextRequest) {
         return await getOverviewData(departmentFilter, startDate, endDate, days);
     }
   } catch (error) {
-    console.error('Error fetching chart data:', error);
+    logger.error('Error fetching chart data:', error);
     return NextResponse.json(
       { error: 'Failed to fetch chart data' },
       { status: 500 }

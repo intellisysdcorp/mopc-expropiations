@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -26,7 +27,7 @@ export const useCase = (caseId: string) => {
       const data = await response.json()
       setCaseData(data)
     } catch (error) {
-      console.error('Error fetching case:', error)
+      logger.error('Error fetching case:', error)
       toast.error('Error al cargar los detalles del caso')
     } finally {
       setLoading(false)

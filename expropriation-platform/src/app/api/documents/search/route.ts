@@ -9,6 +9,7 @@ import {
   DocumentStatus,
   DocumentSecurityLevel,
 } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 // Advanced search validation schema
 const searchSchema = z.object({
@@ -352,7 +353,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error searching documents:', error);
+    logger.error('Error searching documents:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -404,7 +405,7 @@ export async function GET(request: NextRequest) {
       suggestions: uniqueSuggestions,
     });
   } catch (error) {
-    console.error('Error getting search suggestions:', error);
+    logger.error('Error getting search suggestions:', error);
     return NextResponse.json(
       { error: 'Failed to get search suggestions' },
       { status: 500 }

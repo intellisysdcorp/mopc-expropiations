@@ -30,6 +30,7 @@ import {
   Mail,
   Briefcase,
 } from 'lucide-react';
+import clientLogger from '@/lib/client-logger';
 
 // Schema for user transfer
 const transferSchema = z.object({
@@ -140,7 +141,7 @@ export function UserTransfer({
           setTransferHistory(data.transfers || []);
         }
       } catch (error) {
-        console.error('Error fetching transfer history:', error);
+        clientLogger.error('Error fetching transfer history:', error);
       } finally {
         setLoadingHistory(false);
       }

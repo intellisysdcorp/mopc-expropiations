@@ -45,6 +45,7 @@ import {
 import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 import { useWebSocket, NotificationData } from '@/hooks/use-websocket';
+import clientLogger from '@/lib/client-logger';
 
 interface EnhancedNotificationCenterProps {
   className?: string;
@@ -124,7 +125,7 @@ export function EnhancedNotificationCenter({
       const data = await response.json();
       // WebSocket will handle real-time updates, so we only fetch if needed
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      clientLogger.error('Error fetching notifications:', error);
       toast.error('Error al cargar notificaciones');
     } finally {
       setLoading(false);

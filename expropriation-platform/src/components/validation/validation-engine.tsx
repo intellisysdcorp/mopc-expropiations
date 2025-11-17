@@ -31,6 +31,7 @@ import {
   Eye,
   Zap
 } from 'lucide-react';
+import clientLogger from '@/lib/client-logger';
 
 // Types
 interface ValidationRule {
@@ -119,7 +120,7 @@ export function ValidationEngine({
         setRules(data);
       }
     } catch (error) {
-      console.error('Error fetching validation rules:', error);
+      clientLogger.error('Error fetching validation rules:', error);
       toast({
         title: 'Error',
         description: 'Failed to fetch validation rules',
@@ -146,7 +147,7 @@ export function ValidationEngine({
         calculateSummary(data);
       }
     } catch (error) {
-      console.error('Error fetching validation executions:', error);
+      clientLogger.error('Error fetching validation executions:', error);
     }
   };
 
@@ -188,7 +189,7 @@ export function ValidationEngine({
         throw new Error(error.error || 'Validation failed');
       }
     } catch (error) {
-      console.error('Error running validation:', error);
+      clientLogger.error('Error running validation:', error);
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Validation failed',

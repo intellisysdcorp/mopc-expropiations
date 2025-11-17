@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 import { updateDepartmentSchema } from '@/lib/validators/department-validator';
+import { logger } from '@/lib/logger';
 
 // GET /api/departments/[id] - Get specific department
 export async function GET(
@@ -76,7 +77,7 @@ export async function GET(
 
     return NextResponse.json(sanitizedDepartment);
   } catch (error) {
-    console.error('Error fetching department:', error);
+    logger.error('Error fetching department:', error);
     return NextResponse.json(
       { error: 'Error al obtener departamento' },
       { status: 500 }
@@ -237,7 +238,7 @@ export async function PUT(
       );
     }
 
-    console.error('Error updating department:', error);
+    logger.error('Error updating department:', error);
     return NextResponse.json(
       { error: 'Error al actualizar departamento' },
       { status: 500 }
@@ -332,7 +333,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Departamento eliminado correctamente' });
   } catch (error) {
-    console.error('Error deleting department:', error);
+    logger.error('Error deleting department:', error);
     return NextResponse.json(
       { error: 'Error al eliminar departamento' },
       { status: 500 }

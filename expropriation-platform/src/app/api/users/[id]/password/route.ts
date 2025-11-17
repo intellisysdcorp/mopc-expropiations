@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { logActivity } from '@/lib/activity-logger';
+import { logger } from '@/lib/logger';
 
 // Schema for password change
 const changePasswordSchema = z.object({
@@ -208,7 +209,7 @@ export async function PUT(
       );
     }
 
-    console.error('Error changing password:', error);
+    logger.error('Error changing password:', error);
     return NextResponse.json(
       { error: 'Error al cambiar la contraseña' },
       { status: 500 }

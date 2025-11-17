@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { ActivityType } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const createTimeEntrySchema = z.object({
@@ -99,7 +100,7 @@ export async function GET(request: NextRequest) {
       summary,
     });
   } catch (error) {
-    console.error('Error fetching time tracking entries:', error);
+    logger.error('Error fetching time tracking entries:', error);
     return NextResponse.json(
       { error: 'Failed to fetch time tracking entries' },
       { status: 500 }
@@ -250,7 +251,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Error creating time tracking entry:', error);
+    logger.error('Error creating time tracking entry:', error);
     return NextResponse.json(
       { error: 'Failed to create time tracking entry' },
       { status: 500 }
@@ -398,7 +399,7 @@ export async function GET_ANALYTICS(request: NextRequest) {
 
     return NextResponse.json(analytics);
   } catch (error) {
-    console.error('Error fetching time tracking analytics:', error);
+    logger.error('Error fetching time tracking analytics:', error);
     return NextResponse.json(
       { error: 'Failed to fetch time tracking analytics' },
       { status: 500 }

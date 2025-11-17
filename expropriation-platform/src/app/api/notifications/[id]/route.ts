@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // Get specific notification
 export async function GET(
@@ -52,7 +53,7 @@ export async function GET(
     return NextResponse.json(notification);
 
   } catch (error) {
-    console.error('Error fetching notification:', error);
+    logger.error('Error fetching notification:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -110,7 +111,7 @@ export async function PATCH(
     });
 
   } catch (error) {
-    console.error('Error updating notification:', error);
+    logger.error('Error updating notification:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -163,7 +164,7 @@ export async function DELETE(
     });
 
   } catch (error) {
-    console.error('Error deleting notification:', error);
+    logger.error('Error deleting notification:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -43,6 +43,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
+import clientLogger from '@/lib/client-logger';
 
 interface ChecklistItem {
   id: string;
@@ -170,7 +171,7 @@ export function ChecklistManager({
 
     } catch (err) {
       toast.error('Error al actualizar el item del checklist');
-      console.error('Error updating checklist item:', err);
+      clientLogger.error('Error updating checklist item:', err);
     }
   };
 
@@ -208,7 +209,7 @@ export function ChecklistManager({
       toast.success('Archivo subido exitosamente');
     } catch (err) {
       toast.error('Error al subir el archivo');
-      console.error('Error uploading file:', err);
+      clientLogger.error('Error uploading file:', err);
     }
   };
 

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const updatePermissionSchema = z.object({
@@ -176,7 +177,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error fetching document permissions:', error);
+    logger.error('Error fetching document permissions:', error);
     return NextResponse.json(
       { error: 'Failed to fetch permissions' },
       { status: 500 }
@@ -413,7 +414,7 @@ export async function POST(
 
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
-    console.error('Error updating document permissions:', error);
+    logger.error('Error updating document permissions:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -517,7 +518,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error clearing document permissions:', error);
+    logger.error('Error clearing document permissions:', error);
     return NextResponse.json(
       { error: 'Failed to clear permissions' },
       { status: 500 }

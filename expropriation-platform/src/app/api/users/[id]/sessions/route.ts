@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { logActivity } from '@/lib/activity-logger';
+import { logger } from '@/lib/logger';
 
 // GET /api/users/[id]/sessions - Get user sessions
 export async function GET(
@@ -63,7 +64,7 @@ export async function GET(
 
     return NextResponse.json(formattedSessions);
   } catch (error) {
-    console.error('Error fetching sessions:', error);
+    logger.error('Error fetching sessions:', error);
     return NextResponse.json(
       { error: 'Error al obtener sesiones' },
       { status: 500 }
@@ -171,7 +172,7 @@ export async function DELETE(
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Error terminating sessions:', error);
+    logger.error('Error terminating sessions:', error);
     return NextResponse.json(
       { error: 'Error al terminar sesiones' },
       { status: 500 }

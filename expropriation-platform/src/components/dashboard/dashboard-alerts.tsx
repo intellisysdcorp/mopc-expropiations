@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import clientLogger from '@/lib/client-logger';
 
 interface Alert {
   id: string;
@@ -239,7 +240,7 @@ export function DashboardAlerts({ departmentId, userId }: DashboardAlertsProps) 
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error loading alerts');
-      console.error('Error fetching alerts:', err);
+      clientLogger.error('Error fetching alerts:', err);
     } finally {
       setLoading(false);
     }

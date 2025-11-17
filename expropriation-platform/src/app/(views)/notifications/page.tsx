@@ -43,6 +43,7 @@ import {
 import { cn } from '@/lib/utils'
 import { toast } from 'react-hot-toast'
 import { useAuth } from '@/hooks/use-auth'
+import clientLogger from '@/lib/client-logger';
 
 interface Notification {
   id: string
@@ -128,7 +129,7 @@ export default function NotificationsPage() {
       setCurrentPage(data.pagination.page)
 
     } catch (error) {
-      console.error('Error fetching notifications:', error)
+      clientLogger.error('Error fetching notifications:', error)
       toast.error('Error al cargar notificaciones')
     } finally {
       setLoading(false)

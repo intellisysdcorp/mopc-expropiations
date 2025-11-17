@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { ActivityType } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 const updateChecklistTemplateSchema = z.object({
   name: z.string().min(1).optional(),
@@ -41,7 +42,7 @@ export async function GET(
 
     return NextResponse.json(template);
   } catch (error) {
-    console.error('Error fetching checklist template:', error);
+    logger.error('Error fetching checklist template:', error);
     return NextResponse.json(
       { error: 'Failed to fetch checklist template' },
       { status: 500 }
@@ -105,7 +106,7 @@ export async function PUT(
       );
     }
 
-    console.error('Error updating checklist template:', error);
+    logger.error('Error updating checklist template:', error);
     return NextResponse.json(
       { error: 'Failed to update checklist template' },
       { status: 500 }
@@ -154,7 +155,7 @@ export async function DELETE(
       { message: 'Checklist template deleted successfully' }
     );
   } catch (error) {
-    console.error('Error deleting checklist template:', error);
+    logger.error('Error deleting checklist template:', error);
     return NextResponse.json(
       { error: 'Failed to delete checklist template' },
       { status: 500 }

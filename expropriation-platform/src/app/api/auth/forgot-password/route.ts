@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createPasswordResetToken, checkRateLimit } from '@/lib/auth-utils';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Correo electrónico inválido'),
@@ -42,8 +43,8 @@ export async function POST(request: NextRequest) {
 
     // In a real implementation, you would send an email here
     // For now, we'll log the token (remove this in production)
-    console.log(`Password reset token for ${email}: ${resetToken}`);
-    console.log(`Reset link: ${process.env.NEXTAUTH_URL}/reset-password?token=${resetToken}`);
+    logger.info(`Password reset token for ${email}: ${resetToken}`);
+    logger.info(`Reset link: ${process.env.NEXTAUTH_URL}/reset-password?token=${resetToken}`);
 
     // TODO: Send email with reset link
     // Example using nodemailer or another email service:
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Forgot password error:', error);
+    logger.error('Forgot password error:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

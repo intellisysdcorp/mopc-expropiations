@@ -7,6 +7,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 import { DocumentStatus, DocumentSecurityLevel, DocumentActionType } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const updateDocumentSchema = z.object({
@@ -200,7 +201,7 @@ export async function GET(
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error fetching document:', error);
+    logger.error('Error fetching document:', error);
     return NextResponse.json(
       { error: 'Failed to fetch document' },
       { status: 500 }
@@ -358,7 +359,7 @@ export async function PUT(
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error updating document:', error);
+    logger.error('Error updating document:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -435,7 +436,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Document deleted successfully' });
   } catch (error) {
-    console.error('Error deleting document:', error);
+    logger.error('Error deleting document:', error);
     return NextResponse.json(
       { error: 'Failed to delete document' },
       { status: 500 }

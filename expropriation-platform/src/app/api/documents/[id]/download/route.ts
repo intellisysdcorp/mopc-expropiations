@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import fs from 'fs/promises';
 import path from 'path';
 import { DocumentActionType } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 // GET /api/documents/[id]/download - Download a document
 export async function GET(
@@ -110,7 +111,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error downloading document:', error);
+    logger.error('Error downloading document:', error);
     return NextResponse.json(
       { error: 'Failed to download document' },
       { status: 500 }

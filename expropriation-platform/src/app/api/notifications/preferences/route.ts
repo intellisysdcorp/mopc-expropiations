@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const updatePreferencesSchema = z.object({
   enableEmailNotifications: z.boolean().optional(),
@@ -93,7 +94,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching notification preferences:', error);
+    logger.error('Error fetching notification preferences:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -153,7 +154,7 @@ export async function PATCH(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error updating notification preferences:', error);
+    logger.error('Error updating notification preferences:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -230,7 +231,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error resetting notification preferences:', error);
+    logger.error('Error resetting notification preferences:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

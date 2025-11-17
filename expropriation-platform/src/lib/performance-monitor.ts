@@ -1,4 +1,5 @@
 'use client'
+import clientLogger from '@/lib/client-logger';
 
 // Performance monitoring utilities
 interface PerformanceMetrics {
@@ -44,7 +45,7 @@ class PerformanceMonitor {
       navObserver.observe({ entryTypes: ['navigation'] })
       this.observers.push(navObserver)
     } catch (error) {
-      console.warn('Navigation timing not supported:', error)
+      clientLogger.warn('Navigation timing not supported:', error)
     }
 
     // Observe paint timing
@@ -60,7 +61,7 @@ class PerformanceMonitor {
       paintObserver.observe({ entryTypes: ['paint'] })
       this.observers.push(paintObserver)
     } catch (error) {
-      console.warn('Paint timing not supported:', error)
+      clientLogger.warn('Paint timing not supported:', error)
     }
 
     // Observe largest contentful paint
@@ -74,7 +75,7 @@ class PerformanceMonitor {
       lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] })
       this.observers.push(lcpObserver)
     } catch (error) {
-      console.warn('LCP not supported:', error)
+      clientLogger.warn('LCP not supported:', error)
     }
 
     // Observe layout shift
@@ -92,7 +93,7 @@ class PerformanceMonitor {
       clsObserver.observe({ entryTypes: ['layout-shift'] })
       this.observers.push(clsObserver)
     } catch (error) {
-      console.warn('CLS not supported:', error)
+      clientLogger.warn('CLS not supported:', error)
     }
 
     // Observe long tasks
@@ -110,7 +111,7 @@ class PerformanceMonitor {
       longTaskObserver.observe({ entryTypes: ['longtask'] })
       this.observers.push(longTaskObserver)
     } catch (error) {
-      console.warn('Long task observer not supported:', error)
+      clientLogger.warn('Long task observer not supported:', error)
     }
   }
 
@@ -136,7 +137,7 @@ class PerformanceMonitor {
 
   private logMetric(name: string, value: number) {
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[Performance] ${name}:`, value)
+      clientLogger.info(`[Performance] ${name}:`, value)
     }
 
     // Send to analytics service in production
@@ -153,7 +154,7 @@ class PerformanceMonitor {
     this.entries.push(entry)
 
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[Performance Entry] ${entry.name}:`, entry.duration, 'ms')
+      clientLogger.info(`[Performance Entry] ${entry.name}:`, entry.duration, 'ms')
     }
   }
 
@@ -178,7 +179,7 @@ class PerformanceMonitor {
           })
         }
       } catch (error) {
-        console.warn('Failed to create measure:', error)
+        clientLogger.warn('Failed to create measure:', error)
       }
     }
   }
@@ -281,7 +282,7 @@ export function measurePageLoad() {
   window.addEventListener('load', () => {
     setTimeout(() => {
       const report = performanceMonitor.getReport()
-      console.log('Page Load Performance Report:', report)
+      clientLogger.info('Page Load Performance Report:', report)
     }, 0)
   })
 }

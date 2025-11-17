@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { debounce } from 'lodash-es';
 import { cn } from '@/lib/utils';
+import clientLogger from '@/lib/client-logger';
 
 interface SearchResult {
   id: string;
@@ -70,7 +71,7 @@ export function GlobalSearch() {
           setResults(data.results);
         }
       } catch (error) {
-        console.error('Search failed:', error);
+        clientLogger.error('Search failed:', error);
         setResults([]);
       } finally {
         setIsSearching(false);

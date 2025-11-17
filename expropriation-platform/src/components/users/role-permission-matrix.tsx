@@ -53,6 +53,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { PERMISSION_CATEGORIES, DEFAULT_PERMISSIONS, normalizePermissions, RolePermissions } from '@/types/permissions';
+import clientLogger from '@/lib/client-logger';
 
 interface Role {
   id: string;
@@ -165,7 +166,7 @@ export function RolePermissionMatrix({ roles, onRolesUpdate }: RolePermissionMat
         }
       });
 
-      console.log('Final cleaned permissions:', cleanedPermissions);
+      clientLogger.info('Final cleaned permissions:', cleanedPermissions);
 
       const requestData = {
         name: roleName.trim(),
@@ -177,7 +178,7 @@ export function RolePermissionMatrix({ roles, onRolesUpdate }: RolePermissionMat
         requestData.description = roleDescription.trim();
       }
 
-      console.log('Final request data:', requestData);
+      clientLogger.info('Final request data:', requestData);
 
       const response = await fetch('/api/roles', {
         method: 'POST',

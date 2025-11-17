@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { ActivityType } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const executeValidationSchema = z.object({
@@ -78,7 +79,7 @@ export async function POST(request: NextRequest) {
         }
 
       } catch (error) {
-        console.error(`Error executing rule ${rule.id}:`, error);
+        logger.error(`Error executing rule ${rule.id}:`, error);
 
         const execution = await prisma.validationExecution.create({
           data: {
@@ -143,7 +144,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Error executing validation:', error);
+    logger.error('Error executing validation:', error);
     return NextResponse.json(
       { error: 'Failed to execute validation' },
       { status: 500 }

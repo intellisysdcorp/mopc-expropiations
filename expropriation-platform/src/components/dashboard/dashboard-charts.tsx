@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, Download, Filter } from 'lucide-react';
 import { format } from 'date-fns';
+import clientLogger from '@/lib/client-logger';
 
 interface ChartData {
   timeline: Array<{
@@ -109,7 +110,7 @@ export function DashboardCharts({ departmentId }: DashboardChartsProps) {
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error loading charts');
-      console.error('Error fetching chart data:', err);
+      clientLogger.error('Error fetching chart data:', err);
     } finally {
       setLoading(false);
     }

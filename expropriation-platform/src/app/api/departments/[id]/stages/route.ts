@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 import { CaseStage } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 // Schema for stage assignment
 const stageAssignmentSchema = z.object({
@@ -82,7 +83,7 @@ export async function GET(
       availableStages: allStages,
     });
   } catch (error) {
-    console.error('Error fetching department stage assignments:', error);
+    logger.error('Error fetching department stage assignments:', error);
     return NextResponse.json(
       { error: 'Error al obtener asignaciones de etapas del departamento' },
       { status: 500 }
@@ -188,7 +189,7 @@ export async function POST(
       );
     }
 
-    console.error('Error assigning stages to department:', error);
+    logger.error('Error assigning stages to department:', error);
     return NextResponse.json(
       { error: 'Error al asignar etapas al departamento' },
       { status: 500 }
@@ -315,7 +316,7 @@ export async function PUT(
       });
     }
   } catch (error) {
-    console.error('Error updating stage assignment:', error);
+    logger.error('Error updating stage assignment:', error);
     return NextResponse.json(
       { error: 'Error al actualizar asignación de etapa' },
       { status: 500 }
@@ -411,7 +412,7 @@ export async function DELETE(
       message: `Etapa ${stage} eliminada correctamente`,
     });
   } catch (error) {
-    console.error('Error removing stage assignment:', error);
+    logger.error('Error removing stage assignment:', error);
     return NextResponse.json(
       { error: 'Error al eliminar asignación de etapa' },
       { status: 500 }

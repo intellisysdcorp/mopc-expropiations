@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
 import path from 'path';
 import fs from 'fs/promises';
 import crypto from 'crypto';
+import archiver from 'archiver';
+
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // GET /api/cases/[id]/documents/[documentId]/download - Download document
 export async function GET(
@@ -123,7 +126,7 @@ export async function GET(
         mimeType = convertedData.mimeType;
         fileName = `${path.parse(fileName).name}.${format}`;
       } catch (error) {
-        console.error('Format conversion error:', error);
+        logger.error('Format conversion error:', error);
         // Fall back to original format if conversion fails
       }
     }
@@ -177,7 +180,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error downloading document:', error);
+    logger.error('Error downloading document:', error);
     return NextResponse.json(
       { error: 'Failed to download document' },
       { status: 500 }
@@ -207,11 +210,8 @@ async function convertDocumentFormat(
 
     case 'zip':
       // Create a zip file containing the document
-      const archiver = await import('archiver');
-      const { default: Archiver } = archiver;
-
       return new Promise((resolve, reject) => {
-        const archive = Archiver('zip', { zlib: { level: 9 } });
+        const archive = archiver('zip', { zlib: { level: 9 } });
         const chunks: Buffer[] = [];
 
         archive.on('data', (chunk: Buffer) => chunks.push(chunk));

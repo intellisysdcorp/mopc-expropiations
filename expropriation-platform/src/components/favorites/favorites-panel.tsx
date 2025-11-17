@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import clientLogger from '@/lib/client-logger';
 
 interface FavoriteItem {
   id: string;
@@ -57,7 +58,7 @@ export function FavoritesPanel({ className, maxItems = 5 }: FavoritesPanelProps)
         setFavorites(data.favorites || []);
       }
     } catch (error) {
-      console.error('Failed to load favorites:', error);
+      clientLogger.error('Failed to load favorites:', error);
     } finally {
       setIsLoading(false);
     }
@@ -297,7 +298,7 @@ export function useFavorite(item: {
         setIsFavorite(data.isFavorite);
       }
     } catch (error) {
-      console.error('Failed to check favorite status:', error);
+      clientLogger.error('Failed to check favorite status:', error);
     }
   };
 

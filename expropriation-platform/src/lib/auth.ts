@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { logUserLogin, logFailedLogin } from '@/lib/activity-logger';
 import { loggers } from '@/lib/logger';
 import { randomBytes } from 'crypto';
+import { getServerSession as nextAuthGetServerSession } from 'next-auth/next';
 
 // Validate required environment variables
 if (!process.env.NEXTAUTH_SECRET) {
@@ -300,8 +301,7 @@ export const authOptions: NextAuthOptions = {
 
 // Helper functions for server-side auth
 export async function getServerSession() {
-  const { getServerSession } = await import('next-auth/next');
-  return getServerSession(authOptions);
+  return nextAuthGetServerSession(authOptions);
 }
 
 export const auth = getServerSession;

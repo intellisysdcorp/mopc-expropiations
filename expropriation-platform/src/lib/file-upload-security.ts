@@ -5,6 +5,7 @@ import { validateMimeType, isMimeTypeAllowed, getMimeTypeCategory } from './mime
 import { scanFileForMalware, quickMalwareScan } from './malware-scanner';
 import { atomicFileUpload, AtomicUploadOptions } from './atomic-upload';
 import { checkRateLimit, recordRequest, checkSuspiciousActivity } from './rate-limiter';
+import { logger } from '@/lib/logger';
 
 // Comprehensive file upload security configuration
 export interface FileUploadSecurityConfig {
@@ -385,7 +386,7 @@ export async function validateFileUpload(
     };
 
   } catch (error) {
-    console.error('Error during file upload validation:', error);
+    logger.error('Error during file upload validation:', error);
 
     return {
       allowed: false,
@@ -548,7 +549,7 @@ export async function secureFileUpload(
     return result;
 
   } catch (error) {
-    console.error('Error during secure file upload:', error);
+    logger.error('Error during secure file upload:', error);
 
     return {
       success: false,

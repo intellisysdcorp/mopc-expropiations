@@ -48,6 +48,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import clientLogger from '@/lib/client-logger';
 
 interface Department {
   id: string;
@@ -108,7 +109,7 @@ export function DepartmentAssignment({
       const data = await response.json();
       setDepartments(data);
     } catch (error) {
-      console.error('Error fetching departments:', error);
+      clientLogger.error('Error fetching departments:', error);
       toast.error('Error al cargar los departamentos');
     }
   };
@@ -122,7 +123,7 @@ export function DepartmentAssignment({
       const data = await response.json();
       setAssignments(data);
     } catch (error) {
-      console.error('Error fetching assignments:', error);
+      clientLogger.error('Error fetching assignments:', error);
       toast.error('Error al cargar las asignaciones');
     } finally {
       setLoading(false);

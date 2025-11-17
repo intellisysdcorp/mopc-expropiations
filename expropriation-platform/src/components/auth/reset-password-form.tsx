@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { validatePassword } from '@/lib/auth-utils';
 import { Loader2, Eye, EyeOff, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
+import clientLogger from '@/lib/client-logger';
 
 const resetPasswordSchema = z
   .object({
@@ -128,7 +129,7 @@ export function ResetPasswordForm() {
 
       setIsSuccess(true);
     } catch (err) {
-      console.error('Reset password error:', err);
+      clientLogger.error('Reset password error:', err);
       setError(err instanceof Error ? err.message : 'Error al restablecer la contraseña');
     } finally {
       setIsLoading(false);

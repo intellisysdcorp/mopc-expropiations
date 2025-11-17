@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { logger } from '@/lib/logger'
 
 const updateConfigSchema = z.object({
   value: z.any(),
@@ -56,7 +57,7 @@ export async function GET(
 
     return NextResponse.json(config)
   } catch (error) {
-    console.error('Error fetching system configuration:', error)
+    logger.error('Error fetching system configuration:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -154,7 +155,7 @@ export async function PUT(
 
     return NextResponse.json(updatedConfig)
   } catch (error) {
-    console.error('Error updating system configuration:', error)
+    logger.error('Error updating system configuration:', error)
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Validation error', details: error.issues },
@@ -216,7 +217,7 @@ export async function DELETE(
       message: 'Configuration deleted successfully'
     })
   } catch (error) {
-    console.error('Error deleting system configuration:', error)
+    logger.error('Error deleting system configuration:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

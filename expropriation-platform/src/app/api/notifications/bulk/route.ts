@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const bulkActionSchema = z.object({
   action: z.enum(['mark_read', 'mark_unread', 'delete']),
@@ -110,7 +111,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error performing bulk notification action:', error);
+    logger.error('Error performing bulk notification action:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { DocumentActionType } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 // Validation schema
 const queryHistorySchema = z.object({
@@ -140,7 +141,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error fetching document history:', error);
+    logger.error('Error fetching document history:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -284,7 +285,7 @@ export async function POST_EXPORT(
       return NextResponse.json({ error: 'Unsupported export format' }, { status: 400 });
     }
   } catch (error) {
-    console.error('Error exporting document history:', error);
+    logger.error('Error exporting document history:', error);
     return NextResponse.json(
       { error: 'Failed to export document history' },
       { status: 500 }

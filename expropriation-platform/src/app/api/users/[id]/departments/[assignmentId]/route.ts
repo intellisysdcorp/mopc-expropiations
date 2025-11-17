@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { logActivity } from '@/lib/activity-logger';
+import { logger } from '@/lib/logger';
 
 // DELETE /api/users/[id]/departments/[assignmentId] - Remove department assignment
 export async function DELETE(
@@ -99,7 +100,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Asignación removida correctamente' });
   } catch (error) {
-    console.error('Error removing department assignment:', error);
+    logger.error('Error removing department assignment:', error);
     return NextResponse.json(
       { error: 'Error al remover asignación' },
       { status: 500 }
@@ -193,7 +194,7 @@ export async function PUT(
 
     return NextResponse.json({ message: 'Departamento principal actualizado correctamente' });
   } catch (error) {
-    console.error('Error updating primary department:', error);
+    logger.error('Error updating primary department:', error);
     return NextResponse.json(
       { error: 'Error al actualizar departamento principal' },
       { status: 500 }

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { ActivityType, ObservationPriority, ObservationStatus } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const createObservationSchema = z.object({
@@ -133,7 +134,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(observations);
   } catch (error) {
-    console.error('Error fetching observations:', error);
+    logger.error('Error fetching observations:', error);
     return NextResponse.json(
       { error: 'Failed to fetch observations' },
       { status: 500 }
@@ -276,7 +277,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Error creating observation:', error);
+    logger.error('Error creating observation:', error);
     return NextResponse.json(
       { error: 'Failed to create observation' },
       { status: 500 }
@@ -402,7 +403,7 @@ export async function POST_RESPONSE(request: NextRequest) {
       );
     }
 
-    console.error('Error creating observation response:', error);
+    logger.error('Error creating observation response:', error);
     return NextResponse.json(
       { error: 'Failed to create observation response' },
       { status: 500 }

@@ -5,6 +5,7 @@ import * as SelectPrimitive from "@radix-ui/react-select"
 import { Check, ChevronDown, ChevronUp } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import clientLogger from '@/lib/client-logger'
 
 const Select = SelectPrimitive.Root
 
@@ -122,7 +123,7 @@ const SelectItem = React.forwardRef<
 >(({ className, children, value, ...props }, ref) => {
   // Development-time validation to catch empty values
   if (process.env.NODE_ENV === 'development' && (!value || value.trim() === '')) {
-    console.error(
+    clientLogger.error(
       'SelectItem: Empty string value detected. All SelectItem components must have a non-empty string value. ' +
       'Use meaningful values like "none", "all", "empty", or similar instead of empty strings.',
       { value, children }

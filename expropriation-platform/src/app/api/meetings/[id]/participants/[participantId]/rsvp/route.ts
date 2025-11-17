@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { logger } from '@/lib/logger';
 
 // POST /api/meetings/[id]/participants/[participantId]/rsvp - RSVP to meeting
 export async function POST(
@@ -219,7 +220,7 @@ export async function POST(
       message: `RSVP ${validatedData.status.toLowerCase()} successfully`,
     });
   } catch (error) {
-    console.error("Error updating RSVP:", error);
+    logger.error("Error updating RSVP:", error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Validation failed", details: error.issues },

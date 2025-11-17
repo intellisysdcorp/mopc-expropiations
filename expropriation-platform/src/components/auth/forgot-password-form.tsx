@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Mail, ArrowLeft, CheckCircle } from 'lucide-react';
+import clientLogger from '@/lib/client-logger';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Correo electrónico inválido'),
@@ -76,7 +77,7 @@ export function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProps) {
       setCountdown(60); // 60 seconds countdown
       onSuccess?.();
     } catch (err) {
-      console.error('Forgot password error:', err);
+      clientLogger.error('Forgot password error:', err);
       setError(err instanceof Error ? err.message : 'Error al enviar el correo de recuperación');
     } finally {
       setIsLoading(false);

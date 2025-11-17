@@ -30,6 +30,7 @@ import {
   Calendar,
   Activity,
 } from 'lucide-react';
+import clientLogger from '@/lib/client-logger';
 
 interface StageAssignment {
   id: string;
@@ -189,7 +190,7 @@ export function DepartmentStages({
       setStageStatistics(data.stageStatistics || []);
     } catch (error) {
       toast.error('Error al cargar etapas');
-      console.error('Error fetching stages:', error);
+      clientLogger.error('Error fetching stages:', error);
     } finally {
       setLoading(false);
     }

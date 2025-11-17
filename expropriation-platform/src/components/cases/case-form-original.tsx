@@ -22,6 +22,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 
 import { CreateCaseInput, UpdateCaseInput } from '@/lib/validations/case'
 import { User, Department, Document, Case } from '@/types/client'
+import clientLogger from '@/lib/client-logger'
 import { CaseCreationDocuments } from '@/components/cases/case-creation-documents'
 import { DocumentUpload } from '@/components/cases/document-upload'
 import { DocumentList } from '@/components/cases/document-list'
@@ -264,12 +265,12 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
       const response = await fetch(`/api/cases?${params}`)
       if (response.ok) {
         const data = await response.json()
-        console.log(data);
+        clientLogger.info(data);
         // Use the actual cases array length since we're filtering by date
         index = (data.cases?.length || 0) + 1
       }
     } catch (error) {
-      console.error('Couldn\'t get today\'s case count:', error)
+      clientLogger.error('Couldn\'t get today\'s case count:', error)
     }
     const indexString = index.toString().padStart(2, '0')
     return `EXP-${year}-${month}-${day}-${indexString}`
@@ -329,7 +330,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
         isDraft: false
       })
     } catch (error) {
-      console.error('Error fetching case:', error)
+      clientLogger.error('Error fetching case:', error)
       showError('Error al cargar los detalles del caso')
       router.push('/cases')
     }
@@ -343,7 +344,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
         setExistingDocuments(data.documents || [])
       }
     } catch (error) {
-      console.error('Error fetching existing documents:', error)
+      clientLogger.error('Error fetching existing documents:', error)
     }
   }
 
@@ -354,7 +355,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
       const data = await response.json()
       setDepartments(Array.isArray(data) ? data : (data.departments || []))
     } catch (error) {
-      console.error('Error fetching departments:', error)
+      clientLogger.error('Error fetching departments:', error)
       showError('Error al cargar los departamentos')
     }
   }
@@ -374,7 +375,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
         }))
       }
     } catch (error) {
-      console.error('Error fetching users:', error)
+      clientLogger.error('Error fetching users:', error)
       showError('Error al cargar los usuarios del departamento')
     }
   }
@@ -527,7 +528,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
   // Handle document selection
   const handleDocumentSelect = (document: Document) => {
     // Could open a detail modal or navigate to document details
-    console.log('Selected document:', document)
+    clientLogger.info('Selected document:', document)
   }
 
   // Check if form has any data entered (for create mode)
@@ -567,7 +568,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
       success('Borrador guardado exitosamente')
       router.push(`/cases/${newDraft.id}`)
     } catch (error) {
-      console.error('Error saving draft:', error)
+      clientLogger.error('Error saving draft:', error)
       showError(error instanceof Error ? error.message : 'Error al guardar el borrador')
     } finally {
       setSavingDraft(false)
@@ -682,7 +683,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
         router.push(`/cases/${savedCase.id}`)
       }, 500)
     } catch (error) {
-      console.error('Error saving case:', error)
+      clientLogger.error('Error saving case:', error)
       showError(error instanceof Error ? error.message : 'Error al guardar el caso')
     } finally {
       setLoading(false)
@@ -705,7 +706,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
       await Promise.all(linkPromises)
       success(`${selectedExistingDocuments.length} documento(s) existente(s) vinculado(s)`)
     } catch (error) {
-      console.error('Error linking existing documents:', error)
+      clientLogger.error('Error linking existing documents:', error)
       showError('Error al vincular documentos existentes')
     }
   }
@@ -766,7 +767,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
 
         return document
       } catch (error) {
-        console.error('Upload error:', error)
+        clientLogger.error('Upload error:', error)
 
         // Update document status to error
         setDocuments(prev => prev.map(d =>

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const createTemplateSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido'),
@@ -148,7 +149,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching notification templates:', error);
+    logger.error('Error fetching notification templates:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -261,7 +262,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error creating notification template:', error);
+    logger.error('Error creating notification template:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

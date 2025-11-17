@@ -8,6 +8,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { logger } from '@/lib/logger';
 
 const exportSchema = z.object({
   format: z.enum(['pdf', 'excel', 'csv', 'json']),
@@ -404,7 +405,7 @@ export async function POST(request: NextRequest) {
       recordCount: data.length,
     });
   } catch (error) {
-    console.error('Export error:', error);
+    logger.error('Export error:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

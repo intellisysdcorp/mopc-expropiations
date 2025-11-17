@@ -28,6 +28,7 @@ import {
   Shield,
   Activity,
 } from 'lucide-react';
+import clientLogger from '@/lib/client-logger';
 
 interface ActivityItem {
   id: string;
@@ -113,7 +114,7 @@ export function UserActivityHistory({ userId, userName }: UserActivityHistoryPro
       setStats(data.statistics);
       setPagination(data.pagination);
     } catch (error) {
-      console.error('Error fetching activity history:', error);
+      clientLogger.error('Error fetching activity history:', error);
     } finally {
       setLoading(false);
     }
@@ -215,7 +216,7 @@ export function UserActivityHistory({ userId, userName }: UserActivityHistoryPro
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error exporting activity:', error);
+      clientLogger.error('Error exporting activity:', error);
     }
   };
 

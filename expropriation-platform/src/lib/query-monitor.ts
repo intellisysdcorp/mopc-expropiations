@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { performance } from 'perf_hooks'
 
 interface QueryMetrics {
@@ -34,7 +35,7 @@ class QueryPerformanceMonitor {
 
       // Log slow queries
       if (duration > this.slowQueryThreshold) {
-        console.warn(`🐌 Slow Query Detected (${duration.toFixed(2)}ms): ${queryType}`, {
+        logger.warn(`🐌 Slow Query Detected (${duration.toFixed(2)}ms): ${queryType}`, {
           duration,
           params: this.sanitizeParams(params)
         })
@@ -53,7 +54,7 @@ class QueryPerformanceMonitor {
     } catch (error) {
       const duration = performance.now() - startTime
 
-      console.error(`❌ Query Failed (${duration.toFixed(2)}ms): ${queryType}`, {
+      logger.error(`❌ Query Failed (${duration.toFixed(2)}ms): ${queryType}`, {
         error: error instanceof Error ? error.message : 'Unknown error',
         duration,
         params: this.sanitizeParams(params)

@@ -1,5 +1,6 @@
 'use client'
 
+import clientLogger from '@/lib/client-logger';
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -97,7 +98,7 @@ export default function CasesPage() {
       setCases(data.cases)
       setPagination(data.pagination)
     } catch (error) {
-      console.error('Error fetching cases:', error)
+      clientLogger.error('Error fetching cases:', error)
       toast.error('Error al cargar los casos')
     } finally {
       setLoading(false)

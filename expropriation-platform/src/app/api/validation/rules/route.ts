@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { ActivityType, ValidationRuleType } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const createRuleSchema = z.object({
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(rules);
   } catch (error) {
-    console.error('Error fetching validation rules:', error);
+    logger.error('Error fetching validation rules:', error);
     return NextResponse.json(
       { error: 'Failed to fetch validation rules' },
       { status: 500 }
@@ -114,7 +115,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Error creating validation rule:', error);
+    logger.error('Error creating validation rule:', error);
     return NextResponse.json(
       { error: 'Failed to create validation rule' },
       { status: 500 }

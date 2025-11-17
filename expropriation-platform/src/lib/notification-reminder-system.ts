@@ -1,6 +1,7 @@
 import { prisma } from './prisma';
 import { sendRealtimeNotification } from './websocket-server';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '@/lib/logger';
 
 export interface ReminderConfig {
   id: string;
@@ -53,7 +54,7 @@ class NotificationReminderSystem {
     // Start the reminder processor
     this.start();
 
-    console.log('Notification Reminder System initialized');
+    logger.info('Notification Reminder System initialized');
   }
 
   private async loadPendingJobs(): Promise<void> {
@@ -77,15 +78,15 @@ class NotificationReminderSystem {
         this.jobs.set(job.id, job as ReminderJob);
       });
 
-      console.log(`Loaded ${pendingJobs.length} pending reminder jobs`);
+      logger.info(`Loaded ${pendingJobs.length} pending reminder jobs`);
     } catch (error) {
-      console.error('Error loading pending reminder jobs:', error);
+      logger.error('Error loading pending reminder jobs:', error);
     }
   }
 
   public start(): void {
     if (this.isRunning) {
-      console.warn('Reminder system is already running');
+      logger.warn('Reminder system is already running');
       return;
     }
 
@@ -94,7 +95,7 @@ class NotificationReminderSystem {
       this.processReminders();
     }, 60000); // Check every minute
 
-    console.log('Reminder system started');
+    logger.info('Reminder system started');
   }
 
   public stop(): void {
@@ -108,7 +109,7 @@ class NotificationReminderSystem {
       this.interval = null;
     }
 
-    console.log('Reminder system stopped');
+    logger.info('Reminder system stopped');
   }
 
   private async processReminders(): Promise<void> {
@@ -122,7 +123,7 @@ class NotificationReminderSystem {
         return;
       }
 
-      console.log(`Processing ${jobsToExecute.length} reminder jobs`);
+      logger.info(`Processing ${jobsToExecute.length} reminder jobs`);
 
       // Process jobs in parallel with a limit
       const batchSize = 5;
@@ -132,7 +133,7 @@ class NotificationReminderSystem {
       }
 
     } catch (error) {
-      console.error('Error processing reminders:', error);
+      logger.error('Error processing reminders:', error);
     }
   }
 
@@ -164,7 +165,7 @@ class NotificationReminderSystem {
           const result = await this.sendReminder(config, entity);
           results.push({ entityId: entity.id, success: true, result });
         } catch (error) {
-          console.error(`Error sending reminder for entity ${entity.id}:`, error);
+          logger.error(`Error sending reminder for entity ${entity.id}:`, error);
           results.push({
             entityId: entity.id,
             success: false,
@@ -182,7 +183,7 @@ class NotificationReminderSystem {
       this.jobs.delete(job.id);
 
     } catch (error) {
-      console.error(`Error executing reminder job ${job.id}:`, error);
+      logger.error(`Error executing reminder job ${job.id}:`, error);
 
       await this.updateJobStatus(job.id, 'failed', {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -218,7 +219,7 @@ class NotificationReminderSystem {
         metadata: config.metadata as any
       };
     } catch (error) {
-      console.error('Error loading reminder config:', error);
+      logger.error('Error loading reminder config:', error);
       return null;
     }
   }
@@ -246,12 +247,12 @@ class NotificationReminderSystem {
           entities = await this.getMatchingUsers(filters, timeBefore, timeAfter);
           break;
         default:
-          console.warn(`Unknown entity type: ${entityType}`);
+          logger.warn(`Unknown entity type: ${entityType}`);
       }
 
       return entities;
     } catch (error) {
-      console.error('Error getting matching entities:', error);
+      logger.error('Error getting matching entities:', error);
       return [];
     }
   }
@@ -451,7 +452,7 @@ class NotificationReminderSystem {
 
         results.push({ recipientId: recipient.id, success: true, notificationId: notification.id });
       } catch (error) {
-        console.error(`Error sending reminder to ${recipient.id}:`, error);
+        logger.error(`Error sending reminder to ${recipient.id}:`, error);
         results.push({
           recipientId: recipient.id,
           success: false,
@@ -630,7 +631,7 @@ class NotificationReminderSystem {
         if (data?.error) job.error = data.error;
       }
     } catch (error) {
-      console.error(`Error updating job status for ${jobId}:`, error);
+      logger.error(`Error updating job status for ${jobId}:`, error);
     }
   }
 
@@ -690,7 +691,7 @@ class NotificationReminderSystem {
       this.jobs.delete(jobId);
       return true;
     } catch (error) {
-      console.error(`Error cancelling reminder job ${jobId}:`, error);
+      logger.error(`Error cancelling reminder job ${jobId}:`, error);
       return false;
     }
   }

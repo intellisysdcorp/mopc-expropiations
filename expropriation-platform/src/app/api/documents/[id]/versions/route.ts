@@ -7,6 +7,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 import { DocumentActionType } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const createVersionSchema = z.object({
@@ -91,7 +92,7 @@ export async function GET(
       versions: formattedVersions,
     });
   } catch (error) {
-    console.error('Error fetching document versions:', error);
+    logger.error('Error fetching document versions:', error);
     return NextResponse.json(
       { error: 'Failed to fetch document versions' },
       { status: 500 }
@@ -288,7 +289,7 @@ export async function POST(
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
-    console.error('Error creating document version:', error);
+    logger.error('Error creating document version:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import clientLogger from '@/lib/client-logger';
 
 interface CaseItem {
   id: string;
@@ -380,7 +381,7 @@ function CasesSection({
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error loading cases');
-      console.error('Error fetching cases:', err);
+      clientLogger.error('Error fetching cases:', err);
     } finally {
       setLoading(false);
     }

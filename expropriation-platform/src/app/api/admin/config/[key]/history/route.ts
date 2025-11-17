@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -74,7 +75,7 @@ export async function GET(
       }
     })
   } catch (error) {
-    console.error('Error fetching configuration history:', error)
+    logger.error('Error fetching configuration history:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

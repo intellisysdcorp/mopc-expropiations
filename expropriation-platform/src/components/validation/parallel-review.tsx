@@ -45,6 +45,7 @@ import {
   Settings,
   Activity
 } from 'lucide-react';
+import clientLogger from '@/lib/client-logger';
 
 // Types
 interface ReviewAssignment {
@@ -143,7 +144,7 @@ export function ParallelReview({
         setAssignments(data);
       }
     } catch (error) {
-      console.error('Error fetching review assignments:', error);
+      clientLogger.error('Error fetching review assignments:', error);
       toast({
         title: 'Error',
         description: 'Failed to fetch review assignments',
@@ -231,7 +232,7 @@ export function ParallelReview({
         throw new Error(error.error || 'Failed to submit review');
       }
     } catch (error) {
-      console.error('Error submitting review:', error);
+      clientLogger.error('Error submitting review:', error);
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to submit review',

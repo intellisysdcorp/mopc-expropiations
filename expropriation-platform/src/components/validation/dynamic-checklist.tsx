@@ -30,6 +30,7 @@ import {
   Eye,
   Edit
 } from 'lucide-react';
+import clientLogger from '@/lib/client-logger';
 
 // Types
 interface ChecklistItem {
@@ -125,7 +126,7 @@ export function DynamicChecklist({
         setCompletions(data);
       }
     } catch (error) {
-      console.error('Error fetching checklist data:', error);
+      clientLogger.error('Error fetching checklist data:', error);
       toast({
         title: 'Error',
         description: 'Failed to load checklist data',
@@ -219,7 +220,7 @@ export function DynamicChecklist({
         throw new Error('Failed to update completion');
       }
     } catch (error) {
-      console.error('Error updating completion:', error);
+      clientLogger.error('Error updating completion:', error);
       toast({
         title: 'Error',
         description: 'Failed to update checklist item',
@@ -265,7 +266,7 @@ export function DynamicChecklist({
         });
       }
     } catch (error) {
-      console.error('Error updating notes:', error);
+      clientLogger.error('Error updating notes:', error);
     }
   };
 

@@ -29,6 +29,7 @@ import {
   Ban,
   Play,
 } from 'lucide-react';
+import clientLogger from '@/lib/client-logger';
 
 interface StatusChange {
   id: string;
@@ -86,7 +87,7 @@ export function DepartmentStatus({
       setStatusHistory(data.statusHistory || []);
     } catch (error) {
       toast.error('Error al cargar historial de estado');
-      console.error('Error fetching status history:', error);
+      clientLogger.error('Error fetching status history:', error);
     } finally {
       setLoading(false);
     }

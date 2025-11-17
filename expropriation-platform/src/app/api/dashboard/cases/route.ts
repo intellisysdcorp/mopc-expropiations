@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { CaseStatus, Priority } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
         return await getRecentCases(baseWhere, limit);
     }
   } catch (error) {
-    console.error('Error fetching cases:', error);
+    logger.error('Error fetching cases:', error);
     return NextResponse.json(
       { error: 'Failed to fetch cases' },
       { status: 500 }

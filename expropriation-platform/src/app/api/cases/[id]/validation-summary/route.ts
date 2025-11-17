@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
+import { logger } from '@/lib/logger';
 
 // GET /api/cases/[id]/validation-summary - Get comprehensive validation summary
 export async function GET(
@@ -218,7 +219,7 @@ export async function GET(
 
     return NextResponse.json(summary);
   } catch (error) {
-    console.error('Error fetching validation summary:', error);
+    logger.error('Error fetching validation summary:', error);
     return NextResponse.json(
       { error: 'Failed to fetch validation summary' },
       { status: 500 }

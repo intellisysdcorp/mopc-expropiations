@@ -4,6 +4,7 @@ import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
+import clientLogger from '@/lib/client-logger'
 
 interface ErrorBoundaryState {
   hasError: boolean
@@ -38,7 +39,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error Boundary caught an error:', error, errorInfo)
+    clientLogger.error('Error Boundary caught an error:', error, errorInfo)
 
     this.setState({
       error,
@@ -60,7 +61,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
         userAgent: window.navigator.userAgent,
         url: window.location.href
       }
-      console.error('Performance Error Report:', report)
+      clientLogger.error('Performance Error Report:', report)
     }
   }
 
@@ -196,7 +197,7 @@ export function withErrorBoundary<P extends object>(
 // Custom hook for error handling in functional components
 export function useErrorHandler() {
   return (error: Error, errorInfo?: string) => {
-    console.error('Error caught by useErrorHandler:', error, errorInfo)
+    clientLogger.error('Error caught by useErrorHandler:', error, errorInfo)
 
     if (typeof window !== 'undefined') {
       const report = {
@@ -207,7 +208,7 @@ export function useErrorHandler() {
         userAgent: window.navigator.userAgent,
         url: window.location.href
       }
-      console.error('Handled Error Report:', report)
+      clientLogger.error('Handled Error Report:', report)
     }
   }
 }

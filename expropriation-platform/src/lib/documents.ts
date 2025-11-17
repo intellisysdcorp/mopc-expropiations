@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs/promises';
 import { DocumentFormData } from '@/types/client';
+import { logger } from '@/lib/logger';
 
 // File upload configuration
 export const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
@@ -106,7 +107,7 @@ async function extractTextContent(filePath: string, mimeType: string): Promise<s
         return '';
     }
   } catch (error) {
-    console.error('Error extracting text content:', error);
+    logger.error('Error extracting text content:', error);
     return '';
   }
 }

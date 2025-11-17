@@ -44,6 +44,7 @@ import {
   FileText,
   Tag
 } from 'lucide-react';
+import clientLogger from '@/lib/client-logger';
 
 // Types
 interface Observation {
@@ -174,7 +175,7 @@ export function ObservationSystem({
         setObservations(data);
       }
     } catch (error) {
-      console.error('Error fetching observations:', error);
+      clientLogger.error('Error fetching observations:', error);
       toast({
         title: 'Error',
         description: 'Failed to fetch observations',
@@ -250,7 +251,7 @@ export function ObservationSystem({
         throw new Error(error.error || 'Failed to create observation');
       }
     } catch (error) {
-      console.error('Error creating observation:', error);
+      clientLogger.error('Error creating observation:', error);
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to create observation',
@@ -316,7 +317,7 @@ export function ObservationSystem({
         throw new Error(error.error || 'Failed to create response');
       }
     } catch (error) {
-      console.error('Error creating response:', error);
+      clientLogger.error('Error creating response:', error);
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to create response',

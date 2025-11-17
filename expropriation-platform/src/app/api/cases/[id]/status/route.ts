@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -186,7 +187,7 @@ export async function PUT(
 
     return NextResponse.json(updatedCase)
   } catch (error) {
-    console.error('Error updating case status:', error)
+    logger.error('Error updating case status:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

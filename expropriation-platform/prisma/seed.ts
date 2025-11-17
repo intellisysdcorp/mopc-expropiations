@@ -1,10 +1,11 @@
 import { PrismaClient, CaseStage, CaseStatus, Priority } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { logger } from '@/lib/logger';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('🌱 Starting database seeding...');
+  logger.info('🌱 Starting database seeding...');
 
   // Create roles
   const superAdminRole = await prisma.role.upsert({
@@ -488,25 +489,25 @@ async function main() {
 
   // Sample cases will be created later after authentication is tested
 
-  console.log('✅ Database seeding completed successfully!');
-  console.log('');
-  console.log('👤 Created users:');
-  console.log('   - admin@mopc.gob.do / admin123 (Super Admin)');
-  console.log('   - dept.admin@mopc.gob.do / admin123 (Department Admin)');
-  console.log('   - analyst@mopc.gob.do / admin123 (Analyst)');
-  console.log('');
-  console.log('🏢 Created departments:');
-  console.log('   - MOPC (Main)');
-  console.log('   - LEGAL (Child of MOPC)');
-  console.log('   - TECHNICAL (Child of MOPC)');
-  console.log('');
-  console.log('⚙️ Created system configuration');
-  console.log('📋 Sample cases will be created later');
+  logger.info(`✅ Database seeding completed successfully!
+
+👤 Created users:
+   - admin@mopc.gob.do / admin123 (Super Admin)
+   - dept.admin@mopc.gob.do / admin123 (Department Admin)
+   - analyst@mopc.gob.do / admin123 (Analyst)
+
+🏢 Created departments:
+   - MOPC (Main)
+   - LEGAL (Child of MOPC)
+   - TECHNICAL (Child of MOPC)
+
+⚙️ Created system configuration
+📋 Sample cases will be created later`);
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Error during seeding:', e);
+    logger.error('❌ Error during seeding:', e);
     process.exit(1);
   })
   .finally(async () => {

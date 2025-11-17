@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // GET /api/time-tracking/analytics - Get time tracking analytics
 export async function GET(request: NextRequest) {
@@ -142,7 +143,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(analytics);
   } catch (error) {
-    console.error('Error fetching time tracking analytics:', error);
+    logger.error('Error fetching time tracking analytics:', error);
     return NextResponse.json(
       { error: 'Failed to fetch time tracking analytics' },
       { status: 500 }

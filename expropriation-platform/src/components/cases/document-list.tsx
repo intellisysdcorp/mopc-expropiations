@@ -12,7 +12,6 @@ import {
   Filter,
   MoreHorizontal,
   History,
-  Tag,
   Calendar,
   User,
   AlertTriangle,
@@ -32,8 +31,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   DropdownMenu,
@@ -42,19 +39,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { toast } from 'react-hot-toast'
 
-import { Document, DocumentSearchInput } from '@/types/client'
+import { Document } from '@/types/client'
 import { formatFileSize, formatDistanceToNow } from '@/lib/utils'
+import clientLogger from '@/lib/client-logger';
 
 interface DocumentListProps {
   caseId: string
@@ -157,7 +147,7 @@ export function DocumentList({ caseId, onDocumentSelect, refreshTrigger }: Docum
         setPagination(prev => ({ ...prev, page: 1 }))
       }
     } catch (error) {
-      console.error('Error fetching documents:', error)
+      clientLogger.error('Error fetching documents:', error)
       toast.error('Error al cargar los documentos')
     } finally {
       setLoading(false)
@@ -185,7 +175,7 @@ export function DocumentList({ caseId, onDocumentSelect, refreshTrigger }: Docum
 
       toast.success('Documento descargado exitosamente')
     } catch (error) {
-      console.error('Download error:', error)
+      clientLogger.error('Download error:', error)
       toast.error('Error al descargar el documento')
     }
   }
@@ -209,7 +199,7 @@ export function DocumentList({ caseId, onDocumentSelect, refreshTrigger }: Docum
       toast.success('Documento eliminado exitosamente')
       fetchDocuments()
     } catch (error) {
-      console.error('Delete error:', error)
+      clientLogger.error('Delete error:', error)
       toast.error('Error al eliminar el documento')
     }
   }

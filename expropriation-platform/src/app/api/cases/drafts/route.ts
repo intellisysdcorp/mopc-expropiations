@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -170,7 +171,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(newDraft, { status: 201 })
   } catch (error) {
-    console.error('Error creating draft case:', error)
+    logger.error('Error creating draft case:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -279,7 +280,7 @@ export async function GET(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Error fetching draft cases:', error)
+    logger.error('Error fetching draft cases:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

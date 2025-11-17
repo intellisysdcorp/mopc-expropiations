@@ -21,6 +21,7 @@ import {
   Filter,
   RefreshCw
 } from 'lucide-react';
+import clientLogger from '@/lib/client-logger';
 
 interface FlowNode {
   id: string;
@@ -196,7 +197,7 @@ export function CaseFlowVisualization({ departmentId }: CaseFlowVisualizationPro
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error loading flow data');
-      console.error('Error fetching flow data:', err);
+      clientLogger.error('Error fetching flow data:', err);
     } finally {
       setLoading(false);
     }
@@ -279,7 +280,7 @@ export function CaseFlowVisualization({ departmentId }: CaseFlowVisualizationPro
   const dataToDisplay = flowData || mockFlowData;
 
   const handleStageClick = (stage: string) => {
-    console.log('Clicked stage:', stage);
+    clientLogger.info('Clicked stage:', stage);
     // Navigate to detailed stage view
   };
 

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { ActivityType, ApprovalStatus } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const createWorkflowSchema = z.object({
@@ -152,7 +153,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(workflows);
   } catch (error) {
-    console.error('Error fetching approval workflows:', error);
+    logger.error('Error fetching approval workflows:', error);
     return NextResponse.json(
       { error: 'Failed to fetch approval workflows' },
       { status: 500 }
@@ -289,7 +290,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Error creating approval workflow:', error);
+    logger.error('Error creating approval workflow:', error);
     return NextResponse.json(
       { error: 'Failed to create approval workflow' },
       { status: 500 }

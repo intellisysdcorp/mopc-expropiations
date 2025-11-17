@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { format, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
+import { logger } from '@/lib/logger';
 
 const calendarSchema = z.object({
   start: z.string().datetime(),
@@ -398,7 +399,7 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('Calendar error:', error);
+    logger.error('Calendar error:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

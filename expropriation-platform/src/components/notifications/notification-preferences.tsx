@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
+import clientLogger from '@/lib/client-logger';
 
 interface NotificationPreferences {
   enableEmailNotifications: boolean;
@@ -136,7 +137,7 @@ export function NotificationPreferences({ className, onSave }: NotificationPrefe
       setPreferences(data.preferences);
       setOriginalPreferences(data.preferences);
     } catch (error) {
-      console.error('Error fetching preferences:', error);
+      clientLogger.error('Error fetching preferences:', error);
       toast.error('Error al cargar preferencias');
     } finally {
       setLoading(false);
@@ -168,7 +169,7 @@ export function NotificationPreferences({ className, onSave }: NotificationPrefe
       onSave?.(data.preferences);
 
     } catch (error) {
-      console.error('Error saving preferences:', error);
+      clientLogger.error('Error saving preferences:', error);
       toast.error('Error al guardar preferencias');
     } finally {
       setSaving(false);
@@ -196,7 +197,7 @@ export function NotificationPreferences({ className, onSave }: NotificationPrefe
       onSave?.(data.preferences);
 
     } catch (error) {
-      console.error('Error resetting preferences:', error);
+      clientLogger.error('Error resetting preferences:', error);
       toast.error('Error al restablecer preferencias');
     } finally {
       setSaving(false);

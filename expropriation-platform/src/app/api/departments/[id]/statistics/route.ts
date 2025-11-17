@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 // GET /api/departments/[id]/statistics - Get department statistics
 export async function GET(
@@ -284,7 +285,7 @@ export async function GET(
 
     return NextResponse.json(statistics);
   } catch (error) {
-    console.error('Error fetching department statistics:', error);
+    logger.error('Error fetching department statistics:', error);
     return NextResponse.json(
       { error: 'Error al obtener estadísticas del departamento' },
       { status: 500 }

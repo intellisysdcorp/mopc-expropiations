@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { logger } from '@/lib/logger';
 
 // PUT /api/meetings/[id]/participants/[participantId] - Update participant
 export async function PUT(
@@ -184,7 +185,7 @@ export async function PUT(
 
     return NextResponse.json(updatedParticipant);
   } catch (error) {
-    console.error("Error updating participant:", error);
+    logger.error("Error updating participant:", error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Validation failed", details: error.errors },
@@ -307,7 +308,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: "Participant removed successfully" });
   } catch (error) {
-    console.error("Error removing participant:", error);
+    logger.error("Error removing participant:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

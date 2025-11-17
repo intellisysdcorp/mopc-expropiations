@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { logActivity } from '@/lib/activity-logger';
+import { logger } from '@/lib/logger';
 
 // GET /api/users/export - Export users data
 export async function GET(request: NextRequest) {
@@ -224,7 +225,7 @@ export async function GET(request: NextRequest) {
         );
     }
   } catch (error) {
-    console.error('Error exporting users:', error);
+    logger.error('Error exporting users:', error);
     return NextResponse.json(
       { error: 'Error al exportar usuarios' },
       { status: 500 }

@@ -2,6 +2,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import * as crypto from 'crypto';
 import { validateFileSecurity, generateSecureFileName, validateFilePath } from './file-security';
+import { logger } from '@/lib/logger';
 
 // Upload configuration
 const UPLOAD_TEMP_DIR = path.join(process.cwd(), 'uploads', 'temp');
@@ -35,14 +36,14 @@ async function cleanupTempFiles() {
         const stats = await fs.stat(filePath);
         if (now - stats.mtime.getTime() > MAX_TEMP_FILE_AGE) {
           await fs.unlink(filePath);
-          console.log(`Cleaned up old temporary file: ${file}`);
+          logger.info(`Cleaned up old temporary file: ${file}`);
         }
       } catch (error) {
-        console.error(`Error checking temp file ${file}:`, error);
+        logger.error(`Error checking temp file ${file}:`, error);
       }
     }
   } catch (error) {
-    console.error('Error cleaning up temp files:', error);
+    logger.error('Error cleaning up temp files:', error);
   }
 }
 
@@ -140,7 +141,7 @@ export async function atomicFileUpload(
       try {
         await callback();
       } catch (error) {
-        console.error('Error during cleanup:', error);
+        logger.error('Error during cleanup:', error);
       }
     }
   };
@@ -296,7 +297,7 @@ export async function atomicFileUpload(
     };
 
   } catch (error) {
-    console.error('Error during atomic file upload:', error);
+    logger.error('Error during atomic file upload:', error);
 
     // Cleanup on error
     await cleanup();
@@ -338,7 +339,7 @@ export async function atomicMultipleFileUpload(
           try {
             await fs.unlink(uploadedFile.filePath);
           } catch (error) {
-            console.error(`Error cleaning up file ${uploadedFile.fileName}:`, error);
+            logger.error(`Error cleaning up file ${uploadedFile.fileName}:`, error);
           }
         }
 
@@ -370,7 +371,7 @@ export async function atomicMultipleFileUpload(
       try {
         await fs.unlink(uploadedFile.filePath);
       } catch (cleanupError) {
-        console.error(`Error cleaning up file ${uploadedFile.fileName}:`, cleanupError);
+        logger.error(`Error cleaning up file ${uploadedFile.fileName}:`, cleanupError);
       }
     }
 
@@ -396,20 +397,20 @@ export async function verifyFileIntegrity(
 
     // Check file size
     if (stats.size !== expectedSize) {
-      console.error(`File size mismatch: expected ${expectedSize}, got ${stats.size}`);
+      logger.error(`File size mismatch: expected ${expectedSize}, got ${stats.size}`);
       return false;
     }
 
     // Check file hash
     const actualHash = await calculateFileHash(filePath);
     if (actualHash !== expectedHash) {
-      console.error(`File hash mismatch: expected ${expectedHash}, got ${actualHash}`);
+      logger.error(`File hash mismatch: expected ${expectedHash}, got ${actualHash}`);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('Error verifying file integrity:', error);
+    logger.error('Error verifying file integrity:', error);
     return false;
   }
 }
@@ -447,7 +448,7 @@ export async function getUploadStatistics(): Promise<{
     finalFilesSize = finalStats.size;
 
   } catch (error) {
-    console.error('Error getting upload statistics:', error);
+    logger.error('Error getting upload statistics:', error);
   }
 
   return {

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { logger } from '@/lib/logger';
 
 interface CaseCreationDocument {
   file: File
@@ -74,7 +75,7 @@ export function useDocumentSubmission() {
 
         return document
       } catch (error) {
-        console.error('Upload error:', error)
+        logger.error('Upload error:', error)
 
         // Update document status to error
         setDocuments(prev => prev.map(d =>
@@ -127,7 +128,7 @@ export function useDocumentSubmission() {
         message: `${selectedExistingDocuments.length} documento(s) existente(s) vinculado(s)`
       }
     } catch (error) {
-      console.error('Error linking existing documents:', error)
+      logger.error('Error linking existing documents:', error)
       return {
         success: false,
         message: 'Error al vincular documentos existentes'

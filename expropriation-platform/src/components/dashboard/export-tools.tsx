@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import clientLogger from '@/lib/client-logger';
 
 interface ExportOptions {
   format: 'pdf' | 'excel';
@@ -152,7 +153,7 @@ export function ExportTools({ departmentId, availableData }: ExportToolsProps) {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Template download error:', error);
+      clientLogger.error('Template download error:', error);
     } finally {
       setIsExporting(false);
     }

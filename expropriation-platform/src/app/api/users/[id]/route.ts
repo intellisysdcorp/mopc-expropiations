@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { logActivity } from '@/lib/activity-logger';
+import { logger } from '@/lib/logger';
 
 // Schema for user updates
 const updateUserSchema = z.object({
@@ -92,7 +93,7 @@ export async function GET(
 
     return NextResponse.json(sanitizedUser);
   } catch (error) {
-    console.error('Error fetching user:', error);
+    logger.error('Error fetching user:', error);
     return NextResponse.json(
       { error: 'Error al obtener usuario' },
       { status: 500 }
@@ -260,7 +261,7 @@ export async function PUT(
       );
     }
 
-    console.error('Error updating user:', error);
+    logger.error('Error updating user:', error);
     return NextResponse.json(
       { error: 'Error al actualizar usuario' },
       { status: 500 }
@@ -335,7 +336,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Usuario eliminado correctamente' });
   } catch (error) {
-    console.error('Error deleting user:', error);
+    logger.error('Error deleting user:', error);
     return NextResponse.json(
       { error: 'Error al eliminar usuario' },
       { status: 500 }

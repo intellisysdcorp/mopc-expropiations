@@ -34,6 +34,7 @@ import { SecurityConfigurationPanel } from './security-configuration-panel'
 import { UsageStatisticsPanel } from './usage-statistics-panel'
 import { NotificationConfigurationPanel } from './notification-configuration-panel'
 import { AdminDashboardSkeleton } from './admin-dashboard-skeleton'
+import clientLogger from '@/lib/client-logger';
 
 interface SystemStats {
   totalUsers: number
@@ -78,7 +79,7 @@ export function AdminDashboard() {
         setStats(data)
       }
     } catch (error) {
-      console.error('Error fetching system stats:', error)
+      clientLogger.error('Error fetching system stats:', error)
     } finally {
       setLoading(false)
     }
@@ -92,7 +93,7 @@ export function AdminDashboard() {
         setAlerts(data.slice(0, 5)) // Show only latest 5 alerts
       }
     } catch (error) {
-      console.error('Error fetching system alerts:', error)
+      clientLogger.error('Error fetching system alerts:', error)
     }
   }
 

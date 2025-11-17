@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { ActivityType } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 const revokeSignatureSchema = z.object({
   reason: z.string().min(1, 'Revocation reason is required'),
@@ -104,7 +105,7 @@ export async function POST(
       );
     }
 
-    console.error('Error revoking digital signature:', error);
+    logger.error('Error revoking digital signature:', error);
     return NextResponse.json(
       { error: 'Failed to revoke digital signature' },
       { status: 500 }

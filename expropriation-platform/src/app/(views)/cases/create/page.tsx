@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 
 import { CaseFormModular } from '@/components/dynamic'
+import clientLogger from '@/lib/client-logger';
 
 export default function CreateCasePage() {
   const { data: session, status } = useSession()
@@ -48,7 +49,7 @@ export default function CreateCasePage() {
 
       router.push('/cases')
     } catch (error) {
-      console.error('Error creating case:', error)
+      clientLogger.error('Error creating case:', error)
       // Re-throw to let the form component handle the error display
       throw error
     }

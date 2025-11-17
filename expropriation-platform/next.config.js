@@ -106,6 +106,7 @@ const nextConfig = withBundleAnalyzer({
     }
     return config;
   },
+
   // Configure headers for security
   async headers() {
     const headers = [

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { ActivityType } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 // Validation schemas
 const createChecklistTemplateSchema = z.object({
@@ -62,7 +63,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(templates);
   } catch (error) {
-    console.error('Error fetching checklist templates:', error);
+    logger.error('Error fetching checklist templates:', error);
     return NextResponse.json(
       { error: 'Failed to fetch checklist templates' },
       { status: 500 }
@@ -134,7 +135,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error('Error creating checklist template:', error);
+    logger.error('Error creating checklist template:', error);
     return NextResponse.json(
       { error: 'Failed to create checklist template' },
       { status: 500 }

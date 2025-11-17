@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import fs from 'fs/promises';
+import path from 'path';
+
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // Define document templates for different stages and document types
 const DOCUMENT_TEMPLATES = {
@@ -282,7 +285,7 @@ export async function GET(
       currentStage: case_.currentStage,
     });
   } catch (error) {
-    console.error('Error fetching document templates:', error);
+    logger.error('Error fetching document templates:', error);
     return NextResponse.json(
       { error: 'Failed to fetch templates' },
       { status: 500 }
@@ -372,9 +375,6 @@ export async function POST(
     }
 
     // Create a temporary document file
-    const fs = await import('fs/promises');
-    const path = await import('path');
-
     const fileName = `${template.title.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}.docx`;
     const tempDir = path.join(process.cwd(), 'temp');
 
@@ -466,7 +466,7 @@ export async function POST(
       updatedAt: document.updatedAt.toISOString(),
     });
   } catch (error) {
-    console.error('Error creating document from template:', error);
+    logger.error('Error creating document from template:', error);
     return NextResponse.json(
       { error: 'Failed to create document from template' },
       { status: 500 }

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { logActivity } from '@/lib/activity-logger'
+import { logger } from '@/lib/logger'
 import { CreateCaseSchema, CaseSearchSchema } from '@/lib/validations/case'
 
 // GET /api/cases - List cases with filtering and pagination
@@ -201,7 +202,7 @@ export async function GET(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Error fetching cases:', error)
+    logger.error('Error fetching cases:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -382,7 +383,7 @@ export async function POST(request: NextRequest) {
         }
       }
     })
-    console.log(newCase);
+    logger.info(newCase);
 
     // Log case creation
     await logActivity({
@@ -418,7 +419,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(newCase, { status: 201 })
   } catch (error) {
-    console.error('Error creating case:', error)
+    logger.error('Error creating case:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

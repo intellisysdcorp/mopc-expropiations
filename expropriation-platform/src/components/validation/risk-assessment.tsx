@@ -44,6 +44,7 @@ import {
   Download,
   RefreshCw
 } from 'lucide-react';
+import clientLogger from '@/lib/client-logger';
 
 // Types
 interface RiskAssessment {
@@ -168,7 +169,7 @@ export function RiskAssessment({
         setAssessments(data);
       }
     } catch (error) {
-      console.error('Error fetching risk assessments:', error);
+      clientLogger.error('Error fetching risk assessments:', error);
       toast({
         title: 'Error',
         description: 'Failed to fetch risk assessments',
@@ -188,7 +189,7 @@ export function RiskAssessment({
         setAnalytics(data);
       }
     } catch (error) {
-      console.error('Error fetching risk analytics:', error);
+      clientLogger.error('Error fetching risk analytics:', error);
     }
   };
 
@@ -229,7 +230,7 @@ export function RiskAssessment({
         throw new Error(error.error || 'Risk assessment failed');
       }
     } catch (error) {
-      console.error('Error running risk assessment:', error);
+      clientLogger.error('Error running risk assessment:', error);
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Risk assessment failed',
@@ -325,7 +326,7 @@ export function RiskAssessment({
         throw new Error(error.error || 'Failed to create assessment');
       }
     } catch (error) {
-      console.error('Error creating assessment:', error);
+      clientLogger.error('Error creating assessment:', error);
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to create assessment',

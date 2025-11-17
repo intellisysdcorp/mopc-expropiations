@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
+import { logger } from '@/lib/logger';
 
 // GET /api/departments/[id]/users - Get users in a department
 export async function GET(
@@ -115,7 +116,7 @@ export async function GET(
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error fetching department users:', error);
+    logger.error('Error fetching department users:', error);
     return NextResponse.json(
       { error: 'Error al obtener usuarios del departamento' },
       { status: 500 }
@@ -311,7 +312,7 @@ export async function POST(
       );
     }
 
-    console.error('Error transferring users:', error);
+    logger.error('Error transferring users:', error);
     return NextResponse.json(
       { error: 'Error al transferir usuarios' },
       { status: 500 }

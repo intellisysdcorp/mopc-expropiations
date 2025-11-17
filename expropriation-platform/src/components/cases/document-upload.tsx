@@ -32,6 +32,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Document, DocumentFormData } from '@/types/client'
 import { getSuggestedDocumentTypes } from '@/lib/documents'
+import clientLogger from '@/lib/client-logger';
 
 interface DocumentUploadProps {
   caseId: string
@@ -224,7 +225,7 @@ export function DocumentUpload({
       onUploadComplete?.(document)
 
     } catch (error) {
-      console.error('Upload error:', error)
+      clientLogger.error('Upload error:', error)
       setUploads(prev => prev.map((u, i) =>
         i === uploadIndex ? {
           ...u,

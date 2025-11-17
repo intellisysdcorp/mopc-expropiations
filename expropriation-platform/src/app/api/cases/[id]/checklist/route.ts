@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const checklistItemSchema = z.object({
   title: z.string().min(1, 'El título es requerido'),
@@ -145,7 +146,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Error fetching checklist:', error);
+    logger.error('Error fetching checklist:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -236,7 +237,7 @@ export async function POST(
     });
 
   } catch (error) {
-    console.error('Error creating checklist item:', error);
+    logger.error('Error creating checklist item:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -413,7 +414,7 @@ export async function PUT(
     });
 
   } catch (error) {
-    console.error('Error updating checklist completion:', error);
+    logger.error('Error updating checklist completion:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { z } from 'zod';
+
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
-import crypto from 'crypto';
-import path from 'path';
-import fs from 'fs/promises';
+import { logger } from '@/lib/logger';
+import { createDocumentVersion } from '@/lib/documents';
 
 // Validation schemas
 const createVersionSchema = z.object({
@@ -140,7 +140,7 @@ export async function GET(
       currentVersion: document,
     });
   } catch (error) {
-    console.error('Error fetching document versions:', error);
+    logger.error('Error fetching document versions:', error);
     return NextResponse.json(
       { error: 'Failed to fetch document versions' },
       { status: 500 }
@@ -237,8 +237,6 @@ export async function POST(
 
     if (file) {
       // Handle file upload for new version
-      const { createDocumentVersion } = await import('@/lib/documents');
-
       newVersion = await createDocumentVersion({
         documentId,
         file,
@@ -354,7 +352,7 @@ export async function POST(
       version: newVersion,
     }, { status: 201 });
   } catch (error) {
-    console.error('Error creating document version:', error);
+    logger.error('Error creating document version:', error);
     return NextResponse.json(
       { error: 'Failed to create document version' },
       { status: 500 }
@@ -362,94 +360,6 @@ export async function POST(
   }
 }
 
-// Helper function to create document version with file
-async function createDocumentVersion({
-  documentId,
-  file,
-  versionData,
-  userId,
-  versionNumber,
-}: {
-  documentId: string;
-  file: File;
-  versionData: any;
-  userId: string;
-  versionNumber: number;
-}) {
-  const UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'documents', 'versions');
-
-  // Ensure upload directory exists
-  try {
-    await fs.access(UPLOAD_DIR);
-  } catch {
-    await fs.mkdir(UPLOAD_DIR, { recursive: true });
-  }
-
-  // Generate unique file path
-  const timestamp = Date.now();
-  const random = crypto.randomBytes(8).toString('hex');
-  const ext = path.extname(file.name);
-  const name = path.basename(file.name, ext);
-  const fileName = `v${versionNumber}-${timestamp}-${random}-${name}${ext}`;
-  const filePath = path.join(UPLOAD_DIR, fileName);
-
-  // Save file to disk
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await fs.writeFile(filePath, buffer);
-
-  // Calculate file hash
-  const fileHash = crypto.createHash('sha256').update(buffer).digest('hex');
-
-  // Create document version record
-  const version = await prisma.documentVersion.create({
-    data: {
-      documentId,
-      version: versionNumber,
-      title: versionData.title || file.name,
-      description: versionData.description,
-      fileName: fileName,
-      filePath: path.relative(process.cwd(), filePath),
-      fileSize: file.size,
-      mimeType: file.type,
-      fileHash,
-      changeDescription: versionData.changeDescription,
-      isDraft: versionData.isDraft,
-      createdById: userId,
-      metadata: versionData.customFields || {},
-    },
-    include: {
-      uploadedBy: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-        },
-      },
-    },
-  });
-
-  // Create history entry
-  await prisma.documentHistory.create({
-    data: {
-      documentId,
-      action: 'VERSION_CREATED',
-      description: `Version ${versionNumber} uploaded: ${file.name}`,
-      userId,
-      fileSize: file.size,
-      fileName: file.name,
-      filePath: path.relative(process.cwd(), filePath),
-      metadata: {
-        originalFileName: file.name,
-        mimeType: file.type,
-        uploadTimestamp: new Date().toISOString(),
-        versionNumber,
-      },
-    },
-  });
-
-  return version;
-}
 
 // Helper functions
 async function hasDepartmentAccess(userId: string, departmentId: string): Promise<boolean> {

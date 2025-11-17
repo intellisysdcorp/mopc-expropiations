@@ -6,6 +6,7 @@ import jsPDF from 'jspdf';
 import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { logger } from '@/lib/logger';
 
 interface ExportOptions {
   format: 'pdf' | 'excel';
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     throw new Error('Unsupported export format');
   } catch (error) {
-    console.error('Export error:', error);
+    logger.error('Export error:', error);
     return NextResponse.json(
       { error: 'Failed to generate export' },
       { status: 500 }

@@ -1,5 +1,6 @@
 import { prisma } from './prisma';
 import nodemailer from 'nodemailer';
+import { logger } from '@/lib/logger';
 
 export interface EmailConfig {
   host: string;
@@ -49,7 +50,7 @@ class EmailQueueProcessor {
       this.config = await this.loadEmailConfig();
 
       if (!this.config) {
-        console.warn('Email configuration not found. Email processing disabled.');
+        logger.warn('Email configuration not found. Email processing disabled.');
         return;
       }
 
@@ -66,13 +67,13 @@ class EmailQueueProcessor {
 
       // Verify the transporter
       await this.transporter.verify();
-      console.log('Email transporter initialized successfully');
+      logger.info('Email transporter initialized successfully');
 
       // Start processing
       this.start();
 
     } catch (error) {
-      console.error('Failed to initialize email processor:', error);
+      logger.error('Failed to initialize email processor:', error);
     }
   }
 
@@ -138,7 +139,7 @@ class EmailQueueProcessor {
       return null;
 
     } catch (error) {
-      console.error('Error loading email configuration:', error);
+      logger.error('Error loading email configuration:', error);
       return null;
     }
   }
@@ -153,7 +154,7 @@ class EmailQueueProcessor {
       this.processEmailQueue();
     }, 30000); // Process every 30 seconds
 
-    console.log('Email queue processor started');
+    logger.info('Email queue processor started');
   }
 
   public stop(): void {
@@ -167,7 +168,7 @@ class EmailQueueProcessor {
       this.processingInterval = null;
     }
 
-    console.log('Email queue processor stopped');
+    logger.info('Email queue processor stopped');
   }
 
   private async processEmailQueue(): Promise<void> {
@@ -200,7 +201,7 @@ class EmailQueueProcessor {
         return;
       }
 
-      console.log(`Processing ${pendingEmails.length} emails`);
+      logger.info(`Processing ${pendingEmails.length} emails`);
 
       // Process emails in parallel with a limit
       const batchSize = 5;
@@ -210,7 +211,7 @@ class EmailQueueProcessor {
       }
 
     } catch (error) {
-      console.error('Error processing email queue:', error);
+      logger.error('Error processing email queue:', error);
     }
   }
 
@@ -252,7 +253,7 @@ class EmailQueueProcessor {
         }
       });
 
-      console.log(`Email sent successfully: ${emailQueueItem.id} -> ${emailQueueItem.to}`);
+      logger.info(`Email sent successfully: ${emailQueueItem.id} -> ${emailQueueItem.to}`);
 
       // Update notification delivery record
       if (emailQueueItem.metadata?.notificationId) {
@@ -271,7 +272,7 @@ class EmailQueueProcessor {
       }
 
     } catch (error) {
-      console.error(`Failed to send email ${emailQueueItem.id}:`, error);
+      logger.error(`Failed to send email ${emailQueueItem.id}:`, error);
 
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       const attempts = emailQueueItem.attempts + 1;
@@ -364,7 +365,7 @@ class EmailQueueProcessor {
       return emailQueue.id;
 
     } catch (error) {
-      console.error('Error queuing email:', error);
+      logger.error('Error queuing email:', error);
       throw error;
     }
   }
@@ -396,7 +397,7 @@ class EmailQueueProcessor {
       return emailQueues;
 
     } catch (error) {
-      console.error('Error queuing bulk emails:', error);
+      logger.error('Error queuing bulk emails:', error);
       throw error;
     }
   }
@@ -478,11 +479,11 @@ class EmailQueueProcessor {
         }
       });
 
-      console.log(`Retried ${updated.count} failed emails`);
+      logger.info(`Retried ${updated.count} failed emails`);
       return updated.count;
 
     } catch (error) {
-      console.error('Error retrying failed emails:', error);
+      logger.error('Error retrying failed emails:', error);
       throw error;
     }
   }
@@ -503,11 +504,11 @@ class EmailQueueProcessor {
         }
       });
 
-      console.log(`Cleaned up ${deleted.count} old emails`);
+      logger.info(`Cleaned up ${deleted.count} old emails`);
       return deleted.count;
 
     } catch (error) {
-      console.error('Error cleaning up old emails:', error);
+      logger.error('Error cleaning up old emails:', error);
       throw error;
     }
   }

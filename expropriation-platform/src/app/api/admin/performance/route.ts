@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
@@ -92,7 +93,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response)
 
   } catch (error) {
-    console.error('Error fetching performance metrics:', error)
+    logger.error('Error fetching performance metrics:', error)
     return NextResponse.json(
       {
         success: false,
@@ -125,7 +126,7 @@ export async function DELETE(_request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error clearing performance metrics:', error)
+    logger.error('Error clearing performance metrics:', error)
     return NextResponse.json(
       {
         success: false,

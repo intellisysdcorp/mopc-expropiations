@@ -36,6 +36,7 @@ import {
   Search,
   Filter
 } from 'lucide-react'
+import clientLogger from '@/lib/client-logger';
 
 interface SystemConfig {
   id: string
@@ -107,7 +108,7 @@ export function SystemConfigurationPanel() {
         setConfigs(data)
       }
     } catch (error) {
-      console.error('Error fetching configs:', error)
+      clientLogger.error('Error fetching configs:', error)
     } finally {
       setLoading(false)
     }
@@ -121,7 +122,7 @@ export function SystemConfigurationPanel() {
         setConfigHistory(data)
       }
     } catch (error) {
-      console.error('Error fetching config history:', error)
+      clientLogger.error('Error fetching config history:', error)
     }
   }
 
@@ -170,7 +171,7 @@ export function SystemConfigurationPanel() {
         alert(`Error: ${error.error}`)
       }
     } catch (error) {
-      console.error('Error saving config:', error)
+      clientLogger.error('Error saving config:', error)
       alert('Error al guardar la configuración')
     }
   }

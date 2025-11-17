@@ -36,6 +36,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import clientLogger from '@/lib/client-logger';
 
 import { Meeting } from '@/types/client'
 
@@ -91,7 +92,7 @@ export default function MeetingDetailsPage() {
       const data = await response.json()
       setMeeting(data)
     } catch (error) {
-      console.error('Error fetching meeting:', error)
+      clientLogger.error('Error fetching meeting:', error)
       toast.error('Error al cargar los detalles de la reunión')
       router.push('/meetings')
     } finally {
@@ -175,7 +176,7 @@ export default function MeetingDetailsPage() {
       toast.success('Reunión eliminada exitosamente')
       router.push('/meetings')
     } catch (error) {
-      console.error('Error deleting meeting:', error)
+      clientLogger.error('Error deleting meeting:', error)
       toast.error('Error al eliminar la reunión')
     }
   }

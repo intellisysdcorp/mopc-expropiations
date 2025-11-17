@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { logActivity } from '@/lib/activity-logger'
+import { logger } from '@/lib/logger'
 import { UpdateCaseSchema, CaseStatusUpdateSchema, CaseStageUpdateSchema, CaseAssignmentSchema } from '@/lib/validations/case'
 
 // GET /api/cases/[id] - Get a specific case
@@ -169,7 +170,7 @@ export async function GET(
 
     return NextResponse.json(caseRecord)
   } catch (error) {
-    console.error('Error fetching case:', error)
+    logger.error('Error fetching case:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -372,7 +373,7 @@ export async function PUT(
 
     return NextResponse.json(updatedCase)
   } catch (error) {
-    console.error('Error updating case:', error)
+    logger.error('Error updating case:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -453,7 +454,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'Case deleted successfully' })
   } catch (error) {
-    console.error('Error deleting case:', error)
+    logger.error('Error deleting case:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

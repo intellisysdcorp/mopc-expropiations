@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { ActivityType } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 interface LogActivityParams {
   userId: string;
@@ -28,7 +29,7 @@ export async function logActivity({
     });
 
     if (!userExists) {
-      console.warn(`Cannot log activity: User ${userId} not found`);
+      logger.warn(`Cannot log activity: User ${userId} not found`);
       return;
     }
 
@@ -44,8 +45,8 @@ export async function logActivity({
       },
     });
   } catch (error) {
-    console.error('Error logging activity:', error);
-    console.error('Activity details:', {
+    logger.error('Error logging activity:', error);
+    logger.error('Activity details:', {
       userId,
       action,
       entityType,
@@ -146,7 +147,7 @@ export async function logFailedLogin(email: string, ipAddress?: string, userAgen
       });
     }
   } catch (error) {
-    console.error('Error logging failed login:', error);
+    logger.error('Error logging failed login:', error);
   }
 }
 

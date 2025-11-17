@@ -1,6 +1,7 @@
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcryptjs';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 // Security constants
 export const SECURITY_CONSTANTS = {
@@ -262,7 +263,7 @@ export const auditLogger = {
     };
 
     // In a real implementation, this would be stored in a secure audit log
-    console.log('AUDIT:', auditEntry);
+    logger.info('AUDIT:', auditEntry);
   },
 
   logSecurityEvent: async (
@@ -279,7 +280,7 @@ export const auditLogger = {
       severity: event === 'ACCOUNT_LOCKED' ? 'HIGH' : 'MEDIUM',
     };
 
-    console.log('SECURITY:', securityEvent);
+    logger.info('SECURITY:', securityEvent);
   },
 };
 

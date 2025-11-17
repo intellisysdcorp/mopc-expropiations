@@ -43,6 +43,7 @@ import {
   Save,
   X
 } from 'lucide-react';
+import clientLogger from '@/lib/client-logger';
 
 // Types
 interface ApprovalLevel {
@@ -148,7 +149,7 @@ export function ApprovalMatrix({
         }
       }
     } catch (error) {
-      console.error('Error fetching approval matrices:', error);
+      clientLogger.error('Error fetching approval matrices:', error);
       toast({
         title: 'Error',
         description: 'Failed to fetch approval matrices',
@@ -256,7 +257,7 @@ export function ApprovalMatrix({
         throw new Error(error.error || 'Failed to create approval level');
       }
     } catch (error) {
-      console.error('Error creating approval level:', error);
+      clientLogger.error('Error creating approval level:', error);
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to create approval level',
@@ -324,7 +325,7 @@ export function ApprovalMatrix({
         throw new Error(error.error || 'Failed to update approval level');
       }
     } catch (error) {
-      console.error('Error updating approval level:', error);
+      clientLogger.error('Error updating approval level:', error);
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to update approval level',
@@ -364,7 +365,7 @@ export function ApprovalMatrix({
         throw new Error('Failed to delete approval level');
       }
     } catch (error) {
-      console.error('Error deleting approval level:', error);
+      clientLogger.error('Error deleting approval level:', error);
       toast({
         title: 'Error',
         description: 'Failed to delete approval level',

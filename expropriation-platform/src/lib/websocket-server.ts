@@ -4,6 +4,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { verify } from 'jsonwebtoken';
 import { prisma } from './prisma';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from './logger';
 
 export interface AuthenticatedSocket extends Socket {
   userId: string;
@@ -44,7 +45,7 @@ class WebSocketNotificationServer {
 
   public initialize(server: HttpServer): void {
     if (this.io) {
-      console.warn('WebSocket server already initialized');
+      logger.warn('WebSocket server already initialized');
       return;
     }
 
@@ -64,7 +65,7 @@ class WebSocketNotificationServer {
     this.setupMiddleware();
     this.setupEventHandlers();
 
-    console.log('WebSocket server initialized');
+    logger.info('WebSocket server initialized');
   }
 
   private setupMiddleware(): void {
@@ -103,7 +104,7 @@ class WebSocketNotificationServer {
 
         next();
       } catch (error) {
-        console.error('WebSocket authentication error:', error);
+        logger.error('WebSocket authentication error:', error);
         next(new Error('Authentication failed'));
       }
     });
@@ -117,7 +118,7 @@ class WebSocketNotificationServer {
       const userEmail = (socket as any).userEmail;
       const departmentId = (socket as any).departmentId;
 
-      console.log(`User ${userEmail} connected (${socket.id})`);
+      logger.info(`User ${userEmail} connected (${socket.id})`);
 
       // Track connection
       if (!this.connectedUsers.has(userId)) {
@@ -199,7 +200,7 @@ class WebSocketNotificationServer {
 
       // Handle disconnection
       socket.on('disconnect', (reason) => {
-        console.log(`User ${userEmail} disconnected (${socket.id}): ${reason}`);
+        logger.info(`User ${userEmail} disconnected (${socket.id}): ${reason}`);
         this.handleDisconnection(socket);
       });
 
@@ -289,7 +290,7 @@ class WebSocketNotificationServer {
         });
       }
     } catch (error) {
-      console.error('Error tracking WebSocket connection:', error);
+      logger.error('Error tracking WebSocket connection:', error);
     }
   }
 
@@ -328,7 +329,7 @@ class WebSocketNotificationServer {
         }
       });
     } catch (error) {
-      console.error('Error sending WebSocket notification:', error);
+      logger.error('Error sending WebSocket notification:', error);
     }
   }
 
@@ -338,7 +339,7 @@ class WebSocketNotificationServer {
     try {
       this.io.to(room).emit(message.type, message);
     } catch (error) {
-      console.error('Error sending message to room:', error);
+      logger.error('Error sending message to room:', error);
     }
   }
 
@@ -351,7 +352,7 @@ class WebSocketNotificationServer {
         this.io!.to(room).emit(message.type, message);
       });
     } catch (error) {
-      console.error('Error sending message to users:', error);
+      logger.error('Error sending message to users:', error);
     }
   }
 
@@ -361,7 +362,7 @@ class WebSocketNotificationServer {
     try {
       this.io.to(`department:${departmentId}`).emit(message.type, message);
     } catch (error) {
-      console.error('Error sending message to department:', error);
+      logger.error('Error sending message to department:', error);
     }
   }
 
@@ -371,7 +372,7 @@ class WebSocketNotificationServer {
     try {
       this.io.to(`role:${role}`).emit(message.type, message);
     } catch (error) {
-      console.error('Error sending message to role:', error);
+      logger.error('Error sending message to role:', error);
     }
   }
 
@@ -389,7 +390,7 @@ class WebSocketNotificationServer {
         timestamp: new Date()
       });
     } catch (error) {
-      console.error('Error sending unread count:', error);
+      logger.error('Error sending unread count:', error);
     }
   }
 

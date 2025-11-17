@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { logActivity } from '@/lib/activity-logger'
 import { CaseAssignmentSchema } from '@/lib/validations/case'
+import { logger } from '@/lib/logger';
 
 // PUT /api/cases/[id]/assign - Assign or reassign a case
 export async function PUT(
@@ -256,7 +257,7 @@ export async function PUT(
 
     return NextResponse.json(updatedCase)
   } catch (error) {
-    console.error('Error updating case assignment:', error)
+    logger.error('Error updating case assignment:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

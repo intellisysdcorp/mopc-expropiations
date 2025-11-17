@@ -6,6 +6,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import sharp from 'sharp';
 import { DocumentActionType } from '@prisma/client';
+import { logger } from '@/lib/logger';
 
 // Supported preview types and their processing
 const PREVIEW_CONFIG = {
@@ -105,7 +106,7 @@ export async function GET(
         return NextResponse.json({ error: 'Preview not supported' }, { status: 400 });
     }
   } catch (error) {
-    console.error('Error generating preview:', error);
+    logger.error('Error generating preview:', error);
     return NextResponse.json(
       { error: 'Failed to generate preview' },
       { status: 500 }
@@ -165,7 +166,7 @@ async function generateImagePreview(
       },
     });
   } catch (error) {
-    console.error('Error generating image preview:', error);
+    logger.error('Error generating image preview:', error);
     throw error;
   }
 }
@@ -199,7 +200,7 @@ async function generatePdfPreview(
 
     return NextResponse.json(pdfInfo);
   } catch (error) {
-    console.error('Error generating PDF preview:', error);
+    logger.error('Error generating PDF preview:', error);
     throw error;
   }
 }
@@ -245,7 +246,7 @@ async function generateTextPreview(
       },
     });
   } catch (error) {
-    console.error('Error generating text preview:', error);
+    logger.error('Error generating text preview:', error);
     throw error;
   }
 }
@@ -280,7 +281,7 @@ async function logPreviewAction(
       },
     });
   } catch (error) {
-    console.error('Error logging preview action:', error);
+    logger.error('Error logging preview action:', error);
     // Don't throw here, as it's not critical for the preview functionality
   }
 }

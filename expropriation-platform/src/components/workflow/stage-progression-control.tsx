@@ -45,6 +45,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
+import clientLogger from '@/lib/client-logger';
 
 interface Stage {
   stage: string;
@@ -113,7 +114,7 @@ export function StageProgressionControl({
       const stages = await response.json();
       setAvailableStages(stages);
     } catch (err) {
-      console.error('Error fetching stages:', err);
+      clientLogger.error('Error fetching stages:', err);
     }
   };
 
@@ -128,7 +129,7 @@ export function StageProgressionControl({
       const data = await response.json();
       setProgressions(data.progressions);
     } catch (err) {
-      console.error('Error fetching progressions:', err);
+      clientLogger.error('Error fetching progressions:', err);
     }
   };
 

@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { Server as NetServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import { initializeWebSocket } from '@/lib/websocket-server';
+import { logger } from '@/lib/logger';
 
 export const config = {
   api: {
@@ -11,12 +12,12 @@ export const config = {
 
 const SocketHandler = (req: NextApiRequest, res: NextApiResponse & { socket: any }) => {
   if (res.socket.server.io) {
-    console.log('Socket.IO server already running');
+    logger.info('Socket.IO server already running');
     res.end();
     return;
   }
 
-  console.log('Initializing Socket.IO server...');
+  logger.info('Initializing Socket.IO server...');
 
   const httpServer: NetServer = res.socket.server as any;
   const io = new SocketIOServer(httpServer, {
