@@ -319,13 +319,13 @@ class NotificationReminderSystem {
     });
   }
 
-  private async getMatchingTasks(filters: Record<string, any>, timeBefore?: number, timeAfter?: number): Promise<any[]> {
+  private async getMatchingTasks(): Promise<any[]> {
     // Similar implementation for tasks
     // This would depend on your task management system
     return [];
   }
 
-  private async getMatchingMeetings(filters: Record<string, any>, timeBefore?: number, timeAfter?: number): Promise<any[]> {
+  private async getMatchingMeetings(filters: Record<string, any>, timeBefore?: number): Promise<any[]> {
     const where: any = {};
 
     if (filters.status) {
@@ -372,12 +372,12 @@ class NotificationReminderSystem {
     });
   }
 
-  private async getMatchingDocuments(filters: Record<string, any>, timeBefore?: number, timeAfter?: number): Promise<any[]> {
+  private async getMatchingDocuments(): Promise<any[]> {
     // Similar implementation for documents
     return [];
   }
 
-  private async getMatchingUsers(filters: Record<string, any>, timeBefore?: number, timeAfter?: number): Promise<any[]> {
+  private async getMatchingUsers(): Promise<any[]> {
     // Similar implementation for users
     return [];
   }

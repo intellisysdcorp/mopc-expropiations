@@ -1,14 +1,14 @@
 'use client';
 
-import React from 'react';
-import { ChevronRight, Home, MoreHorizontal } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Home, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 interface BreadcrumbItem {
   label: string;
-  href?: string;
+  href?: string | undefined;
   icon?: React.ReactNode;
   isActive?: boolean;
   isDropdown?: boolean;
@@ -23,9 +23,14 @@ interface EnhancedBreadcrumbsProps {
   className?: string;
 }
 
+const HOME_BREADCRUMB = {
+  label: 'Inicio',
+  href: '/dashboard',
+  icon: <Home className="h-4 w-4" />,
+}
+
 export function EnhancedBreadcrumbs({
   items: propItems,
-  separator = <ChevronRight className="h-4 w-4" />,
   maxItems = 4,
   showHome = true,
   className,
@@ -34,7 +39,7 @@ export function EnhancedBreadcrumbs({
 
   // Generate breadcrumbs from pathname if not provided
   const generateBreadcrumbsFromPath = (): BreadcrumbItem[] => {
-    const segments = pathname.split('/').filter(Boolean);
+    const segments = (pathname || "").split('/').filter(Boolean);
     const breadcrumbs: BreadcrumbItem[] = [];
 
     segments.forEach((segment, index) => {
@@ -92,20 +97,16 @@ export function EnhancedBreadcrumbs({
 
   const items = propItems || generateBreadcrumbsFromPath();
 
-  // Add home breadcrumb
-  const allItems = showHome
-    ? [
-        {
-          label: 'Inicio',
-          href: '/dashboard',
-          icon: <Home className="h-4 w-4" />,
-        },
-        ...items,
-      ]
-    : items;
+  // Handle overflow with memoized allItems
+  const displayItems = useMemo(() => {
+    // Add home breadcrumb inside useMemo to prevent recreation on every render
+    const allItems = showHome
+      ? [
+          HOME_BREADCRUMB,
+          ...items,
+        ]
+      : items;
 
-  // Handle overflow
-  const displayItems = React.useMemo(() => {
     if (allItems.length <= maxItems) {
       return allItems;
     }
@@ -122,7 +123,7 @@ export function EnhancedBreadcrumbs({
       },
       ...lastItems,
     ];
-  }, [allItems, maxItems]);
+  }, [items, showHome, maxItems]);
 
   return (
     <nav
@@ -130,9 +131,8 @@ export function EnhancedBreadcrumbs({
       className={cn('flex items-center space-x-1 text-sm text-muted-foreground', className)}
     >
       <ol className="flex items-center space-x-1">
-        {displayItems.map((item, index) => {
+        {displayItems.map((item: BreadcrumbItem, index) => {
           const isLast = index === displayItems.length - 1;
-
           if (item.isDropdown && item.dropdownItems) {
             return (
               <React.Fragment key={`dropdown-${index}`}>
@@ -223,13 +223,9 @@ export function useBreadcrumbs() {
       return customItems;
     }
 
-    const segments = pathname.split('/').filter(Boolean);
+    const segments = (pathname || '').split('/').filter(Boolean);
     const breadcrumbs: BreadcrumbItem[] = [
-      {
-        label: 'Inicio',
-        href: '/dashboard',
-        icon: <Home className="h-4 w-4" />,
-      },
+      HOME_BREADCRUMB
     ];
 
     segments.forEach((segment, index) => {

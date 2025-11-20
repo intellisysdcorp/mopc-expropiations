@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Plus, Search, Filter, Download, RefreshCw, Calendar, Clock, Users, Video, MapPin } from 'lucide-react'
+import { Plus, Search, RefreshCw, Calendar, Clock, Users, Video, MapPin } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,7 +11,6 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ResponsiveContainer } from '@/components/ui/responsive-container'
 import { toast } from 'react-hot-toast'
@@ -47,7 +46,7 @@ const PRIORITIES = [
 ]
 
 export default function MeetingsPage() {
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const router = useRouter()
   const [meetings, setMeetings] = useState<Meeting[]>([])
   const [loading, setLoading] = useState(true)
@@ -75,15 +74,13 @@ export default function MeetingsPage() {
   }, [searchParams.query])
 
   // Fetch meetings
-  const fetchMeetings = async () => {
+  const fetchMeetings = useCallback(async () => {
     try {
       setLoading(true)
-      const params = new URLSearchParams({
-        ...searchParams,
-        query: debouncedQuery,
-        page: searchParams.page.toString(),
-        limit: searchParams.limit.toString()
-      })
+      const params = getSanitizedMeetingParams(searchParams);
+      if (debouncedQuery) {
+        params.set('query', debouncedQuery)
+      }
 
       const response = await fetch(`/api/meetings?${params}`)
       if (!response.ok) {
@@ -94,19 +91,21 @@ export default function MeetingsPage() {
       setMeetings(data.meetings)
       setPagination(data.pagination)
     } catch (error) {
-      clientLogger.error('Error fetching meetings:', error)
-      toast.error('Error al cargar las reuniones')
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching meetings:', error)
+        toast.error('Error al cargar las reuniones')
+      }
     } finally {
       setLoading(false)
     }
-  }
+  }, [debouncedQuery, searchParams])
 
   // Fetch meetings when search params change
   useEffect(() => {
     if (status === 'authenticated') {
       fetchMeetings()
     }
-  }, [status, debouncedQuery, searchParams.page, searchParams.limit, searchParams.meetingType, searchParams.status, searchParams.priority, searchParams.virtual, searchParams.sortBy, searchParams.sortOrder])
+  }, [status, debouncedQuery, searchParams, fetchMeetings])
 
   // Handle search input change
   const handleSearchChange = (value: string) => {
@@ -398,4 +397,38 @@ export default function MeetingsPage() {
       </div>
     </ResponsiveContainer>
   )
+}
+
+function getSanitizedMeetingParams(searchParams: MeetingSearchInput): URLSearchParams {
+  const params = new URLSearchParams();
+  params.set('page', searchParams.page.toString())
+  params.set('limit', searchParams.limit.toString())
+
+  // Add string parameters
+  if (searchParams.query) params.set('query', searchParams.query)
+  if (searchParams.meetingType) params.set('meetingType', searchParams.meetingType)
+  if (searchParams.status) params.set('status', searchParams.status)
+  if (searchParams.priority) params.set('priority', searchParams.priority)
+  if (searchParams.departmentId) params.set('departmentId', searchParams.departmentId)
+  if (searchParams.organizerId) params.set('organizerId', searchParams.organizerId)
+  if (searchParams.chairId) params.set('chairId', searchParams.chairId)
+  if (searchParams.caseId) params.set('caseId', searchParams.caseId)
+
+  // Add boolean parameters
+  if (searchParams.virtual !== undefined) params.set('virtual', searchParams.virtual.toString())
+  if (searchParams.isRecurring !== undefined) params.set('isRecurring', searchParams.isRecurring.toString())
+
+  // Add Date parameters
+  if (searchParams.scheduledStartTimeFrom) {
+    params.set('scheduledStartTimeFrom', searchParams.scheduledStartTimeFrom.toISOString())
+  }
+  if (searchParams.scheduledStartTimeTo) {
+    params.set('scheduledStartTimeTo', searchParams.scheduledStartTimeTo.toISOString())
+  }
+
+  // Add sorting parameters
+  params.set('sortBy', searchParams.sortBy)
+  if (searchParams.sortOrder) params.set('sortOrder', searchParams.sortOrder)
+  
+  return params;
 }

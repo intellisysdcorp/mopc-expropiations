@@ -1,8 +1,7 @@
 import { NextRequest } from 'next/server';
-import { z } from 'zod';
-import { validateFileSecurity, FILE_SIZE_LIMITS } from './file-security';
+import { validateFileSecurity } from './file-security';
 import { validateMimeType, isMimeTypeAllowed, getMimeTypeCategory } from './mime-validator';
-import { scanFileForMalware, quickMalwareScan } from './malware-scanner';
+import { scanFileForMalware } from './malware-scanner';
 import { atomicFileUpload, AtomicUploadOptions } from './atomic-upload';
 import { checkRateLimit, recordRequest, checkSuspiciousActivity } from './rate-limiter';
 import { logger } from '@/lib/logger';

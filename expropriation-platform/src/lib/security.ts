@@ -176,7 +176,7 @@ export const tokenUtils = {
     return Math.floor(100000 + Math.random() * 900000).toString();
   },
 
-  verifyToken(token: string, maxAge: number): boolean {
+  verifyToken(token: string): boolean {
     try {
       // This would verify JWT tokens or similar
       // For now, return true if token exists
@@ -221,7 +221,7 @@ export const rateLimiting = {
     return `rate_limit:${identifier}:${action}`;
   },
 
-  shouldBlock(key: string, requests: number, window: number): boolean {
+  shouldBlock(): boolean {
     // This would typically use Redis or similar for distributed rate limiting
     // For now, return false (no blocking)
     return false;
@@ -413,7 +413,7 @@ export const middleware = {
     return true;
   },
 
-  async checkPermissions(userId: string, resource: string, action: string): Promise<boolean> {
+  async checkPermissions(): Promise<boolean> {
     // This would check user permissions against resource
     // For now, return true
     return true;

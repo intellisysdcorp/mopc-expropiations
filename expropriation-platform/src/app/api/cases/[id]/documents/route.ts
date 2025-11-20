@@ -1,11 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import { DocumentFormData } from '@/types/client';
 import { logger } from '@/lib/logger';
 import { createDocumentWithFile } from '@/lib/documents';
+import type { DocumentFormData } from '@/types/client';
 
 // Validation schemas
 const createCaseDocumentSchema = z.object({

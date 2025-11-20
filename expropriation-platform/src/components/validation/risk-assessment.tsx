@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,17 +31,12 @@ import {
   AlertTriangle,
   TrendingUp,
   Shield,
-  Activity,
   BarChart3,
   Eye,
-  Edit,
-  Calendar,
-  Target,
   AlertCircle,
   CheckCircle2,
   Clock,
   Plus,
-  Download,
   RefreshCw
 } from 'lucide-react';
 import clientLogger from '@/lib/client-logger';
@@ -141,10 +136,10 @@ export function RiskAssessment({
 }: RiskAssessmentProps) {
   const [assessments, setAssessments] = useState<RiskAssessment[]>([]);
   const [analytics, setAnalytics] = useState<RiskAnalytics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [assessing, setAssessing] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
-  const [selectedAssessment, setSelectedAssessment] = useState<RiskAssessment | null>(null);
+  const [_selectedAssessment, setSelectedAssessment] = useState<RiskAssessment | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [assessmentData, setAssessmentData] = useState({
     likelihood: 3,
@@ -160,7 +155,7 @@ export function RiskAssessment({
   const { toast } = useToast();
 
   // Fetch risk assessments
-  const fetchAssessments = async () => {
+  const fetchAssessments = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/risk-assessments?caseId=${caseId}`);
@@ -168,8 +163,10 @@ export function RiskAssessment({
         const data = await response.json();
         setAssessments(data);
       }
-    } catch (error) {
-      clientLogger.error('Error fetching risk assessments:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching risk assessments:', error);        
+      }
       toast({
         title: 'Error',
         description: 'Failed to fetch risk assessments',
@@ -178,23 +175,25 @@ export function RiskAssessment({
     } finally {
       setLoading(false);
     }
-  };
+  }, [caseId, toast]);
 
   // Fetch risk analytics
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     try {
       const response = await fetch(`/api/risk-assessments/analytics?caseId=${caseId}`);
       if (response.ok) {
         const data = await response.json();
         setAnalytics(data);
       }
-    } catch (error) {
-      clientLogger.error('Error fetching risk analytics:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching risk analytics:', error);
+      }
     }
-  };
+  }, [caseId]);
 
   // Run risk assessment
-  const runAssessment = async () => {
+  const runAssessment = useCallback(async () => {
     try {
       setAssessing(true);
 
@@ -229,8 +228,10 @@ export function RiskAssessment({
         const error = await response.json();
         throw new Error(error.error || 'Risk assessment failed');
       }
-    } catch (error) {
-      clientLogger.error('Error running risk assessment:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error running risk assessment:', error);
+      }
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Risk assessment failed',
@@ -239,7 +240,7 @@ export function RiskAssessment({
     } finally {
       setAssessing(false);
     }
-  };
+  }, [caseId, fetchAnalytics, fetchAssessments, onRiskUpdate, stage, toast]);
 
   // Create manual assessment
   const createAssessment = async () => {
@@ -325,8 +326,10 @@ export function RiskAssessment({
         const error = await response.json();
         throw new Error(error.error || 'Failed to create assessment');
       }
-    } catch (error) {
-      clientLogger.error('Error creating assessment:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error creating assessment:', error);
+      }
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to create assessment',
@@ -360,12 +363,6 @@ export function RiskAssessment({
     };
     return colors[severity as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
-
-  // Get active risks
-  const getActiveRisks = () => {
-    return assessments.filter(a => a.status === 'ACTIVE');
-  };
-
   // Get critical risks
   const getCriticalRisks = () => {
     return assessments.filter(a => a.riskLevel === 'CRITICAL' || a.riskLevel === 'VERY_HIGH');
@@ -376,15 +373,14 @@ export function RiskAssessment({
     if (showAnalytics) {
       fetchAnalytics();
     }
-  }, [caseId, stage]);
+  }, [fetchAssessments, fetchAnalytics, showAnalytics]);
 
   useEffect(() => {
     if (autoAssess) {
       runAssessment();
     }
-  }, [autoAssess]);
+  }, [autoAssess, runAssessment]);
 
-  const activeRisks = getActiveRisks();
   const criticalRisks = getCriticalRisks();
 
   return (

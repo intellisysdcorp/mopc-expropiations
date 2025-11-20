@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -11,13 +10,10 @@ import {
   Building2,
   BarChart3,
   FileText,
-  Settings,
   LogOut,
   TrendingUp,
   AlertTriangle,
-  Download,
-  Calendar,
-  Filter
+  Download
 } from 'lucide-react';
 import { DashboardStats } from '@/components/dashboard/dashboard-stats';
 import { DashboardCharts } from '@/components/dashboard/dashboard-charts';
@@ -27,9 +23,9 @@ import { DateFilter, useDateFilter } from '@/components/dashboard/date-filter';
 import { ExportTools } from '@/components/dashboard/export-tools';
 
 export default function ReportsPage() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
-  const { dateRange, updateDateRange, updatePeriod, getApiParams } = useDateFilter();
+  const { updateDateRange, updatePeriod } = useDateFilter();
 
   return (
     <div className="min-h-screen bg-gray-50">

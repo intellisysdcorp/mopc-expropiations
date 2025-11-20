@@ -1,20 +1,16 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   CheckCircle2,
   Circle,
   Clock,
-  AlertCircle,
-  ArrowRight,
   User,
-  Calendar,
   FileText,
   RotateCcw,
   Info,
@@ -101,11 +97,7 @@ export function CaseTimeline({ caseId, className }: CaseTimelineProps) {
   const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set());
   const [selectedStage, setSelectedStage] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchTimeline();
-  }, [caseId]);
-
-  const fetchTimeline = async () => {
+  const fetchTimeline = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/cases/${caseId}/timeline`);
@@ -121,7 +113,11 @@ export function CaseTimeline({ caseId, className }: CaseTimelineProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [caseId]);
+
+  useEffect(() => {
+    fetchTimeline();
+  }, [fetchTimeline]);
 
   const toggleStageExpansion = (stageName: string) => {
     setExpandedStages(prev => {
@@ -362,7 +358,7 @@ export function CaseTimeline({ caseId, className }: CaseTimelineProps) {
                   {/* Stage Events (Expanded) */}
                   {expandedStages.has(stage.name) && stage.events.length > 0 && (
                     <div className="ml-8 mt-2 space-y-2">
-                      {stage.events.map((event, eventIndex) => (
+                      {stage.events.map((event) => (
                         <div key={event.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
                           <div className="flex-shrink-0 mt-1">
                             {getEventIcon(event)}

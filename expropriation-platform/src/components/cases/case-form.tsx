@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
 
-import { CreateCaseInput } from '@/lib/validations/case'
+import { CreateCaseInput, UpdateCaseInput } from '@/lib/validations/case'
 import { Case } from '@/types/client'
 import clientLogger from '@/lib/client-logger';
 
@@ -55,9 +55,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
     updateState,
     setFormData,
     generateCaseNumber,
-    session,
     status,
-    router: hookRouter
   } = useCaseForm(mode, caseId, initialData)
 
   const {
@@ -92,7 +90,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
   useEffect(() => {
     setDocuments(formState.documents)
     setSelectedExistingDocuments(formState.selectedExistingDocuments)
-  }, [formState.documents, formState.selectedExistingDocuments])
+  }, [formState.documents, formState.selectedExistingDocuments, setDocuments, setSelectedExistingDocuments])
 
   // Form handlers
   const handleInputChange = (field: keyof (CreateCaseInput | UpdateCaseInput), value: any) => {
@@ -161,9 +159,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
 
   // Save draft functionality (create mode only)
   const saveDraft = async () => {
-    if (mode !== 'create') {
-      return
-    }
+    if (mode !== 'create') return
 
     setSavingDraft(true)
     try {
@@ -186,9 +182,13 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
       updateState({ isDraft: true })
       success('Borrador guardado exitosamente')
       router.push(`/cases/${newDraft.id}`)
-    } catch (error) {
-      clientLogger.error('Error saving draft:', error)
-      showError(error instanceof Error ? error.message : 'Error al guardar el borrador')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error saving draft:', error)
+        showError(error.message)
+      } else {
+        showError('Error al guardar el borrador')
+      }
     } finally {
       setSavingDraft(false)
     }
@@ -273,9 +273,13 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
       setTimeout(() => {
         router.push(`/cases/${savedCase.id}`)
       }, 500)
-    } catch (error) {
-      clientLogger.error('Error saving case:', error)
-      showError(error instanceof Error ? error.message : 'Error al guardar el caso')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error saving case:', error)
+        showError(error.message)
+      } else {
+        showError('Error al guardar el caso');
+      }
     } finally {
       setLoading(false)
       resetSubmissionFlags()
@@ -362,7 +366,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">Paso {currentStep + 1} de {steps.length}</span>
-            <span className="text-sm text-muted-foreground">{steps[currentStep]?.title}</span>
+            <span className="text-sm text-muted-foreground">{steps[currentStep]!.title}</span>
           </div>
           <Progress value={((currentStep + 1) / steps.length) * 100} className="w-full" />
         </div>
@@ -381,7 +385,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
 
       <form onSubmit={handleSubmit}>
         <Tabs
-          value={steps[currentStep]?.id}
+          value={steps[currentStep]!.id}
           className="space-y-6"
           onValueChange={handleTabChange}
         >

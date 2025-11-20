@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,24 +24,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import {
   MessageSquare,
   Plus,
   Reply,
   Eye,
-  Edit,
-  Trash2,
   AlertTriangle,
-  CheckCircle2,
-  Clock,
   User,
   Calendar,
-  Filter,
   Search,
   Send,
-  FileText,
   Tag
 } from 'lucide-react';
 import clientLogger from '@/lib/client-logger';
@@ -129,7 +122,6 @@ export function ObservationSystem({
   allowCreate = true,
   allowRespond = true,
   showResolved = true,
-  compact = false,
   onObservationUpdate
 }: ObservationSystemProps) {
   const [observations, setObservations] = useState<Observation[]>([]);
@@ -160,7 +152,7 @@ export function ObservationSystem({
   const { toast } = useToast();
 
   // Fetch observations
-  const fetchObservations = async () => {
+  const fetchObservations = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -174,8 +166,10 @@ export function ObservationSystem({
         const data = await response.json();
         setObservations(data);
       }
-    } catch (error) {
-      clientLogger.error('Error fetching observations:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching observations:', error);
+      }
       toast({
         title: 'Error',
         description: 'Failed to fetch observations',
@@ -184,7 +178,7 @@ export function ObservationSystem({
     } finally {
       setLoading(false);
     }
-  };
+  }, [caseId, filterPriority, filterStatus, stage, toast]);
 
   // Create observation
   const createObservation = async () => {
@@ -250,8 +244,10 @@ export function ObservationSystem({
         const error = await response.json();
         throw new Error(error.error || 'Failed to create observation');
       }
-    } catch (error) {
-      clientLogger.error('Error creating observation:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error creating observation:', error);
+      }
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to create observation',
@@ -290,7 +286,7 @@ export function ObservationSystem({
       });
 
       if (response.ok) {
-        const newResponse = await response.json();
+        await response.json();
         toast({
           title: 'Success',
           description: 'Response added successfully',
@@ -316,8 +312,10 @@ export function ObservationSystem({
         const error = await response.json();
         throw new Error(error.error || 'Failed to create response');
       }
-    } catch (error) {
-      clientLogger.error('Error creating response:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error creating response:', error);
+      }
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to create response',
@@ -409,7 +407,7 @@ export function ObservationSystem({
 
   useEffect(() => {
     fetchObservations();
-  }, [caseId, stage, filterPriority, filterStatus]);
+  }, [fetchObservations]);
 
   const filteredObservations = getFilteredObservations();
 
@@ -710,18 +708,18 @@ export function ObservationSystem({
                               {observation.responses.length > 0 && (
                                 <div className="border-l-4 border-blue-200 pl-4 mt-3">
                                   <div className="flex items-center gap-2 mb-2">
-                                    <Badge className={getResponseTypeColor(observation.responses[0].responseType)}>
-                                      {observation.responses[0].responseType}
+                                    <Badge className={getResponseTypeColor(observation.responses[0]!.responseType)}>
+                                      {observation.responses[0]!.responseType}
                                     </Badge>
                                     <span className="text-sm text-gray-500">
-                                      by {observation.responses[0].user.firstName} {observation.responses[0].user.lastName}
+                                      by {observation.responses[0]!.user.firstName} {observation.responses[0]!.user.lastName}
                                     </span>
                                     <span className="text-sm text-gray-500">
-                                      {new Date(observation.responses[0].createdAt).toLocaleDateString()}
+                                      {new Date(observation.responses[0]!.createdAt).toLocaleDateString()}
                                     </span>
                                   </div>
                                   <p className="text-sm text-gray-700">
-                                    {observation.responses[0].response}
+                                    {observation.responses[0]!.response}
                                   </p>
                                 </div>
                               )}

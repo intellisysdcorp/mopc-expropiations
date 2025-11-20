@@ -173,7 +173,7 @@ export async function atomicFileUpload(
     cleanupCallbacks.push(async () => {
       try {
         await fs.unlink(tempFilePath);
-      } catch (error) {
+      } catch (_) {
         // Ignore if file doesn't exist
       }
     });
@@ -259,12 +259,12 @@ export async function atomicFileUpload(
         cleanup: async () => {
           try {
             await fs.unlink(newFinalFilePath);
-          } catch (error) {
+          } catch (_) {
             // Ignore if file doesn't exist
           }
         },
       };
-    } catch (error) {
+    } catch (_) {
       // File doesn't exist, proceed with original name
     }
 
@@ -275,7 +275,7 @@ export async function atomicFileUpload(
     cleanupCallbacks.push(async () => {
       try {
         await fs.unlink(finalFilePath);
-      } catch (error) {
+      } catch (_) {
         // Ignore if file doesn't exist
       }
     });
@@ -290,7 +290,7 @@ export async function atomicFileUpload(
       cleanup: async () => {
         try {
           await fs.unlink(finalFilePath);
-        } catch (error) {
+        } catch (_) {
           // Ignore if file doesn't exist
         }
       },
@@ -438,7 +438,7 @@ export async function getUploadStatistics(): Promise<{
         const stats = await fs.stat(filePath);
         tempFilesCount++;
         tempFilesSize += stats.size;
-      } catch (error) {
+      } catch (_) {
         // Skip files that can't be accessed
       }
     }

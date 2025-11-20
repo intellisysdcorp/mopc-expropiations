@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Save, Eye, AlertTriangle, RefreshCw } from 'lucide-react'
@@ -18,10 +18,10 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Progress } from '@/components/ui/progress'
 import { useEnhancedToast } from '@/components/notifications/enhanced-toast-provider'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
-import { CreateCaseInput, UpdateCaseInput } from '@/lib/validations/case'
-import { User, Department, Document, Case } from '@/types/client'
+import { CreateCaseInput, UpdateCaseInput, Priority, CaseStatus, CaseStage } from '@/lib/validations/case'
+import { DepartmentUser, Department, Document, Case } from '@/types/client'
 import clientLogger from '@/lib/client-logger'
 import { CaseCreationDocuments } from '@/components/cases/case-creation-documents'
 import { DocumentUpload } from '@/components/cases/document-upload'
@@ -128,19 +128,19 @@ const EDIT_STEPS = [
  * @param date 
  * @returns date in format YYYY-MM-DD
  */
-const formatDate = (date: Date) => date.toISOString().split('T')[0]
+const formatDate = (date: Date) => date.toISOString().split('T')[0]!
 
 export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const router = useRouter()
   const { success, error: showError } = useEnhancedToast()
 
   const [loading, setLoading] = useState(false)
   const [savingDraft, setSavingDraft] = useState(false)
-  const [currentStep, setCurrentStep] = useState(mode === 'create' ? 0 : 0) // Start at 0 for both modes
+  const [currentStep, setCurrentStep] = useState(0) // Start at 0 for both modes
   const [showValidationAlert, setShowValidationAlert] = useState(false)
   const [departments, setDepartments] = useState<Department[]>([])
-  const [users, setUsers] = useState<User[]>([])
+  const [users, setUsers] = useState<DepartmentUser[]>([])
   const [existingDocuments, setExistingDocuments] = useState<Document[]>([])
   const [selectedExistingDocuments, setSelectedExistingDocuments] = useState<string[]>([])
   const [documents, setDocuments] = useState<CaseCreationDocument[]>([])
@@ -148,7 +148,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
   const [fieldErrors, setFieldErrors] = useState<Set<string>>(new Set())
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [refreshDocuments, setRefreshDocuments] = useState(0)
-  const [assignmentStepAttempted, setAssignmentStepAttempted] = useState(false)
+  const [_assignmentStepAttempted, setAssignmentStepAttempted] = useState(false)
   const [explicitSubmitAttempt, setExplicitSubmitAttempt] = useState(false)
 
   // Form data state - handles both create and edit modes
@@ -158,9 +158,9 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
         fileNumber: initialData.fileNumber,
         title: initialData.title,
         description: initialData.description || '',
-        priority: initialData.priority,
-        status: initialData.status,
-        currentStage: initialData.currentStage,
+        priority: initialData.priority as Priority,
+        status: initialData.status as CaseStatus,
+        currentStage: initialData.currentStage as CaseStage,
         startDate: initialData.startDate ? new Date(initialData.startDate) : undefined,
         expectedEndDate: initialData.expectedEndDate ? new Date(initialData.expectedEndDate) : undefined,
         actualEndDate: initialData.actualEndDate ? new Date(initialData.actualEndDate) : undefined,
@@ -225,58 +225,8 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
     }
   })
 
-  // Initialize data and fetch dependencies
-  useEffect(() => {
-    if (status === 'authenticated') {
-      fetchDepartments()
-      fetchExistingDocuments()
 
-      if (mode === 'edit' && caseId && !initialData) {
-        fetchCase()
-      }
-    }
-  }, [status, mode, caseId, initialData])
-
-  // Fetch users when department is selected
-  useEffect(() => {
-    if (formData.departmentId) {
-      fetchDepartmentUsers(formData.departmentId)
-    }
-  }, [formData.departmentId])
-
-  // Generate case number locally as fallback (create mode only)
-  const generateCaseNumber = async () => {
-    const today = new Date()
-    const year = today.getFullYear()
-    const month = (today.getMonth() + 1).toString().padStart(2, '0')
-    const day = today.getDate().toString().padStart(2, '0')
-
-    let index = 1
-    try {
-      today.setHours(0, 0, 0, 0)
-      const tomorrow = new Date(today)
-      tomorrow.setDate(tomorrow.getDate() + 1)
-
-      const params = new URLSearchParams({
-        createdAtFrom: formatDate(today),
-        createdAtTo: formatDate(tomorrow),
-      })
-
-      const response = await fetch(`/api/cases?${params}`)
-      if (response.ok) {
-        const data = await response.json()
-        clientLogger.info(data);
-        // Use the actual cases array length since we're filtering by date
-        index = (data.cases?.length || 0) + 1
-      }
-    } catch (error) {
-      clientLogger.error('Couldn\'t get today\'s case count:', error)
-    }
-    const indexString = index.toString().padStart(2, '0')
-    return `EXP-${year}-${month}-${day}-${indexString}`
-  }
-
-  const fetchCase = async () => {
+  const fetchCase = useCallback(async () => {
     if (!caseId) return
 
     try {
@@ -296,9 +246,9 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
         fileNumber: data.fileNumber,
         title: data.title,
         description: data.description || '',
-        priority: data.priority,
-        status: data.status,
-        currentStage: data.currentStage,
+        priority: data.priority as Priority,
+        status: data.status as CaseStatus,
+        currentStage: data.currentStage as CaseStage,
         startDate: data.startDate ? new Date(data.startDate) : undefined,
         expectedEndDate: data.expectedEndDate ? new Date(data.expectedEndDate) : undefined,
         actualEndDate: data.actualEndDate ? new Date(data.actualEndDate) : undefined,
@@ -329,38 +279,44 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
         progressPercentage: data.progressPercentage,
         isDraft: false
       })
-    } catch (error) {
-      clientLogger.error('Error fetching case:', error)
-      showError('Error al cargar los detalles del caso')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching case:', error)
+        showError('Error al cargar los detalles del caso')
+      }
       router.push('/cases')
     }
-  }
+  }, [caseId, router, showError])
 
-  const fetchExistingDocuments = async () => {
+  const fetchExistingDocuments = useCallback(async () => {
     try {
       const response = await fetch('/api/documents?limit=50')
       if (response.ok) {
         const data = await response.json()
         setExistingDocuments(data.documents || [])
       }
-    } catch (error) {
-      clientLogger.error('Error fetching existing documents:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching existing documents:', error)
+      }
     }
-  }
+  }, [])
 
-  const fetchDepartments = async () => {
+  const fetchDepartments = useCallback(async () => {
     try {
       const response = await fetch('/api/departments')
       if (!response.ok) { throw new Error('Failed to fetch departments') }
       const data = await response.json()
       setDepartments(Array.isArray(data) ? data : (data.departments || []))
-    } catch (error) {
-      clientLogger.error('Error fetching departments:', error)
-      showError('Error al cargar los departamentos')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching departments:', error)
+        showError('Error al cargar los departamentos')
+      }
     }
-  }
+  }, [showError])
 
-  const fetchDepartmentUsers = async (departmentId: string) => {
+  const fetchDepartmentUsers = useCallback(async (departmentId: string) => {
     try {
       const response = await fetch(`/api/departments/${departmentId}/users`)
       if (!response.ok) { throw new Error('Failed to fetch users') }
@@ -374,10 +330,65 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
           supervisedById: 'UNASSIGNED'
         }))
       }
-    } catch (error) {
-      clientLogger.error('Error fetching users:', error)
-      showError('Error al cargar los usuarios del departamento')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching users:', error)
+        showError('Error al cargar los usuarios del departamento')
+      }
     }
+  }, [mode, showError])
+
+  // Initialize data and fetch dependencies
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchDepartments()
+      fetchExistingDocuments()
+
+      if (mode === 'edit' && caseId && !initialData) {
+        fetchCase()
+      }
+    }
+  }, [status, mode, caseId, initialData, fetchCase, fetchDepartments, fetchExistingDocuments])
+
+  // Fetch users when department is selected
+  useEffect(() => {
+    if (formData.departmentId) {
+      fetchDepartmentUsers(formData.departmentId)
+    }
+  }, [formData.departmentId, fetchDepartmentUsers])
+
+  // Generate case number locally as fallback (create mode only)
+  const generateCaseNumber = async () => {
+    const today = new Date()
+    const year = today.getFullYear()
+    const month = (today.getMonth() + 1).toString().padStart(2, '0')
+    const day = today.getDate().toString().padStart(2, '0')
+
+    let index = 1
+    try {
+      today.setHours(0, 0, 0, 0)
+      const tomorrow = new Date(today)
+      tomorrow.setDate(tomorrow.getDate() + 1)
+
+      const params = new URLSearchParams({
+        createdAtFrom: formatDate(today),
+        createdAtTo: formatDate(tomorrow),
+      })
+
+      const response = await fetch(`/api/cases?${params}`)
+      if (response.ok) {
+        const data = await response.json()
+        clientLogger.info(data);
+        // Use the actual cases array length since we're filtering by date
+        index = (data.cases?.length || 0) + 1
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Couldn\'t get today\'s case count:', error)
+      }
+    }
+    const indexString = index.toString().padStart(2, '0')
+    return `EXP-${year}-${month}-${day}-${indexString}`
   }
 
   const handleInputChange = (field: keyof (CreateCaseInput | UpdateCaseInput), value: any) => {
@@ -399,6 +410,54 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
         return newErrors
       })
       setShowValidationAlert(false)
+    }
+  }
+
+  const handleStatusChange = (value: CaseStatus) => {
+    if (mode === 'edit') {
+      setFormData(prev => ({ ...prev, status: value }))
+    }
+  }
+
+  const handleProgressPercentageChange = (value: string) => {
+    if (mode === 'edit') {
+      const numValue = value === '' ? undefined : parseFloat(value)
+      if (!isNaN(numValue as number)) {
+        setFormData(prev => ({ ...prev, progressPercentage: numValue }))
+      }
+    }
+  }
+
+  const handleActualEndDateChange = (value: string) => {
+    if (mode === 'edit') {
+      setFormData(prev => ({ ...prev, actualEndDate: value ? new Date(value) : undefined }))
+    }
+  }
+
+  const handleActualValueChange = (value: string) => {
+    if (mode === 'edit') {
+      const numValue = value === '' ? undefined : parseFloat(value)
+      if (!isNaN(numValue as number)) {
+        setFormData(prev => ({ ...prev, actualValue: numValue }))
+      }
+    }
+  }
+
+  const handleAppraisalValueChange = (value: string) => {
+    if (mode === 'edit') {
+      const numValue = value === '' ? undefined : parseFloat(value)
+      if (!isNaN(numValue as number)) {
+        setFormData(prev => ({ ...prev, appraisalValue: numValue }))
+      }
+    }
+  }
+
+  const handleCompensationAmountChange = (value: string) => {
+    if (mode === 'edit') {
+      const numValue = value === '' ? undefined : parseFloat(value)
+      if (!isNaN(numValue as number)) {
+        setFormData(prev => ({ ...prev, compensationAmount: numValue }))
+      }
     }
   }
 
@@ -437,12 +496,12 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
       return true
     }
 
-    const missingFields = step.required.filter(field => {
+    const missingFields = step?.required.filter(field => {
       const value = formData[field as keyof CreateCaseInput]
       return !value || (typeof value === 'string' && value.trim() === '')
     })
 
-    if (missingFields.length > 0) {
+    if (missingFields && missingFields.length > 0) {
       setFieldErrors(new Set(missingFields))
       // Only show validation alert if errors should be shown AND this is an attempted interaction
       // For assignment step (index 4), ONLY show errors on explicit submission attempt
@@ -450,7 +509,11 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
         setShowValidationAlert(true)
       }
       // For assignment step, only show if user has explicitly attempted submission
-      if (showErrors && currentStep === 4 && explicitSubmitAttempt && missingFields.has('departmentId')) {
+      if (showErrors 
+          && currentStep === 4 
+          && explicitSubmitAttempt 
+          && missingFields.includes('departmentId')
+      ) {
         setShowValidationAlert(true)
       }
       return false
@@ -567,9 +630,13 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
       setIsDraft(true)
       success('Borrador guardado exitosamente')
       router.push(`/cases/${newDraft.id}`)
-    } catch (error) {
-      clientLogger.error('Error saving draft:', error)
-      showError(error instanceof Error ? error.message : 'Error al guardar el borrador')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error saving draft:', error)
+        showError(error.message)
+      } else {
+        showError('Error al guardar el borrador');
+      }
     } finally {
       setSavingDraft(false)
     }
@@ -682,9 +749,13 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
       setTimeout(() => {
         router.push(`/cases/${savedCase.id}`)
       }, 500)
-    } catch (error) {
-      clientLogger.error('Error saving case:', error)
-      showError(error instanceof Error ? error.message : 'Error al guardar el caso')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error saving case:', error)
+        showError(error.message)
+      } else {
+        showError('Error al guardar el caso')
+      }
     } finally {
       setLoading(false)
       setExplicitSubmitAttempt(false) // Reset the flag after submission
@@ -705,8 +776,10 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
 
       await Promise.all(linkPromises)
       success(`${selectedExistingDocuments.length} documento(s) existente(s) vinculado(s)`)
-    } catch (error) {
-      clientLogger.error('Error linking existing documents:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error linking existing documents:', error)
+      }
       showError('Error al vincular documentos existentes')
     }
   }
@@ -766,27 +839,31 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
         ))
 
         return document
-      } catch (error) {
+    } catch (error: unknown) {
+      let uploadError = 'Unknown error';
+      if (error instanceof Error) {
         clientLogger.error('Upload error:', error)
-
-        // Update document status to error
-        setDocuments(prev => prev.map(d =>
-          d.file === doc.file ? {
-            ...d,
-            uploadStatus: 'error' as const,
-            uploadError: error instanceof Error ? error.message : 'Unknown error'
-          } : d
-        ))
-
-        showError(`Error al subir ${doc.title}`)
-        throw error
+        uploadError = error.message;
       }
-    })
+
+      // Update document status to error
+      setDocuments(prev => prev.map(d =>
+        d.file === doc.file ? {
+          ...d,
+          uploadStatus: 'error',
+          uploadError
+        } : d
+      ))
+
+      showError(`Error al subir ${doc.title}`)
+      throw error
+    }
+  })
 
     try {
       await Promise.all(uploadPromises)
       success(`${documents.length} documento(s) subido(s) exitosamente`)
-    } catch (error) {
+    } catch (_) {
       showError('Algunos documentos no pudieron ser subidos')
     }
   }
@@ -870,7 +947,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">Paso {currentStep + 1} de {STEPS.length}</span>
-            <span className="text-sm text-muted-foreground">{STEPS[currentStep].title}</span>
+            <span className="text-sm text-muted-foreground">{STEPS[currentStep]?.title}</span>
           </div>
           <Progress value={((currentStep + 1) / STEPS.length) * 100} className="w-full" />
         </div>
@@ -889,7 +966,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
 
       <form onSubmit={handleSubmit}>
         <Tabs
-          value={mode === 'create' ? STEPS[currentStep].id : EDIT_STEPS[currentStep].id}
+          value={mode === 'create' ? STEPS[currentStep]?.id! : EDIT_STEPS[currentStep]?.id!}
           className="space-y-6"
           onValueChange={(value) => {
             const steps = mode === 'create' ? STEPS : EDIT_STEPS
@@ -1030,8 +1107,8 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
                     <div className="space-y-2">
                       <Label htmlFor="status">Estado</Label>
                       <Select
-                        value={formData.status || 'PENDIENTE'}
-                        onValueChange={(value) => handleInputChange('status', value)}
+                        value={(formData as UpdateCaseInput).status || 'PENDIENTE'}
+                        onValueChange={handleStatusChange}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Seleccionar estado" />
@@ -1072,8 +1149,8 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
                         type="number"
                         min="0"
                         max="100"
-                        value={formData.progressPercentage || 0}
-                        onChange={(e) => handleNumberChange('progressPercentage', e.target.value)}
+                        value={(formData as UpdateCaseInput).progressPercentage || 0}
+                        onChange={(e) => handleProgressPercentageChange(e.target.value)}
                         placeholder="0"
                       />
                     </div>
@@ -1116,8 +1193,8 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
                       <Input
                         id="actualEndDate"
                         type="date"
-                        value={formData.actualEndDate ? new Date(formData.actualEndDate).toISOString().split('T')[0] : ''}
-                        onChange={(e) => handleInputChange('actualEndDate', e.target.value ? new Date(e.target.value) : undefined)}
+                        value={(formData as UpdateCaseInput).actualEndDate ? new Date((formData as UpdateCaseInput).actualEndDate!).toISOString().split('T')[0] : ''}
+                        onChange={(e) => handleActualEndDateChange(e.target.value)}
                       />
                     </div>
                   </div>
@@ -1504,8 +1581,8 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
                           id="actualValue"
                           type="number"
                           step="0.01"
-                          value={formData.actualValue || ''}
-                          onChange={(e) => handleNumberChange('actualValue', e.target.value)}
+                          value={(formData as UpdateCaseInput).actualValue || ''}
+                          onChange={(e) => handleActualValueChange(e.target.value)}
                           placeholder="5200000"
                         />
                       </div>
@@ -1518,8 +1595,8 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
                           id="appraisalValue"
                           type="number"
                           step="0.01"
-                          value={formData.appraisalValue || ''}
-                          onChange={(e) => handleNumberChange('appraisalValue', e.target.value)}
+                          value={(formData as UpdateCaseInput).appraisalValue || ''}
+                          onChange={(e) => handleAppraisalValueChange(e.target.value)}
                           placeholder="5100000"
                         />
                       </div>
@@ -1529,8 +1606,8 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
                           id="compensationAmount"
                           type="number"
                           step="0.01"
-                          value={formData.compensationAmount || ''}
-                          onChange={(e) => handleNumberChange('compensationAmount', e.target.value)}
+                          value={(formData as UpdateCaseInput).compensationAmount || ''}
+                          onChange={(e) => handleCompensationAmountChange(e.target.value)}
                           placeholder="5150000"
                         />
                       </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import clientLogger from '@/lib/client-logger';
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Plus, Search, RefreshCw, FileText } from 'lucide-react'
@@ -35,7 +35,7 @@ const PRIORITIES = [
 ]
 
 export default function CasesPage() {
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const router = useRouter()
   const [cases, setCases] = useState<Case[]>([])
   const [loading, setLoading] = useState(true)
@@ -62,8 +62,7 @@ export default function CasesPage() {
     return () => clearTimeout(timer)
   }, [searchParams.query])
 
-  // Fetch cases
-  const fetchCases = async () => {
+  const fetchCases = useCallback(async () => {
     try {
       setLoading(true)
 
@@ -97,20 +96,22 @@ export default function CasesPage() {
       const data = await response.json()
       setCases(data.cases)
       setPagination(data.pagination)
-    } catch (error) {
-      clientLogger.error('Error fetching cases:', error)
-      toast.error('Error al cargar los casos')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching cases:', error)
+        toast.error('Error al cargar los casos')
+      }
     } finally {
       setLoading(false)
     }
-  }
+  }, [searchParams, debouncedQuery])
 
   // Fetch cases when search params change
   useEffect(() => {
     if (status === 'authenticated') {
       fetchCases()
     }
-  }, [status, debouncedQuery, searchParams.page, searchParams.limit, searchParams.status, searchParams.priority, searchParams.currentStage, searchParams.departmentId, searchParams.assignedToId, searchParams.sortBy, searchParams.sortOrder])
+  }, [status, debouncedQuery, searchParams, fetchCases])
 
   // Handle search input change
   const handleSearchChange = (value: string) => {

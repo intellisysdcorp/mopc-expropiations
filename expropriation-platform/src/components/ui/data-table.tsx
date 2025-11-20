@@ -37,16 +37,8 @@ import {
   ChevronsRight,
   MoreHorizontal,
   Search,
-  Filter,
   Download,
   RotateCcw,
-  Eye,
-  Edit,
-  Trash2,
-  Lock,
-  Unlock,
-  UserCheck,
-  UserX,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -88,7 +80,7 @@ interface DataTableProps<T> {
     icon: React.ReactNode;
     onClick: (item: T) => void;
     variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
-    disabled?: boolean;
+    disabled?: boolean | ((user: T) => boolean);
   }[];
   bulkActions?: {
     label: string;
@@ -503,11 +495,15 @@ export function DataTable<T extends Record<string, any>>({
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          {actions.map((action, index) => (
+                          {actions?.map((action, index) => (
                             <DropdownMenuItem
                               key={index}
                               onClick={() => action.onClick(row)}
-                              disabled={action.disabled}
+                              disabled={
+                                typeof action.disabled === 'function'
+                                  ? action.disabled(row)
+                                  : action.disabled || false
+                              }
                               className={cn(
                                 action.variant === 'destructive' && 'text-destructive'
                               )}

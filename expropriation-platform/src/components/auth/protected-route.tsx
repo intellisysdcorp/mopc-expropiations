@@ -29,6 +29,18 @@ export function ProtectedRoute({
   const { isAuthenticated, isLoading, hasRole, hasPermission, redirectToLogin } = useAuth();
   const router = useRouter();
 
+  // Handle redirect for unauthenticated users
+  useEffect(() => {
+    // Only redirect if NOT loading and NOT authenticated
+    if (!isLoading && !isAuthenticated) {
+      if (redirectTo === '/login') {
+        redirectToLogin();
+      } else {
+        router.push(redirectTo);
+      }
+    }
+  }, [isAuthenticated, isLoading, redirectTo, router, redirectToLogin]);
+
   // Check role requirements
   const hasRequiredRole = !roles || hasRole(roles);
 
@@ -59,14 +71,6 @@ export function ProtectedRoute({
 
   // Redirect if not authenticated
   if (!isAuthenticated) {
-    useEffect(() => {
-      if (redirectTo === '/login') {
-        redirectToLogin();
-      } else {
-        router.push(redirectTo);
-      }
-    }, [redirectTo, router, redirectToLogin]);
-
     return fallback || (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">

@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { useSession } from 'next-auth/react'
 import { toast } from 'react-hot-toast'
 import {
   Upload,
@@ -95,7 +94,6 @@ export function CaseCreationDocuments({
   maxFiles = 10,
   disabled = false
 }: CaseCreationDocumentsProps) {
-  const { data: session } = useSession()
   const [currentFile, setCurrentFile] = useState<File | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [formData, setFormData] = useState({

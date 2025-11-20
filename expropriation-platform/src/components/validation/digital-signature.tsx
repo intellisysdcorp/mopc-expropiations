@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,13 +28,9 @@ import { useToast } from '@/hooks/use-toast';
 import {
   PenTool,
   CheckCircle2,
-  AlertCircle,
   Clock,
   User,
   Shield,
-  FileText,
-  Eye,
-  Download,
   X
 } from 'lucide-react';
 import clientLogger from '@/lib/client-logger';
@@ -162,12 +158,6 @@ export function DigitalSignature({
     setSignatureData('');
   };
 
-  // Get signature data from canvas
-  const getSignatureData = (): string => {
-    if (!canvasRef) return '';
-    return canvasRef.toDataURL('image/png');
-  };
-
   // Handle signature submission
   const handleSign = async () => {
     if (!signatureData && !password) {
@@ -244,39 +234,12 @@ export function DigitalSignature({
       clientLogger.error('Error creating signature:', error);
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to create signature',
+        description:
+          error instanceof Error ? error.message : 'Failed to create signature',
         variant: 'destructive',
       });
     } finally {
       setIsSigning(false);
-    }
-  };
-
-  // Revoke signature
-  const revokeSignature = async (signatureId: string, reason: string) => {
-    try {
-      const response = await fetch(`/api/signatures/${signatureId}/revoke`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason }),
-      });
-
-      if (response.ok) {
-        toast({
-          title: 'Success',
-          description: 'Signature revoked successfully',
-        });
-        // Refresh signatures would go here
-      } else {
-        throw new Error('Failed to revoke signature');
-      }
-    } catch (error) {
-      clientLogger.error('Error revoking signature:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to revoke signature',
-        variant: 'destructive',
-      });
     }
   };
 

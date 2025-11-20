@@ -1,14 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -18,7 +16,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import {
   Bell,
@@ -29,15 +26,10 @@ import {
   Clock,
   AlertTriangle,
   Info,
-  FileText,
   User,
-  Calendar,
   Trash2,
-  Archive,
   Eye,
   Search,
-  Filter,
-  Settings,
   Wifi,
   WifiOff,
   RefreshCw
@@ -71,15 +63,12 @@ export function EnhancedNotificationCenter({
   showConnectionStatus = true
 }: EnhancedNotificationCenterProps) {
   const {
-    socket,
-    isConnected,
     connectionStatus,
     notifications,
     unreadCount,
     onlineUsers,
     error,
     connect,
-    disconnect,
     markAsRead,
     clearNotifications
   } = useWebSocket({
@@ -94,26 +83,9 @@ export function EnhancedNotificationCenter({
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [selectedNotifications, setSelectedNotifications] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
-  const [advancedFilter, setAdvancedFilter] = useState<NotificationFilter>({});
+  const [advancedFilter, _setAdvancedFilter] = useState<NotificationFilter>({});
 
-  // Fetch additional notifications when dropdown opens
-  useEffect(() => {
-    if (isOpen && notifications.length < 10) {
-      fetchMoreNotifications();
-    }
-  }, [isOpen]);
-
-  // Auto-refresh notifications every 30 seconds when dropdown is open
-  useEffect(() => {
-    if (isOpen && isConnected) {
-      const interval = setInterval(() => {
-        // Real-time updates will come via WebSocket, but we can refresh if needed
-      }, 30000);
-      return () => clearInterval(interval);
-    }
-  }, [isOpen, isConnected]);
-
-  const fetchMoreNotifications = async () => {
+  const fetchMoreNotifications = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/notifications?limit=100');
@@ -122,15 +94,24 @@ export function EnhancedNotificationCenter({
         throw new Error('Failed to fetch notifications');
       }
 
-      const data = await response.json();
+      await response.json();
       // WebSocket will handle real-time updates, so we only fetch if needed
-    } catch (error) {
-      clientLogger.error('Error fetching notifications:', error);
-      toast.error('Error al cargar notificaciones');
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching notifications:', error);
+        toast.error('Error al cargar notificaciones');
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  // Fetch additional notifications when dropdown opens
+  useEffect(() => {
+    if (isOpen && notifications.length < 10) {
+      fetchMoreNotifications();
+    }
+  }, [isOpen, fetchMoreNotifications, notifications.length]);
 
   const markAsReadHandler = async (notificationId: string, isRead: boolean) => {
     try {
@@ -147,7 +128,7 @@ export function EnhancedNotificationCenter({
       }
 
       markAsRead(notificationId);
-    } catch (error) {
+    } catch (_) {
       toast.error('Error al actualizar notificación');
     }
   };
@@ -166,7 +147,7 @@ export function EnhancedNotificationCenter({
       // This will be handled by the WebSocket real-time updates
       toast.success('Notificación eliminada');
 
-    } catch (error) {
+    } catch (_) {
       toast.error('Error al eliminar notificación');
     }
   };
@@ -196,7 +177,7 @@ export function EnhancedNotificationCenter({
       unreadNotifications.forEach(n => markAsRead(n.id));
       toast.success('Todas las notificaciones marcadas como leídas');
 
-    } catch (error) {
+    } catch (_) {
       toast.error('Error al marcar notificaciones como leídas');
     }
   };
@@ -227,7 +208,7 @@ export function EnhancedNotificationCenter({
       toast.success(result.message);
       setSelectedNotifications(new Set());
 
-    } catch (error) {
+    } catch (_) {
       toast.error('Error al realizar acción masiva');
     }
   };
@@ -245,7 +226,7 @@ export function EnhancedNotificationCenter({
       clearNotifications();
       toast.success('Todas las notificaciones eliminadas');
 
-    } catch (error) {
+    } catch (_) {
       toast.error('Error al eliminar notificaciones');
     }
   };

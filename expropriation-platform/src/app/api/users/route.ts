@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -26,15 +27,6 @@ const createUserSchema = z.object({
   emailMarketing: z.boolean().default(false),
   emailDigest: z.boolean().default(true),
   theme: z.string().default('light'),
-});
-
-// Schema for user updates
-const updateUserSchema = createUserSchema.partial().omit({ password: true });
-
-// Schema for password change
-const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1, 'La contraseña actual es requerida'),
-  newPassword: z.string().min(8, 'La nueva contraseña debe tener al menos 8 caracteres'),
 });
 
 // GET /api/users - List users with filtering, sorting, and pagination
@@ -200,7 +192,7 @@ export async function POST(request: NextRequest) {
     const passwordHash = await bcrypt.hash(validatedData.password, 12);
 
     // Create user
-    const { password, ...userData } = validatedData;
+    const { password: _1, ...userData } = validatedData;
     const user = await prisma.user.create({
       data: {
         ...userData,

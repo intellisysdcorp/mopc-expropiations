@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
@@ -53,6 +53,23 @@ export default function DepartmentsManagementPage() {
   // Form states
   const [createParentId, setCreateParentId] = useState<string | undefined>();
 
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      await Promise.all([
+        fetchDepartments(),
+        fetchUsers(),
+      ]);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error('Error al cargar los datos');
+        clientLogger.error('Error loading data:', error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Check authentication and permissions
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -70,22 +87,7 @@ export default function DepartmentsManagementPage() {
 
       loadData();
     }
-  }, [status, session, router, isSuperAdmin, isDepartmentAdmin]);
-
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      await Promise.all([
-        fetchDepartments(),
-        fetchUsers(),
-      ]);
-    } catch (error) {
-      toast.error('Error al cargar los datos');
-      clientLogger.error('Error loading data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [status, session, router, isSuperAdmin, isDepartmentAdmin, loadData]);
 
   const fetchDepartments = async () => {
     const response = await fetch('/api/departments?includeHierarchy=true');
@@ -113,7 +115,7 @@ export default function DepartmentsManagementPage() {
         body: JSON.stringify(departmentData),
       });
 
-      clientLogger.info('Department creation response status:', response.status);
+      clientLogger.info('Department creation response status:', { status: response.status });
 
       if (!response.ok) {
         const error = await response.json();
@@ -137,10 +139,12 @@ export default function DepartmentsManagementPage() {
       setShowCreateDialog(false);
       setCreateParentId(undefined);
       await fetchDepartments();
-    } catch (error) {
-      clientLogger.error('Department creation failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Error al crear departamento';
-      toast.error(errorMessage);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Department creation failed:', error);
+        const errorMessage = 'Error al crear departamento';
+        toast.error(errorMessage);
+      }
       throw error;
     }
   };
@@ -159,8 +163,7 @@ export default function DepartmentsManagementPage() {
         const error = await response.json();
         throw new Error(error.error || 'Error al actualizar departamento');
       }
-
-      const updatedDepartment = await response.json();
+      
       toast.success('Departamento actualizado correctamente');
       setShowEditDialog(false);
       setSelectedDepartment(undefined);

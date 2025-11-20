@@ -1,14 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
   Settings,
   FileText,
-  Database,
   Activity,
   Calendar,
   Shield,
@@ -18,9 +16,7 @@ import {
   CheckCircle,
   Clock,
   Users,
-  TrendingUp,
-  Download,
-  Upload
+  TrendingUp
 } from 'lucide-react'
 
 // Import sub-components
@@ -35,6 +31,7 @@ import { UsageStatisticsPanel } from './usage-statistics-panel'
 import { NotificationConfigurationPanel } from './notification-configuration-panel'
 import { AdminDashboardSkeleton } from './admin-dashboard-skeleton'
 import clientLogger from '@/lib/client-logger';
+import { Database } from 'lucide-react'
 
 interface SystemStats {
   totalUsers: number

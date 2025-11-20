@@ -1,29 +1,19 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Bell,
   Mail,
-  Settings,
   Smartphone,
-  Check,
-  X,
-  AlertTriangle,
-  Info,
-  Clock,
-  User,
-  Calendar,
-  FileText,
   Volume2,
-  VolumeX
+  Clock
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { useAuth } from '@/hooks/use-auth'
@@ -64,11 +54,7 @@ export default function NotificationSettingsPage() {
   const [saving, setSaving] = useState(false)
   const { user } = useAuth()
 
-  useEffect(() => {
-    fetchPreferences()
-  }, [])
-
-  const fetchPreferences = async () => {
+  const fetchPreferences = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch('/api/notifications/preferences')
@@ -85,13 +71,19 @@ export default function NotificationSettingsPage() {
 
       const data = await response.json()
       setPreferences(data.preferences)
-    } catch (error) {
-      clientLogger.error('Error fetching preferences:', error)
-      toast.error('Error al cargar preferencias')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching preferences:', error)
+        toast.error('Error al cargar preferencias')
+      }
     } finally {
       setLoading(false)
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    fetchPreferences()
+  }, [fetchPreferences])
 
   const createDefaultPreferences = async () => {
     const defaults: Partial<NotificationPreferences> = {
@@ -125,9 +117,11 @@ export default function NotificationSettingsPage() {
 
       const data = await response.json()
       return data.preferences
-    } catch (error) {
-      clientLogger.error('Error creating default preferences:', error)
-      toast.error('Error al crear preferencias por defecto')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error creating default preferences:', error)
+        toast.error('Error al crear preferencias por defecto')
+      }
       return null
     }
   }
@@ -149,8 +143,10 @@ export default function NotificationSettingsPage() {
       setPreferences(data.preferences)
       toast.success('Preferencias actualizadas')
     } catch (error) {
-      clientLogger.error('Error updating preferences:', error)
-      toast.error('Error al actualizar preferencias')
+      if (error instanceof Error) {
+        clientLogger.error('Error updating preferences:', error)
+        toast.error('Error al actualizar preferencias')
+      }
     } finally {
       setSaving(false)
     }

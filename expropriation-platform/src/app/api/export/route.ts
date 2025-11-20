@@ -1,7 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -9,6 +8,8 @@ import 'jspdf-autotable';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { logger } from '@/lib/logger';
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 const exportSchema = z.object({
   format: z.enum(['pdf', 'excel', 'csv', 'json']),
@@ -29,7 +30,7 @@ const exportSchema = z.object({
 });
 
 // Helper function to generate Excel file
-async function generateExcel(data: any[], dataType: string, fields: string[]) {
+async function generateExcel(data: any[], dataType: string) {
   const worksheet = XLSX.utils.json_to_sheet(data);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, dataType);
@@ -354,7 +355,7 @@ export async function POST(request: NextRequest) {
 
     switch (options.format) {
       case 'excel':
-        blob = await generateExcel(data, options.dataType, options.fields);
+        blob = await generateExcel(data, options.dataType);
         fileName = `${options.dataType}_export_${timestamp}.xlsx`;
         mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
         break;

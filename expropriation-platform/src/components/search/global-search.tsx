@@ -1,15 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, X, FileText, Users, Building2, Calendar, Tag } from 'lucide-react';
+import { Search, X, FileText, Users, Building2, Calendar } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { debounce } from 'lodash-es';
 import { cn } from '@/lib/utils';
@@ -48,37 +46,32 @@ export function GlobalSearch() {
   }, []);
 
   // Debounced search function
-  const performSearch = useCallback(
-    debounce(async (searchQuery: string) => {
-      if (!searchQuery.trim()) {
-        setResults([]);
-        return;
+  const performSearch = debounce(async (searchQuery: string) => {
+    if (!searchQuery.trim()) {
+      setResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const response = await fetch(
+        `/api/search?q=${encodeURIComponent(searchQuery)}&limit=20`,
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+
+      if (response.ok) {
+        const data: SearchResponse = await response.json();
+        setResults(data.results);
       }
-
-      setIsSearching(true);
-      try {
-        const response = await fetch(
-          `/api/search?q=${encodeURIComponent(searchQuery)}&limit=20`,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-
-        if (response.ok) {
-          const data: SearchResponse = await response.json();
-          setResults(data.results);
-        }
-      } catch (error) {
-        clientLogger.error('Search failed:', error);
-        setResults([]);
-      } finally {
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Search failed:', error); 
+      }
+      setResults([]);
+    } finally {
         setIsSearching(false);
-      }
-    }, 300),
-    []
-  );
+    }
+    }, 300)
 
   // Handle search input
   useEffect(() => {
@@ -115,7 +108,7 @@ export function GlobalSearch() {
     if (!acc[result.type]) {
       acc[result.type] = [];
     }
-    acc[result.type].push(result);
+    acc[result.type]!.push(result);
     return acc;
   }, {} as Record<string, SearchResult[]>);
 

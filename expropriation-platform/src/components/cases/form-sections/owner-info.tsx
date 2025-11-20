@@ -26,7 +26,7 @@ const OWNER_TYPES = [
   { value: 'OTHER', label: 'Otro' },
 ]
 
-export function OwnerInfo({ register, errors, control, setValue, watch }: FormSectionProps) {
+export function OwnerInfo({ register, errors, setValue, watch }: FormSectionProps) {
   return (
     <Card>
       <CardHeader>

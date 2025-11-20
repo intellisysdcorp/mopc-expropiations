@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, ReactElement } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -22,14 +21,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -39,7 +30,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Building,
   Plus,
-  Edit,
   Trash2,
   MoreHorizontal,
   Users,
@@ -84,7 +74,6 @@ interface DepartmentAssignmentProps {
 export function DepartmentAssignment({
   userId,
   userName,
-  currentDepartmentId,
   onAssignmentUpdate,
 }: DepartmentAssignmentProps) {
   const [loading, setLoading] = useState(true);
@@ -96,25 +85,22 @@ export function DepartmentAssignment({
   const [selectedAssignment, setSelectedAssignment] = useState<UserDepartmentAssignment | null>(null);
   const [updating, setUpdating] = useState(false);
 
-  useEffect(() => {
-    fetchDepartments();
-    fetchAssignments();
-  }, [userId]);
-
-  const fetchDepartments = async () => {
+  const fetchDepartments = useCallback(async () => {
     try {
       const response = await fetch('/api/departments?includeHierarchy=true');
       if (!response.ok) {throw new Error('Error fetching departments');}
 
       const data = await response.json();
       setDepartments(data);
-    } catch (error) {
-      clientLogger.error('Error fetching departments:', error);
-      toast.error('Error al cargar los departamentos');
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching departments:', error);
+        toast.error('Error al cargar los departamentos');
+      }
     }
-  };
+  }, []);
 
-  const fetchAssignments = async () => {
+  const fetchAssignments = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`/api/users/${userId}/departments`);
@@ -122,28 +108,35 @@ export function DepartmentAssignment({
 
       const data = await response.json();
       setAssignments(data);
-    } catch (error) {
-      clientLogger.error('Error fetching assignments:', error);
-      toast.error('Error al cargar las asignaciones');
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching assignments:', error);
+        toast.error('Error al cargar las asignaciones');
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    fetchDepartments();
+    fetchAssignments();
+  }, [fetchDepartments, fetchAssignments]);
 
   const getDepartmentTree = (departments: Department[]): Department[] => {
-    const departmentMap = new Map(dept => dept.id);
+    const departmentMap = new Map<string, Department & { children: Department[] }>();
     const rootDepartments: Department[] = [];
 
-    departments.forEach(dept => {
+    departments.forEach((dept: Department) => {
       departmentMap.set(dept.id, { ...dept, children: [] });
     });
 
-    departments.forEach(dept => {
+    departments.forEach((dept: Department) => {
       const department = departmentMap.get(dept.id)!;
       if (dept.parentId) {
         const parent = departmentMap.get(dept.parentId);
-        if (parent) {
-          parent.children!.push(department);
+        if (parent && parent.children) {
+          parent.children.push(department);
         }
       } else {
         rootDepartments.push(department);
@@ -153,8 +146,8 @@ export function DepartmentAssignment({
     return rootDepartments;
   };
 
-  const renderDepartmentOptions = (departments: Department[], level = 0): JSX.Element[] => {
-    const options: JSX.Element[] = [];
+  const renderDepartmentOptions = (departments: Department[], _level = 0): ReactElement[] => {
+    const options: ReactElement[] = [];
     const tree = getDepartmentTree(departments);
 
     const renderTree = (items: Department[], currentLevel = 0) => {

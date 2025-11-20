@@ -7,7 +7,7 @@ import { CaseFormModular } from '@/components/dynamic'
 import clientLogger from '@/lib/client-logger';
 
 export default function CreateCasePage() {
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const router = useRouter()
 
   if (status === 'loading') {

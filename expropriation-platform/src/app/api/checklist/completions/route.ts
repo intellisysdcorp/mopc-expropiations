@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
@@ -15,13 +16,6 @@ const updateCompletionSchema = z.object({
   })),
 });
 
-const createCompletionSchema = z.object({
-  caseStageId: z.string(),
-  itemId: z.string(),
-  isCompleted: z.boolean().default(false),
-  notes: z.string().optional(),
-  attachmentPath: z.string().optional(),
-});
 
 // GET /api/checklist/completions - Get checklist completions for a case
 export async function GET(request: NextRequest) {
@@ -36,7 +30,7 @@ export async function GET(request: NextRequest) {
     const caseId = searchParams.get('caseId');
     const stage = searchParams.get('stage');
 
-    let where: any = {};
+    const where: any = {};
 
     if (caseStageId) {
       where.caseStageId = caseStageId;

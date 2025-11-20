@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -18,8 +17,6 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Form,
   FormControl,
@@ -30,9 +27,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Upload, Eye, EyeOff, Check, X, AlertCircle, User, Shield, Settings } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Eye, EyeOff, Check, X, User, Shield, Settings } from 'lucide-react';
 
 // Schema for user form validation
 const userFormSchema = z.object({
@@ -189,7 +184,7 @@ export function UserForm({
         await new Promise(resolve => setTimeout(resolve, 500));
         // In a real app, this would be an actual API call
         setEmailAvailable(true);
-      } catch (error) {
+      } catch (_) {
         setEmailAvailable(null);
       } finally {
         setCheckingEmail(false);
@@ -213,7 +208,7 @@ export function UserForm({
         await new Promise(resolve => setTimeout(resolve, 500));
         // In a real app, this would be an actual API call
         setUsernameAvailable(true);
-      } catch (error) {
+      } catch (_) {
         setUsernameAvailable(null);
       } finally {
         setCheckingUsername(false);

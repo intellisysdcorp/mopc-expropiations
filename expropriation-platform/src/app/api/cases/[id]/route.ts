@@ -4,11 +4,11 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { logActivity } from '@/lib/activity-logger'
 import { logger } from '@/lib/logger'
-import { UpdateCaseSchema, CaseStatusUpdateSchema, CaseStageUpdateSchema, CaseAssignmentSchema } from '@/lib/validations/case'
+import { UpdateCaseSchema } from '@/lib/validations/case'
 
 // GET /api/cases/[id] - Get a specific case
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -383,7 +383,7 @@ export async function PUT(
 
 // DELETE /api/cases/[id] - Soft delete a case
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {

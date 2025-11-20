@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useParams } from 'next/navigation'
 import {
@@ -77,7 +77,7 @@ export default function MeetingDetailsPage() {
   const [loading, setLoading] = useState(true)
 
   // Fetch meeting details
-  const fetchMeeting = async () => {
+  const fetchMeeting = useCallback(async () => {
     try {
       const response = await fetch(`/api/meetings/${meetingId}`)
       if (!response.ok) {
@@ -91,20 +91,22 @@ export default function MeetingDetailsPage() {
 
       const data = await response.json()
       setMeeting(data)
-    } catch (error) {
-      clientLogger.error('Error fetching meeting:', error)
-      toast.error('Error al cargar los detalles de la reunión')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching meeting:', error)
+        toast.error('Error al cargar los detalles de la reunión')  
+      }
       router.push('/meetings')
     } finally {
       setLoading(false)
     }
-  }
+  }, [meetingId, router])
 
   useEffect(() => {
     if (status === 'authenticated' && meetingId) {
       fetchMeeting()
     }
-  }, [status, meetingId])
+  }, [status, meetingId, fetchMeeting])
 
   // Format date
   const formatDate = (date: Date) => {
@@ -175,9 +177,11 @@ export default function MeetingDetailsPage() {
 
       toast.success('Reunión eliminada exitosamente')
       router.push('/meetings')
-    } catch (error) {
-      clientLogger.error('Error deleting meeting:', error)
-      toast.error('Error al eliminar la reunión')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error deleting meeting:', error)
+        toast.error('Error al eliminar la reunión')
+      }
     }
   }
 

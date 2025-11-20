@@ -29,7 +29,7 @@ const PROPERTY_TYPES = [
   { value: 'OTHER', label: 'Otro' },
 ]
 
-export function PropertyInfo({ register, errors, control, setValue, watch }: FormSectionProps) {
+export function PropertyInfo({ register, errors, setValue, watch }: FormSectionProps) {
   return (
     <Card>
       <CardHeader>

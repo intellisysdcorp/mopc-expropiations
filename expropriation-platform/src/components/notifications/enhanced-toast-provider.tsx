@@ -1,7 +1,6 @@
 'use client';
 
 import { ReactNode, createContext, useContext, useState, useCallback } from 'react';
-import { toast as sonnerToast, Toaster as SonnerToaster } from 'sonner';
 import {
   CheckCircle,
   XCircle,
@@ -9,10 +8,7 @@ import {
   Info,
   Loader2,
   X,
-  RefreshCw,
   Download,
-  Eye,
-  ExternalLink
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -26,7 +22,7 @@ export interface ToastAction {
   variant?: 'default' | 'outline' | 'ghost' | 'destructive';
 }
 
-export interface ToastOptions {
+  export interface ToastOptions {
   id?: string;
   type?: ToastType;
   title?: string;
@@ -45,14 +41,46 @@ interface EnhancedToast {
   type: ToastType;
   title: string;
   description?: string;
-  duration?: number;
+  duration: number;
   action?: ToastAction;
-  dismissible?: boolean;
-  persistent?: boolean;
+  dismissible: boolean;
+  persistent: boolean;
   icon?: ReactNode;
   className?: string;
   progress?: number;
   timestamp: Date;
+}
+
+// Helper function to convert ToastOptions to EnhancedToast with proper defaults
+function createEnhancedToast(options: ToastOptions): EnhancedToast {
+  const toast: EnhancedToast = {
+    id: options.id || Math.random().toString(36).substring(2, 9),
+    type: options.type || 'info',
+    title: options.title || '',
+    duration: options.duration ?? (options.type === 'loading' ? Infinity : 5000),
+    dismissible: options.dismissible ?? true,
+    persistent: options.persistent ?? false,
+    timestamp: new Date(),
+  };
+
+  // Only add optional properties if they are defined (not undefined)
+  if (options.description !== undefined) {
+    toast.description = options.description;
+  }
+  if (options.action !== undefined) {
+    toast.action = options.action;
+  }
+  if (options.icon !== undefined) {
+    toast.icon = options.icon;
+  }
+  if (options.className !== undefined) {
+    toast.className = options.className;
+  }
+  if (options.progress !== undefined) {
+    toast.progress = options.progress;
+  }
+
+  return toast;
 }
 
 interface ToastContextType {
@@ -108,38 +136,24 @@ const typeConfig = {
 export function EnhancedToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<EnhancedToast[]>([]);
 
+  const dismiss = useCallback((id: string) => {
+    setToasts(prev => prev.filter(toast => toast.id !== id));
+  }, []);
+
   const addToast = useCallback((options: ToastOptions): string => {
-    const id = options.id || Math.random().toString(36).substr(2, 9);
-    const toast: EnhancedToast = {
-      id,
-      type: options.type || 'info',
-      title: options.title || '',
-      description: options.description,
-      duration: options.duration ?? (options.type === 'loading' ? Infinity : 5000),
-      action: options.action,
-      dismissible: options.dismissible ?? true,
-      persistent: options.persistent ?? false,
-      icon: options.icon,
-      className: options.className,
-      progress: options.progress,
-      timestamp: new Date(),
-    };
+    const toast = createEnhancedToast(options);
 
     setToasts(prev => [...prev, toast]);
 
     // Auto-dismiss if not persistent
     if (toast.duration !== Infinity && !toast.persistent) {
       setTimeout(() => {
-        dismiss(id);
+        dismiss(toast.id);
       }, toast.duration);
     }
 
-    return id;
-  }, []);
-
-  const dismiss = useCallback((id: string) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
-  }, []);
+    return toast.id;
+  }, [dismiss]);
 
   const dismissAll = useCallback(() => {
     setToasts([]);
@@ -149,45 +163,29 @@ export function EnhancedToastProvider({ children }: { children: ReactNode }) {
     return addToast(options);
   }, [addToast]);
 
-  const success = useCallback((
+  // Higher-order function to create typed toast functions
+const createTypedToastFunction = useCallback((
+  type: ToastType
+) => {
+  return (
     title: string,
     description?: string,
     options?: Omit<ToastOptions, 'type' | 'title'>
   ) => {
-    return addToast({ ...options, type: 'success', title, description });
-  }, [addToast]);
+    const toastOptions: ToastOptions = { ...options, type, title };
+    if (description !== undefined) {
+      toastOptions.description = description;
+    }
+    return addToast(toastOptions);
+  };
+}, [addToast]);
 
-  const error = useCallback((
-    title: string,
-    description?: string,
-    options?: Omit<ToastOptions, 'type' | 'title'>
-  ) => {
-    return addToast({ ...options, type: 'error', title, description });
-  }, [addToast]);
-
-  const warning = useCallback((
-    title: string,
-    description?: string,
-    options?: Omit<ToastOptions, 'type' | 'title'>
-  ) => {
-    return addToast({ ...options, type: 'warning', title, description });
-  }, [addToast]);
-
-  const info = useCallback((
-    title: string,
-    description?: string,
-    options?: Omit<ToastOptions, 'type' | 'title'>
-  ) => {
-    return addToast({ ...options, type: 'info', title, description });
-  }, [addToast]);
-
-  const loading = useCallback((
-    title: string,
-    description?: string,
-    options?: Omit<ToastOptions, 'type' | 'title'>
-  ) => {
-    return addToast({ ...options, type: 'loading', title, description });
-  }, [addToast]);
+  // Create typed toast functions using the higher-order function
+  const success = createTypedToastFunction('success');
+  const error = createTypedToastFunction('error');
+  const warning = createTypedToastFunction('warning');
+  const info = createTypedToastFunction('info');
+  const loading = createTypedToastFunction('loading');
 
   const contextValue: ToastContextType = {
     toasts,
@@ -304,7 +302,7 @@ function Toast({ toast, onDismiss }: { toast: EnhancedToast; onDismiss: (id: str
 }
 
 // Predefined toast functions for common actions
-export const createToastHelpers = () => {
+export const useToastHelpers = () => {
   const { success, error, warning, info, loading } = useEnhancedToast();
 
   return {
@@ -332,28 +330,27 @@ export const createToastHelpers = () => {
     exportStarted: (format: string) =>
       loading('Exportando', `Generando exportación en formato ${format.toUpperCase()}...`),
 
-    exportCompleted: (fileName: string, downloadUrl?: string) =>
-      success(
-        'Exportación completada',
-        `Datos exportados exitosamente.`,
-        {
-          action: downloadUrl ? {
-            label: 'Descargar',
-            icon: <Download className="h-4 w-4" />,
-            onClick: () => {
-              const link = document.createElement('a');
-              link.href = downloadUrl;
-              link.download = fileName;
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-            }
-          } : undefined
-        }
-      ),
+    exportCompleted: (fileName: string, downloadUrl?: string) => {
+      const options: Omit<ToastOptions, 'type' | 'title'> = {};
+      if (downloadUrl) {
+        options.action = {
+          label: 'Descargar',
+          icon: <Download className="h-4 w-4" />,
+          onClick: () => {
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }
+        };
+      }
+      return success('Exportación completada', `Datos exportados exitosamente.`, options);
+    },
 
-    exportFailed: (error: string) =>
-      error('Error en exportación', `No se pudo completar la exportación: ${error}`),
+    exportFailed: (errorMsg: string) =>
+      error('Error en exportación', `No se pudo completar la exportación: ${errorMsg}`),
 
     // User management toasts
     userCreated: (userName: string) =>
@@ -369,8 +366,8 @@ export const createToastHelpers = () => {
     loginSuccess: (userName: string) =>
       success('Bienvenido', `Has iniciado sesión como ${userName}.`),
 
-    loginError: (error: string) =>
-      error('Error de inicio de sesión', error),
+    loginError: (errorMsg: string) =>
+      error('Error de inicio de sesión', errorMsg),
 
     logoutSuccess: () =>
       info('Sesión cerrada', 'Has cerrado tu sesión exitosamente.'),

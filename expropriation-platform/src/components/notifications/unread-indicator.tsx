@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,7 +9,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import {
   Bell,
   BellRing,
@@ -21,8 +20,6 @@ import {
   Info,
   CheckCircle2,
   User,
-  FileText,
-  Calendar
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
@@ -144,7 +141,7 @@ export function UnreadIndicator({
       unreadIds.forEach(id => markAsRead(id));
       toast.success('Todas las notificaciones marcadas como leídas');
 
-    } catch (error) {
+    } catch (_) {
       toast.error('Error al marcar notificaciones como leídas');
     }
   };

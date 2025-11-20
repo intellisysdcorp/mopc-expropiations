@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import path from 'path';
 import fs from 'fs/promises';
@@ -112,9 +113,7 @@ export async function GET(
       return NextResponse.json({ error: 'File not found' }, { status: 404 });
     }
 
-    // Get file stats
-    const stats = await fs.stat(filePath);
-    let fileBuffer = await fs.readFile(filePath);
+        let fileBuffer = await fs.readFile(filePath);
     let fileName = document.originalFileName || document.fileName;
     let mimeType = document.mimeType;
 
@@ -133,8 +132,7 @@ export async function GET(
 
     // Generate download token for security (optional but recommended)
     const downloadToken = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
+    
     // Store download token (you might want to use Redis for this in production)
     await prisma.documentHistory.create({
       data: {

@@ -8,8 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
-import { toast } from 'react-hot-toast'
-
 import { Document } from '@/types/client'
 import { useCase } from '@/hooks/useCase'
 import { getStatusConfig, getPriorityConfig } from '@/lib/case-helpers'
@@ -45,19 +43,12 @@ export default function CaseDetailPage() {
   const params = useParams()
   const caseId = String(params?.id)
 
-  const { case: caseData, loading, refreshCase, status } = useCase(caseId)
+  const { case: caseData, loading, status } = useCase(caseId)
   const [activeTab, setActiveTab] = useState('overview')
-  const [refreshTrigger, setRefreshTrigger] = useState(0)
-
-  // Handle document upload completion
-  const handleDocumentUploadComplete = (document: Document) => {
-    setRefreshTrigger(prev => prev + 1)
-    refreshCase()
-    toast.success('Documento subido exitosamente')
-  }
+  const [refreshTrigger] = useState(0)
 
   // Handle document selection
-  const handleDocumentSelect = (document: Document) => {
+  const handleDocumentSelect = (_document: Document) => {
     // TODO: Implement document detail view or navigation
     // This would typically open a modal or navigate to a document detail page
   }

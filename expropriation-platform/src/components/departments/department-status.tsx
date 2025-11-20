@@ -1,16 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'react-hot-toast';
 import {
   Power,
@@ -25,7 +21,6 @@ import {
   FileText,
   Calendar,
   AlertCircle,
-  Info,
   Ban,
   Play,
 } from 'lucide-react';
@@ -77,7 +72,7 @@ export function DepartmentStatus({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch status history
-  const fetchStatusHistory = async () => {
+  const fetchStatusHistory = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/departments/${departmentId}/status`);
@@ -85,17 +80,19 @@ export function DepartmentStatus({
 
       const data = await response.json();
       setStatusHistory(data.statusHistory || []);
-    } catch (error) {
-      toast.error('Error al cargar historial de estado');
-      clientLogger.error('Error fetching status history:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error('Error al cargar historial de estado');
+        clientLogger.error('Error fetching status history:', error);
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [departmentId]);
 
   useEffect(() => {
     fetchStatusHistory();
-  }, [departmentId]);
+  }, [fetchStatusHistory]);
 
   // Handle status change
   const handleStatusChange = async () => {
@@ -362,7 +359,7 @@ export function DepartmentStatus({
             </div>
           ) : (
             <div className="space-y-4">
-              {statusHistory.map((change, index) => (
+              {statusHistory.map((change) => (
                 <div key={change.id} className="flex items-start gap-4 p-4 border rounded-lg">
                   <div className="flex items-center justify-center w-10 h-10 rounded-full bg-muted">
                     {getStatusChangeIcon(change.action)}
@@ -415,7 +412,7 @@ export function DepartmentStatus({
               Cambiar Estado del Departamento
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Estás a punto de cambiar el estado del departamento "{department.name}".
+              Estás a punto de cambiar el estado del departamento &quot;{department.name}&quot;.
             </AlertDialogDescription>
           </AlertDialogHeader>
 

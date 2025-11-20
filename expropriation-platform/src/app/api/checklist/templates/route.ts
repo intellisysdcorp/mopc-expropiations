@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
@@ -26,13 +27,6 @@ const createChecklistTemplateSchema = z.object({
   autoGenerate: z.boolean().default(false),
 });
 
-const updateChecklistTemplateSchema = z.object({
-  name: z.string().min(1).optional(),
-  description: z.string().optional(),
-  isActive: z.boolean().optional(),
-  defaultItems: z.array(z.any()).optional(),
-  autoGenerate: z.boolean().optional(),
-});
 
 // GET /api/checklist/templates - Get checklist templates
 export async function GET(request: NextRequest) {
@@ -98,7 +92,7 @@ export async function POST(request: NextRequest) {
     // Create checklist items if provided
     if (validatedData.defaultItems && validatedData.defaultItems.length > 0) {
       await prisma.checklistItem.createMany({
-        data: validatedData.defaultItems.map((item, index) => ({
+        data: validatedData.defaultItems.map((item, _index) => ({
           templateId: template.id,
           title: item.title,
           description: item.description,

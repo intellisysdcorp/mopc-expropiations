@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +8,6 @@ import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Dialog,
@@ -17,7 +16,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   Tooltip,
@@ -31,15 +29,10 @@ import {
   FileText,
   Clock,
   AlertTriangle,
-  Upload,
-  Plus,
-  Download,
   Eye,
-  User,
   Calendar,
   File,
   CheckSquare,
-  Square
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
@@ -95,13 +88,9 @@ export function ChecklistManager({
   const [selectedItem, setSelectedItem] = useState<ChecklistItem | null>(null);
   const [completionDialog, setCompletionDialog] = useState(false);
   const [completionNotes, setCompletionNotes] = useState('');
-  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [_attachmentFile, setAttachmentFile] = useState<File | null>(null);
 
-  useEffect(() => {
-    fetchChecklist();
-  }, [caseId, stage]);
-
-  const fetchChecklist = async () => {
+  const fetchChecklist = useCallback(async () => {
     try {
       setLoading(true);
       const url = stage
@@ -122,7 +111,11 @@ export function ChecklistManager({
     } finally {
       setLoading(false);
     }
-  };
+  }, [caseId, stage]);
+
+  useEffect(() => {
+    fetchChecklist();
+  }, [fetchChecklist]);
 
   const handleItemCompletion = async (itemId: string, isCompleted: boolean) => {
     try {
@@ -169,47 +162,11 @@ export function ChecklistManager({
         onProgressComplete();
       }
 
-    } catch (err) {
-      toast.error('Error al actualizar el item del checklist');
-      clientLogger.error('Error updating checklist item:', err);
-    }
-  };
-
-  const handleFileUpload = async (file: File, itemId: string) => {
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      // This would need to be implemented in your API
-      const response = await fetch(`/api/cases/${caseId}/checklist/${itemId}/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to upload file');
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error updating checklist item:', error);
       }
-
-      const result = await response.json();
-
-      // Update local state with attachment
-      setChecklistItems(prev =>
-        prev.map(item =>
-          item.id === itemId
-            ? {
-                ...item,
-                completion: item.completion
-                  ? { ...item.completion, attachmentPath: result.filePath }
-                  : undefined
-              }
-            : item
-        )
-      );
-
-      toast.success('Archivo subido exitosamente');
-    } catch (err) {
-      toast.error('Error al subir el archivo');
-      clientLogger.error('Error uploading file:', err);
+      toast.error('Error al actualizar el item del checklist');
     }
   };
 

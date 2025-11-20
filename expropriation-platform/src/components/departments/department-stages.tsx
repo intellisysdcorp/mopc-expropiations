@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -17,10 +16,8 @@ import {
   Workflow,
   CheckCircle2,
   AlertTriangle,
-  Clock,
   Search,
   RefreshCw,
-  Play,
   Pause,
   BarChart3,
   Users,
@@ -179,7 +176,7 @@ export function DepartmentStages({
   const [stageToRemove, setStageToRemove] = useState<string | null>(null);
 
   // Fetch stages data
-  const fetchStages = async () => {
+  const fetchStages = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/departments/${departmentId}/stages`);
@@ -188,17 +185,19 @@ export function DepartmentStages({
       const data = await response.json();
       setAssignments(data.assignments || []);
       setStageStatistics(data.stageStatistics || []);
-    } catch (error) {
-      toast.error('Error al cargar etapas');
-      clientLogger.error('Error fetching stages:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error('Error al cargar etapas');
+        clientLogger.error('Error fetching stages:', error);
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [departmentId]);
 
   useEffect(() => {
     fetchStages();
-  }, [departmentId]);
+  }, [fetchStages]);
 
   // Group stages by category
   const stagesByCategory = CASE_STAGES.reduce((acc, stage) => {
@@ -221,7 +220,7 @@ export function DepartmentStages({
 
   // Check if a stage is assigned
   const isStageAssigned = (stage: string) => {
-    return assignments.some(a => a.stage === stage && a.isActive !== false);
+    return assignments.some(a => a.stage === stage);
   };
 
   // Get stage statistics
@@ -230,7 +229,7 @@ export function DepartmentStages({
   };
 
   // Handle stage toggle
-  const handleStageToggle = async (stage: string, assigned: boolean) => {
+  const handleStageToggle = async (stage: string) => {
     try {
       const response = await fetch(`/api/departments/${departmentId}/stages/${stage}`, {
         method: 'PUT',
@@ -503,7 +502,7 @@ export function DepartmentStages({
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleStageToggle(assignment.stage, false)}
+                                onClick={() => handleStageToggle(assignment.stage)}
                               >
                                 <Pause className="h-4 w-4 mr-2" />
                                 Desactivar
@@ -591,7 +590,7 @@ export function DepartmentStages({
                                           Asignada
                                         </Badge>
                                       )}
-                                      {stats?.count > 0 && (
+                                      {stats && stats.count > 0 && (
                                         <Badge variant="outline" className="text-xs">
                                           {stats.count} casos
                                         </Badge>
@@ -609,12 +608,12 @@ export function DepartmentStages({
                                   {isAssigned ? (
                                     <Switch
                                       checked={true}
-                                      onCheckedChange={(checked) => handleStageToggle(stage, checked)}
+                                      onCheckedChange={() => handleStageToggle(stage)}
                                     />
                                   ) : (
                                     <Switch
                                       checked={false}
-                                      onCheckedChange={(checked) => handleStageToggle(stage, checked)}
+                                      onCheckedChange={() => handleStageToggle(stage)}
                                     />
                                   )}
                                 </div>
@@ -638,7 +637,7 @@ export function DepartmentStages({
           <AlertDialogHeader>
             <AlertDialogTitle>Asignar Etapas</AlertDialogTitle>
             <AlertDialogDescription>
-              ¿Estás seguro de que deseas asignar {selectedStages.length} etapa(s) al departamento "{department.name}"?
+              ¿Estás seguro de que deseas asignar {selectedStages.length} etapa(s) al departamento &quot;{department.name}&quot;?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-4">
@@ -668,7 +667,7 @@ export function DepartmentStages({
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar Etapa</AlertDialogTitle>
             <AlertDialogDescription>
-              ¿Estás seguro de que deseas eliminar la etapa "{stageToRemove ? getStageDisplayName(stageToRemove) : ''}" del departamento "{department.name}"?
+              ¿Estás seguro de que deseas eliminar la etapa &quot;{stageToRemove ? getStageDisplayName(stageToRemove) : ''}&quot; del departamento &quot;{department.name}&quot;?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

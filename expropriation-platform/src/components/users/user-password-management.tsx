@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -25,9 +24,6 @@ import {
   RefreshCw,
   AlertTriangle,
   CheckCircle2,
-  Clock,
-  Lock,
-  Unlock,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -40,7 +36,6 @@ interface UserPasswordManagementProps {
 export function UserPasswordManagement({ userId, userName, userEmail }: UserPasswordManagementProps) {
   const [loading, setLoading] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
-  const [showChangeDialog, setShowChangeDialog] = useState(false);
   const [showForceChangeDialog, setShowForceChangeDialog] = useState(false);
 
   // Reset password form
@@ -54,13 +49,8 @@ export function UserPasswordManagement({ userId, userName, userEmail }: UserPass
   const [generatedPassword, setGeneratedPassword] = useState('');
 
   // Current password change form (for self)
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newSelfPassword, setNewSelfPassword] = useState('');
-  const [confirmSelfPassword, setConfirmSelfPassword] = useState('');
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewSelfPassword, setShowNewSelfPassword] = useState(false);
-  const [showConfirmSelfPassword, setShowConfirmSelfPassword] = useState(false);
-  const [selfPasswordStrength, setSelfPasswordStrength] = useState(0);
+  const [newSelfPassword, _setNewSelfPassword] = useState('');
+  const [_selfPasswordStrength, setSelfPasswordStrength] = useState(0);
 
   // Calculate password strength
   const calculatePasswordStrength = (password: string) => {

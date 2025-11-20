@@ -1,24 +1,34 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs/promises';
-import { DocumentType, DocumentCategory, DocumentStatus, DocumentSecurityLevel } from '@prisma/client';
-import { secureFileUpload, getSecurityHeaders } from '@/lib/file-upload-security';
+
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import {
+  DocumentType,
+  DocumentCategory,
+  DocumentStatus,
+  DocumentSecurityLevel,
+} from '@prisma/client';
+import {
+  secureFileUpload,
+  getSecurityHeaders,
+} from '@/lib/file-upload-security';
 import { edgeLogger } from '@/lib/edge-logger';
-import { AtomicUploadOptions } from '@/lib/atomic-upload';
 import { logger } from '@/lib/logger';
 
 // Validation schemas
 const createDocumentSchema = z.object({
-  title: z.string().min(1, "Title is required"),
+  title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   documentType: z.enum(Object.values(DocumentType) as [string, ...string[]]),
   category: z.enum(Object.values(DocumentCategory) as [string, ...string[]]),
-  securityLevel: z.enum(Object.values(DocumentSecurityLevel) as [string, ...string[]]).default(DocumentSecurityLevel.INTERNAL),
+  securityLevel: z
+    .enum(Object.values(DocumentSecurityLevel) as [string, ...string[]])
+    .default(DocumentSecurityLevel.INTERNAL),
   caseId: z.string().optional(),
   tags: z.string().optional(),
   metadata: z.record(z.string(), z.any()).optional(),
@@ -31,85 +41,28 @@ const queryDocumentsSchema = z.object({
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(20),
   search: z.string().optional(),
-  documentType: z.enum(Object.values(DocumentType) as [string, ...string[]]).optional(),
-  category: z.enum(Object.values(DocumentCategory) as [string, ...string[]]).optional(),
-  status: z.enum(Object.values(DocumentStatus) as [string, ...string[]]).optional(),
-  securityLevel: z.enum(Object.values(DocumentSecurityLevel) as [string, ...string[]]).optional(),
+  documentType: z
+    .enum(Object.values(DocumentType) as [string, ...string[]])
+    .optional(),
+  category: z
+    .enum(Object.values(DocumentCategory) as [string, ...string[]])
+    .optional(),
+  status: z
+    .enum(Object.values(DocumentStatus) as [string, ...string[]])
+    .optional(),
+  securityLevel: z
+    .enum(Object.values(DocumentSecurityLevel) as [string, ...string[]])
+    .optional(),
   caseId: z.string().optional(),
   uploadedById: z.string().optional(),
   tags: z.string().optional(),
-  sortBy: z.enum(['createdAt', 'updatedAt', 'title', 'fileSize', 'downloadCount']).default('createdAt'),
+  sortBy: z
+    .enum(['createdAt', 'updatedAt', 'title', 'fileSize', 'downloadCount'])
+    .default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
   dateFrom: z.coerce.date().optional(),
   dateTo: z.coerce.date().optional(),
 });
-
-// File upload configuration
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
-const ALLOWED_MIME_TYPES = [
-  // Documents
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'application/vnd.ms-powerpoint',
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-  // Images
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'image/tiff',
-  // Text files
-  'text/plain',
-  'text/csv',
-  'text/html',
-  // Archives
-  'application/zip',
-  'application/x-rar-compressed',
-  'application/x-7z-compressed',
-];
-
-// Storage configuration
-const UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'documents');
-
-// Ensure upload directory exists
-async function ensureUploadDir() {
-  try {
-    await fs.access(UPLOAD_DIR);
-  } catch {
-    await fs.mkdir(UPLOAD_DIR, { recursive: true });
-  }
-}
-
-// Generate unique file path
-function generateFilePath(originalName: string): string {
-  const timestamp = Date.now();
-  const random = crypto.randomBytes(8).toString('hex');
-  const ext = path.extname(originalName);
-  const name = path.basename(originalName, ext);
-  return `${timestamp}-${random}-${name}${ext}`;
-}
-
-// Calculate file hash
-async function calculateFileHash(filePath: string): Promise<string> {
-  const fileBuffer = await fs.readFile(filePath);
-  return crypto.createHash('sha256').update(fileBuffer).digest('hex');
-}
-
-// Create directory for date-based organization
-async function createDateDirectory(): Promise<string> {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-
-  const dateDir = path.join(UPLOAD_DIR, String(year), month, day);
-  await fs.mkdir(dateDir, { recursive: true });
-
-  return dateDir;
-}
 
 // GET /api/documents - List documents with filtering and pagination
 export async function GET(request: NextRequest) {
@@ -155,10 +108,7 @@ export async function GET(request: NextRequest) {
     if (query.status !== 'ARCHIVED') {
       if (where.OR) {
         // If there's already an OR clause, we need to combine it with the archived filter
-        where.AND = [
-          { OR: where.OR },
-          { status: { not: 'ARCHIVED' } }
-        ];
+        where.AND = [{ OR: where.OR }, { status: { not: 'ARCHIVED' } }];
         delete where.OR;
       } else {
         where.status = { not: 'ARCHIVED' };
@@ -208,13 +158,13 @@ export async function GET(request: NextRequest) {
     });
 
     // Format documents
-    const formattedDocuments = documents.map(doc => ({
+    const formattedDocuments = documents.map((doc) => ({
       ...doc,
       uploadedBy: {
         ...doc.uploadedBy,
         fullName: `${doc.uploadedBy.firstName} ${doc.uploadedBy.lastName}`,
       },
-      tags: doc.tagsRelations.map(tag => ({
+      tags: doc.tagsRelations.map((tag) => ({
         id: tag.id,
         tag: tag.tag,
         color: tag.color,
@@ -265,7 +215,7 @@ export async function POST(request: NextRequest) {
     // Get user role for security configuration
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { role: { select: { name: true } } }
+      select: { role: { select: { name: true } } },
     });
 
     const userRole = user?.role?.name || 'default';
@@ -321,7 +271,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine actual MIME type from validation
-    const actualMimeType = uploadResult.validation.validationDetails.mimeValidation?.recommendedMimeType || file.type;
+    const actualMimeType =
+      uploadResult.validation.validationDetails.mimeValidation
+        ?.recommendedMimeType || file.type;
 
     // Create document record
     const document = await prisma.document.create({
@@ -333,7 +285,9 @@ export async function POST(request: NextRequest) {
         filePath: path.relative(process.cwd(), uploadResult.filePath!),
         fileSize: file.size,
         mimeType: actualMimeType,
-        fileHash: uploadResult.validation.validationDetails.malwareScan?.metadata?.fileHash || '',
+        fileHash:
+          uploadResult.validation.validationDetails.malwareScan?.metadata
+            ?.fileHash || '',
         documentType: validatedData.documentType as DocumentType,
         category: validatedData.category as DocumentCategory,
         status: DocumentStatus.DRAFT,
@@ -346,14 +300,18 @@ export async function POST(request: NextRequest) {
         tags: validatedData.tags || null,
         metadata: {
           ...(validatedData.metadata || {}),
-          securityValidation: JSON.parse(JSON.stringify(uploadResult.validation)),
+          securityValidation: JSON.parse(
+            JSON.stringify(uploadResult.validation)
+          ),
           uploadWarnings: uploadResult.validation.warnings,
           securityLevel: uploadResult.validation.securityLevel,
           requiresManualReview: uploadResult.validation.requiresManualReview,
         },
         customFields: validatedData.customFields || {},
         retentionPeriod: validatedData.retentionPeriod || null,
-        expiresAt: validatedData.expiresAt ? new Date(validatedData.expiresAt) : null,
+        expiresAt: validatedData.expiresAt
+          ? new Date(validatedData.expiresAt)
+          : null,
         contentText,
         isIndexed: contentText.length > 0,
         indexedAt: contentText.length > 0 ? new Date() : null,
@@ -391,7 +349,9 @@ export async function POST(request: NextRequest) {
           originalFileName: file.name,
           mimeType: actualMimeType,
           uploadTimestamp: new Date().toISOString(),
-          securityValidation: JSON.parse(JSON.stringify(uploadResult.validation)),
+          securityValidation: JSON.parse(
+            JSON.stringify(uploadResult.validation)
+          ),
           securityLevel: uploadResult.validation.securityLevel,
         },
       },
@@ -399,7 +359,10 @@ export async function POST(request: NextRequest) {
 
     // Create tags if provided
     if (validatedData.tags) {
-      const tags = validatedData.tags.split(',').map(tag => tag.trim()).filter(Boolean);
+      const tags = validatedData.tags
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean);
       for (const tag of tags) {
         await prisma.documentTag.create({
           data: {
@@ -411,7 +374,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Log security events if needed
-    if (uploadResult.validation.securityLevel === 'high' || uploadResult.validation.securityLevel === 'critical') {
+    if (
+      uploadResult.validation.securityLevel === 'high' ||
+      uploadResult.validation.securityLevel === 'critical'
+    ) {
       edgeLogger.security.suspiciousActivity('high_security_level_upload', {
         userId: session.user.id,
         documentId: document.id,

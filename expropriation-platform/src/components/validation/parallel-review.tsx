@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +8,6 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -23,27 +22,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import {
   Users,
   Eye,
   Edit,
-  CheckCircle2,
-  XCircle,
-  Clock,
   AlertTriangle,
-  FileText,
-  MessageSquare,
   Star,
   Calendar,
-  User,
   Send,
-  Plus,
-  Settings,
-  Activity
 } from 'lucide-react';
 import clientLogger from '@/lib/client-logger';
 
@@ -112,16 +100,12 @@ interface ParallelReviewProps {
 
 export function ParallelReview({
   caseId,
-  caseStage,
-  autoAssign = false,
-  showCompleted = true,
   onReviewComplete
 }: ParallelReviewProps) {
   const [assignments, setAssignments] = useState<ReviewAssignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('pending');
   const [selectedAssignment, setSelectedAssignment] = useState<ReviewAssignment | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
   const [reviewData, setReviewData] = useState({
     findings: '',
@@ -135,7 +119,7 @@ export function ParallelReview({
   const { toast } = useToast();
 
   // Fetch review assignments
-  const fetchAssignments = async () => {
+  const fetchAssignments = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/reviews/assignments?caseId=${caseId}`);
@@ -143,8 +127,10 @@ export function ParallelReview({
         const data = await response.json();
         setAssignments(data);
       }
-    } catch (error) {
-      clientLogger.error('Error fetching review assignments:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching review assignments:', error);
+      }
       toast({
         title: 'Error',
         description: 'Failed to fetch review assignments',
@@ -153,11 +139,11 @@ export function ParallelReview({
     } finally {
       setLoading(false);
     }
-  };
+  }, [caseId, toast]);
 
   useEffect(() => {
     fetchAssignments();
-  }, [caseId]);
+  }, [fetchAssignments]);
 
   // Handle review submission
   const handleSubmitReview = async () => {
@@ -231,8 +217,10 @@ export function ParallelReview({
         const error = await response.json();
         throw new Error(error.error || 'Failed to submit review');
       }
-    } catch (error) {
-      clientLogger.error('Error submitting review:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error submitting review:', error);
+      }
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to submit review',
@@ -444,7 +432,7 @@ export function ParallelReview({
                                           <Star
                                             key={i}
                                             className={`h-4 w-4 ${
-                                              i < latestReview.rating
+                                              i < latestReview.rating!
                                                 ? 'text-yellow-400 fill-current'
                                                 : 'text-gray-300'
                                             }`}

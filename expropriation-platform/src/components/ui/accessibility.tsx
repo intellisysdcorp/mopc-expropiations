@@ -548,7 +548,7 @@ export function AccessibleTable({
 export function useAnnouncement() {
   const [announcement, setAnnouncement] = useState('');
 
-  const announce = useCallback((message: string, politeness: 'polite' | 'assertive' = 'polite') => {
+  const announce = useCallback((message: string) => {
     setAnnouncement(message);
 
     // Clear announcement after it's read

@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -48,21 +49,6 @@ const buildCreateData = (validatedData: any) => {
   if (isActive !== undefined) createData.isActive = isActive;
 
   return createData;
-};
-
-const buildUpdateData = (updateData: any) => {
-  const cleanUpdateData: any = {};
-
-  if (updateData.name !== undefined) cleanUpdateData.name = updateData.name;
-  if (updateData.description !== undefined) {
-    cleanUpdateData.description = updateData.description === null ? null : updateData.description;
-  }
-  if (updateData.isActive !== undefined) cleanUpdateData.isActive = updateData.isActive;
-  if (updateData.permissions !== undefined) {
-    cleanUpdateData.permissions = normalizePermissions(updateData.permissions);
-  }
-
-  return cleanUpdateData;
 };
 
 const sanitizeRoleResponse = (role: any) => ({

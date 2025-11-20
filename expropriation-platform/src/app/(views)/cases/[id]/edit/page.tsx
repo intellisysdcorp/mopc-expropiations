@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useParams } from 'next/navigation'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -10,7 +10,7 @@ import { Case } from '@/types/client'
 import clientLogger from '@/lib/client-logger';
 
 export default function EditCasePage() {
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const router = useRouter()
   const params = useParams()
   const caseId = String(params?.id)
@@ -18,14 +18,7 @@ export default function EditCasePage() {
   const [initialLoading, setInitialLoading] = useState(true)
   const [caseData, setCaseData] = useState<Case | null>(null)
 
-  // Fetch case data
-  useEffect(() => {
-    if (status === 'authenticated' && caseId) {
-      fetchCase()
-    }
-  }, [status, caseId])
-
-  const fetchCase = async () => {
+  const fetchCase = useCallback(async () => {
     try {
       setInitialLoading(true)
       const response = await fetch(`/api/cases/${caseId}`)
@@ -40,14 +33,23 @@ export default function EditCasePage() {
 
       const data: Case = await response.json()
       setCaseData(data)
-    } catch (error) {
-      clientLogger.error('Error fetching case:', error)
-      toast.error('Error al cargar los detalles del caso')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching case:', error)
+        toast.error('Error al cargar los detalles del caso')
+      }
       router.push('/cases')
     } finally {
       setInitialLoading(false)
     }
-  }
+  }, [caseId, router])
+
+  // Fetch case data
+  useEffect(() => {
+    if (status === 'authenticated' && caseId) {
+      fetchCase()
+    }
+  }, [status, caseId, fetchCase])
 
   if (status === 'loading' || initialLoading) {
     return (
@@ -107,9 +109,11 @@ export default function EditCasePage() {
 
       toast.success('Caso actualizado exitosamente')
       router.push('/cases')
-    } catch (error) {
-      clientLogger.error('Error updating case:', error)
-      toast.error('Error al actualizar el caso')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error updating case:', error)
+        toast.error('Error al actualizar el caso')
+      }
       // Re-throw to let the form component handle the error display
       throw error
     }

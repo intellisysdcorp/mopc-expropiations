@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import bcrypt from 'bcryptjs';
-import { logActivity } from '@/lib/activity-logger';
 import { logger } from '@/lib/logger';
+import { logActivity } from '@/lib/activity-logger';
 
 // Schema for user updates
 const updateUserSchema = z.object({
@@ -89,7 +89,7 @@ export async function GET(
     }
 
     // Remove sensitive data
-    const { passwordHash, twoFactorSecret, backupCodes, ...sanitizedUser } = user;
+    const sanitizedUser = removeSensitiveData(user);
 
     return NextResponse.json(sanitizedUser);
   } catch (error) {
@@ -106,7 +106,6 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -250,7 +249,7 @@ export async function PUT(
     });
 
     // Remove sensitive data
-    const { passwordHash, twoFactorSecret, backupCodes, ...sanitizedUser } = updatedUser;
+    const sanitizedUser = removeSensitiveData(updatedUser);
 
     return NextResponse.json(sanitizedUser);
   } catch (error) {
@@ -274,7 +273,6 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -342,4 +340,12 @@ export async function DELETE(
       { status: 500 }
     );
   }
+}
+
+/**
+ * Remove sensitive user data for server response
+ */
+function removeSensitiveData (userObject: any) {
+  const { passwordHash: _1, twoFactorSecret: _2, backupCodes: _3, ...sanitizedUser } = userObject;
+  return sanitizedUser
 }

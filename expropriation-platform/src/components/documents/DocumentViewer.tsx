@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,32 +8,28 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import {
+  AlertCircle,
+  Archive,
+  Calendar,
+  CheckCircle,
+  Clock,
   Download,
   Eye,
   FileText,
-  Image,
-  Video,
-  Music,
-  Archive,
-  Calendar,
-  User,
-  Tag,
-  Shield,
   Hash,
-  Activity,
-  History,
-  Share,
-  Edit,
-  Trash2,
-  Copy,
+  Image as ImgIcon,
   Lock,
+  Music,
+  Share,
+  Shield,
+  Tag,
   Unlock,
-  AlertCircle,
-  CheckCircle,
-  Clock
+  User,
+  Video,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'react-hot-toast';
+import Image from 'next/image';
 
 interface DocumentViewerProps {
   document: any;
@@ -54,13 +50,15 @@ export function DocumentViewer({ document, onClose, showActions = true }: Docume
   const [activeTab, setActiveTab] = useState('preview');
 
   // Document type icon mapping
-  const getDocumentIcon = (mimeType: string) => {
-    if (mimeType.startsWith('image/')) return Image;
-    if (mimeType.startsWith('video/')) return Video;
-    if (mimeType.startsWith('audio/')) return Music;
-    if (mimeType.includes('pdf')) return FileText;
-    if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('7z')) return Archive;
-    return FileText;
+  const getDocumentIcon = (mimeType: string, className?: string) => {
+    const iconProps = { className: className || "h-5 w-5 text-gray-500" };
+
+    if (mimeType.startsWith('image/')) return <ImgIcon {...iconProps} />;
+    if (mimeType.startsWith('video/')) return <Video {...iconProps} />;
+    if (mimeType.startsWith('audio/')) return <Music {...iconProps} />;
+    if (mimeType.includes('pdf')) return <FileText {...iconProps} />;
+    if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('7z')) return <Archive {...iconProps} />;
+    return <FileText {...iconProps} />;
   };
 
   // Security level color mapping
@@ -84,14 +82,7 @@ export function DocumentViewer({ document, onClose, showActions = true }: Docume
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  // Load document preview
-  useEffect(() => {
-    if (document && activeTab === 'preview') {
-      loadPreview();
-    }
-  }, [document, activeTab]);
-
-  const loadPreview = async () => {
+  const loadPreview = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch(`/api/documents/${document.id}/preview`);
@@ -118,7 +109,7 @@ export function DocumentViewer({ document, onClose, showActions = true }: Docume
           content: { error: error.error || 'Preview not available' },
         });
       }
-    } catch (error) {
+    } catch (_) {
       setPreview({
         type: 'unsupported',
         content: { error: 'Failed to load preview' },
@@ -126,7 +117,14 @@ export function DocumentViewer({ document, onClose, showActions = true }: Docume
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [document.id]);
+
+  // Load document preview
+  useEffect(() => {
+    if (document && activeTab === 'preview') {
+      loadPreview();
+    }
+  }, [loadPreview, activeTab, document]);
 
   const handleDownload = async () => {
     try {
@@ -150,7 +148,7 @@ export function DocumentViewer({ document, onClose, showActions = true }: Docume
         const error = await response.json();
         toast.error(error.error || 'Download failed');
       }
-    } catch (error) {
+    } catch (_) {
       toast.error('Failed to download document');
     }
   };
@@ -175,7 +173,7 @@ export function DocumentViewer({ document, onClose, showActions = true }: Docume
         const error = await response.json();
         toast.error(error.error || 'Failed to create share link');
       }
-    } catch (error) {
+    } catch (_) {
       toast.error('Failed to share document');
     }
   };
@@ -211,8 +209,8 @@ export function DocumentViewer({ document, onClose, showActions = true }: Docume
       case 'image':
         return (
           <div className="flex items-center justify-center h-96 bg-gray-50 rounded-lg p-4">
-            <img
-              src={preview.url}
+            <Image
+              src={preview.url!}
               alt={document.title}
               className="max-w-full max-h-full object-contain rounded shadow-lg"
             />
@@ -450,9 +448,7 @@ export function DocumentViewer({ document, onClose, showActions = true }: Docume
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <CardTitle className="flex items-center space-x-2">
-              {React.createElement(getDocumentIcon(document.mimeType), {
-                className: "h-5 w-5 text-gray-500",
-              })}
+              {getDocumentIcon(document.mimeType)}
               <span>{document.title}</span>
             </CardTitle>
             <CardDescription>{document.description}</CardDescription>

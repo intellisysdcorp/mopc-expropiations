@@ -206,6 +206,7 @@ export const CreateCaseSchema = CaseSchema.pick({
   title: true,
   description: true,
   priority: true,
+  currentStage: true,
   startDate: true,
   propertyAddress: true,
   propertyCity: true,
@@ -311,3 +312,10 @@ export type CaseStatusUpdateInput = z.infer<typeof CaseStatusUpdateSchema>
 export type CaseStageUpdateInput = z.infer<typeof CaseStageUpdateSchema>
 export type CaseAssignmentInput = z.infer<typeof CaseAssignmentSchema>
 export type CaseSearchInput = z.infer<typeof CaseSearchSchema>
+
+// Enum type exports
+export type CaseStatus = z.infer<typeof CaseStatusEnum>
+export type Priority = z.infer<typeof PriorityEnum>
+export type CaseStage = z.infer<typeof CaseStageEnum>
+export type ExpropriationReason = z.infer<typeof ExpropriationReasonEnum>
+export type UrgencyLevel = z.infer<typeof UrgencyLevelEnum>

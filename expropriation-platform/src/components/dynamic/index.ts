@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 
 // Heavy components that should be lazy-loaded
 export const CaseForm = dynamic(
-  () => import('@/components/cases/case-form-original').then(mod => ({ default: mod.CaseForm })),
+  () => import('@/components/cases/case-form').then(mod => ({ default: mod.CaseForm })),
   {
     loading: () => React.createElement('div', { className: 'animate-pulse' }, 'Loading form...'),
     ssr: false

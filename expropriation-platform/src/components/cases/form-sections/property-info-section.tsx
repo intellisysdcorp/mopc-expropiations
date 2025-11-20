@@ -13,7 +13,6 @@ interface PropertyInfoSectionProps {
 export function PropertyInfoSection({
   formData,
   onInputChange,
-  onNumberChange,
   hasFieldError
 }: PropertyInfoSectionProps) {
   return (

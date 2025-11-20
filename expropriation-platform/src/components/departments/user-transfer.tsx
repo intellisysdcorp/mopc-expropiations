@@ -17,15 +17,12 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from 'react-hot-toast';
 import { Department, User } from '@/lib/types/department';
 import {
-  Users,
   ArrowRightLeft,
   Search,
   Calendar,
-  FileText,
   AlertTriangle,
   CheckCircle2,
   Clock,
-  UserCheck,
   Building,
   Mail,
   Briefcase,
@@ -98,7 +95,7 @@ export function UserTransfer({
   const {
     register,
     handleSubmit,
-    formState: { errors, isDirty },
+    formState: { errors },
     setValue,
     watch,
     reset,
@@ -611,7 +608,7 @@ export function UserTransfer({
             </AlertDialogTitle>
             <AlertDialogDescription>
               ¿Estás seguro de que deseas transferir {selectedUsers.length} usuario(s) del departamento
-              "{sourceDepartmentName}" al departamento "{destinationDepartment?.name}"?
+              &quot;{sourceDepartmentName}&quot; al departamento &quot;{destinationDepartment?.name}&quot;?
             </AlertDialogDescription>
           </AlertDialogHeader>
 

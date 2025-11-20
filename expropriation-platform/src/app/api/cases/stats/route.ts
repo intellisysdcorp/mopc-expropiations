@@ -5,7 +5,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
 // GET /api/cases/stats - Get case statistics
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
@@ -141,20 +141,7 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Get average time to completion (for completed cases)
-    const avgCompletionTime = await prisma.case.aggregate({
-      where: {
-        ...where,
-        status: 'COMPLETADO',
-        actualEndDate: { not: null },
-        startDate: { not: null }
-      },
-      _avg: {
-        // This would need to be calculated at application level since Prisma doesn't support date diff directly
-        // For now, we'll return 0 and implement this logic in the frontend
-      }
-    })
-
+    
     // Get user's personal stats (cases assigned to, supervised by, created by)
     const userStats = await Promise.all([
       prisma.case.count({ where: { ...where, assignedToId: user.id } }),

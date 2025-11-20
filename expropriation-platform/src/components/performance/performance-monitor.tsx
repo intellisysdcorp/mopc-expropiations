@@ -99,7 +99,7 @@ export function PerformanceMonitor() {
 
 // Hook for using performance data
 export function usePerformanceMetrics() {
-  const [metrics, setMetrics] = useState<Partial<PerformanceMetrics>>({});
+  const [metrics, _setMetrics] = useState<Partial<PerformanceMetrics>>({});
 
   useEffect(() => {
     // Similar logic as above but returns the metrics

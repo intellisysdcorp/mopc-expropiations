@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { z } from "zod";
 import { logger } from '@/lib/logger';
 
 // GET /api/meetings/analytics - Get meeting analytics and insights
@@ -32,7 +31,7 @@ export async function GET(request: NextRequest) {
     // Build date range based on period
     const now = new Date();
     let startDate: Date;
-    let endDate = now;
+    const endDate = now;
 
     switch (period) {
       case "week":
@@ -295,7 +294,7 @@ export async function GET(request: NextRequest) {
 // Helper function to get meeting trends
 async function getMeetingTrends(where: any, period: string): Promise<any> {
   const now = new Date();
-  let periods = [];
+  const periods = [];
   let dateFormat = "";
 
   switch (period) {

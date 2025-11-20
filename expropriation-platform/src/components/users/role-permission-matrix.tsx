@@ -44,10 +44,7 @@ import {
   Settings,
   Users,
   FileText,
-  Download,
-  Upload,
   Eye,
-  EyeOff,
   X,
   MoreHorizontal,
 } from 'lucide-react';
@@ -64,16 +61,6 @@ interface Role {
   createdAt: string;
   updatedAt: string;
   userCount?: number;
-}
-
-interface Permission {
-  id: string;
-  name: string;
-  type: string;
-  description: string;
-  resource: string;
-  action: string;
-  isActive: boolean;
 }
 
 interface RolePermissionMatrixProps {
@@ -747,7 +734,7 @@ export function RolePermissionMatrix({ roles, onRolesUpdate }: RolePermissionMat
             <div>
               <DialogTitle>¿Eliminar Rol?</DialogTitle>
               <DialogDescription>
-                ¿Estás seguro de que deseas eliminar el rol "{selectedRole?.name}"?
+                ¿Estás seguro de que deseas eliminar el rol &quot;{selectedRole?.name}&quot;?
                 {selectedRole && (selectedRole.userCount ?? 0) > 0 && (
                   <span className="text-destructive font-medium">
                     {' '}Este rol está asignado a {(selectedRole.userCount ?? 0)} usuario{(selectedRole.userCount ?? 0) !== 1 ? 's' : ''} y no puede ser eliminado.

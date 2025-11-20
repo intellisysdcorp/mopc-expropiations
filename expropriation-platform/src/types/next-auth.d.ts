@@ -21,6 +21,7 @@ declare module 'next-auth' {
       mustChangePassword?: boolean;
       sessionToken?: string;
     };
+    accessToken?: string;
   }
 
   interface User {

@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -20,22 +21,6 @@ const createTemplateSchema = z.object({
   allowedRoles: z.array(z.string()).optional(),
   requiredFields: z.array(z.string()).optional(),
   requiresApproval: z.boolean().default(false),
-});
-
-const updateTemplateSchema = z.object({
-  name: z.string().min(1).optional(),
-  description: z.string().optional(),
-  templateType: z.nativeEnum(TemplateType).optional(),
-  category: z.nativeEnum(DocumentCategory).optional(),
-  content: z.string().min(1).optional(),
-  variables: z.record(z.any()).optional(),
-  placeholders: z.record(z.any()).optional(),
-  layout: z.record(z.any()).optional(),
-  securityLevel: z.nativeEnum(DocumentSecurityLevel).optional(),
-  allowedRoles: z.array(z.string()).optional(),
-  requiredFields: z.array(z.string()).optional(),
-  requiresApproval: z.boolean().optional(),
-  isActive: z.boolean().optional(),
 });
 
 const queryTemplatesSchema = z.object({

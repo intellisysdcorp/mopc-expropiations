@@ -113,50 +113,8 @@ export function DocumentSearch({
     limit: 20,
   });
 
-  
-  // Handle query change
-  const handleQueryChange = (value: string) => {
-    setQuery(value);
-    setPagination({ ...pagination, page: 1 });
-  };
-
-  // Perform search
-  const performSearch = useCallback(async () => {
-    if (query.trim().length === 0) {
-      toast.error('Por favor ingresa un término de búsqueda');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/documents/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: query.trim(),
-          filters: getActiveFilters(),
-          sort,
-          pagination,
-          includeContent: true,
-        }),
-      });
-
-      if (response.ok) {
-        const data: SearchResults = await response.json();
-        setResults(data);
-      } else {
-        const error = await response.json();
-        toast.error(error.error || 'La búsqueda falló');
-      }
-    } catch (error) {
-      toast.error('No se pudo realizar la búsqueda');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [query, filters, sort, pagination]);
-
   // Get active filters (non-empty values)
-  const getActiveFilters = () => {
+  const getActiveFilters = useCallback(() => {
     const activeFilters: any = {};
 
     if (filters.documentTypes.length > 0) {
@@ -197,7 +155,48 @@ export function DocumentSearch({
     }
 
     return activeFilters;
+  }, [filters]);
+  
+  // Handle query change
+  const handleQueryChange = (value: string) => {
+    setQuery(value);
+    setPagination({ ...pagination, page: 1 });
   };
+
+  // Perform search
+  const performSearch = useCallback(async () => {
+    if (query.trim().length === 0) {
+      toast.error('Por favor ingresa un término de búsqueda');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/documents/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: query.trim(),
+          filters: getActiveFilters(),
+          sort,
+          pagination,
+          includeContent: true,
+        }),
+      });
+
+      if (response.ok) {
+        const data: SearchResults = await response.json();
+        setResults(data);
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'La búsqueda falló');
+      }
+    } catch (_) {
+      toast.error('No se pudo realizar la búsqueda');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [getActiveFilters, pagination, query, sort]);
 
   // Clear filters
   const clearFilters = () => {
@@ -464,7 +463,7 @@ export function DocumentSearch({
           <div className="text-sm text-gray-600">
             Se encontraron {results.pagination.total} resultados
             {results.search.query && (
-              <span> para "{results.search.query}"</span>
+              <span> para &quot;{results.search.query}&quot;</span>
             )}
           </div>
           <div className="flex items-center space-x-2">
@@ -591,7 +590,7 @@ export function DocumentSearch({
     if (query.trim()) {
       performSearch();
     }
-  }, [query, filters, sort, pagination.page]);
+  }, [query, performSearch]);
 
   return (
     <div className={compact ? '' : 'max-w-6xl mx-auto'}>
@@ -613,7 +612,7 @@ export function DocumentSearch({
                   placeholder="Buscar documentos..."
                   value={query}
                   onChange={(e) => handleQueryChange(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && performSearch()}
+                  onKeyDown={(e) => e.key === 'Enter' && performSearch()}
                   className="pl-10 pr-20"
                 />
                 <div className="absolute right-2 top-2 flex items-center space-x-1">

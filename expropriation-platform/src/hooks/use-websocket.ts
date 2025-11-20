@@ -15,6 +15,8 @@ export interface NotificationData {
   userId: string;
   metadata?: any;
   createdAt: Date;
+  readAt?: Date;
+  isRead?: boolean;
 }
 
 export interface WebSocketMessage {
@@ -77,6 +79,24 @@ export const useWebSocket = (options: UseWebSocketOptions = {}): UseWebSocketRet
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Helper functions for heartbeat and reconnection
+  const startHeartbeat = useCallback(() => {
+    if (heartbeatIntervalRef.current) return;
+
+    heartbeatIntervalRef.current = setInterval(() => {
+      if (socketRef.current?.connected) {
+        socketRef.current.emit('heartbeat-ping', { timestamp: new Date() });
+      }
+    }, 30000);
+  }, []);
+
+  const stopHeartbeat = useCallback(() => {
+    if (heartbeatIntervalRef.current) {
+      clearInterval(heartbeatIntervalRef.current);
+      heartbeatIntervalRef.current = null;
+    }
+  }, []);
+
   const connect = useCallback(() => {
     if (!session?.user) {
       clientLogger.warn('Cannot connect WebSocket: no session');
@@ -125,14 +145,19 @@ export const useWebSocket = (options: UseWebSocketOptions = {}): UseWebSocketRet
       });
 
       newSocket.on('disconnect', (reason) => {
-        clientLogger.info('WebSocket disconnected:', reason);
+        clientLogger.info('WebSocket disconnected:', { reason });
         setIsConnected(false);
         setConnectionStatus('disconnected');
         stopHeartbeat();
 
         // Auto-reconnect if not intentionally disconnected
         if (reason !== 'io client disconnect' && reconnection) {
-          scheduleReconnect();
+          if (reconnectTimeoutRef.current) return;
+
+          reconnectTimeoutRef.current = setTimeout(() => {
+            clientLogger.info('Attempting to reconnect WebSocket...');
+            connect();
+          }, reconnectionDelay);
         }
       });
 
@@ -144,7 +169,12 @@ export const useWebSocket = (options: UseWebSocketOptions = {}): UseWebSocketRet
         stopHeartbeat();
 
         if (reconnection) {
-          scheduleReconnect();
+          if (reconnectTimeoutRef.current) return;
+
+          reconnectTimeoutRef.current = setTimeout(() => {
+            clientLogger.info('Attempting to reconnect WebSocket...');
+            connect();
+          }, reconnectionDelay);
         }
       });
 
@@ -159,8 +189,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}): UseWebSocketRet
           setUnreadCount(prev => prev + 1);
 
           // Show toast notification
-          toast.success(notification.title, {
-            description: notification.message,
+          toast(`${notification.title}: ${notification.message}`, {
             duration: 5000,
             icon: getNotificationIcon(notification.type),
           });
@@ -225,7 +254,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}): UseWebSocketRet
       });
 
       // Heartbeat
-      newSocket.on('heartbeat', (data: { timestamp: Date }) => {
+      newSocket.on('heartbeat', () => {
         // Respond to server heartbeat
         newSocket.emit('heartbeat-response', {
           timestamp: new Date(),
@@ -249,12 +278,14 @@ export const useWebSocket = (options: UseWebSocketOptions = {}): UseWebSocketRet
         setError(err.message || 'Unknown error');
       });
 
-    } catch (err) {
-      clientLogger.error('Error creating WebSocket connection:', err);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error creating WebSocket connection:', error);
+      }
       setConnectionStatus('error');
       setError('Failed to create WebSocket connection');
     }
-  }, [session, reconnection, reconnectionAttempts, reconnectionDelay]);
+  }, [session, reconnection, reconnectionAttempts, reconnectionDelay, startHeartbeat, stopHeartbeat]);
 
   const disconnect = useCallback(() => {
     if (socketRef.current) {
@@ -270,33 +301,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}): UseWebSocketRet
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
-  }, []);
-
-  const scheduleReconnect = useCallback(() => {
-    if (reconnectTimeoutRef.current) return;
-
-    reconnectTimeoutRef.current = setTimeout(() => {
-      clientLogger.info('Attempting to reconnect WebSocket...');
-      connect();
-    }, reconnectionDelay);
-  }, [connect, reconnectionDelay]);
-
-  const startHeartbeat = useCallback(() => {
-    if (heartbeatIntervalRef.current) return;
-
-    heartbeatIntervalRef.current = setInterval(() => {
-      if (socketRef.current?.connected) {
-        socketRef.current.emit('heartbeat-ping', { timestamp: new Date() });
-      }
-    }, 30000);
-  }, []);
-
-  const stopHeartbeat = useCallback(() => {
-    if (heartbeatIntervalRef.current) {
-      clearInterval(heartbeatIntervalRef.current);
-      heartbeatIntervalRef.current = null;
-    }
-  }, []);
+  }, [stopHeartbeat]);
 
   const sendNotification = useCallback((data: NotificationData) => {
     if (socketRef.current?.connected) {

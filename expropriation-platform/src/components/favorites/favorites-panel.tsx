@@ -1,23 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Star,
   StarOff,
-  Clock,
   FileText,
   Users,
   Building2,
   X,
-  Plus,
   MoreHorizontal
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,8 +54,10 @@ export function FavoritesPanel({ className, maxItems = 5 }: FavoritesPanelProps)
         const data = await response.json();
         setFavorites(data.favorites || []);
       }
-    } catch (error) {
-      clientLogger.error('Failed to load favorites:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Failed to load favorites:', error);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -67,31 +66,6 @@ export function FavoritesPanel({ className, maxItems = 5 }: FavoritesPanelProps)
   useEffect(() => {
     loadFavorites();
   }, []);
-
-  // Add to favorites
-  const addToFavorites = async (item: Omit<FavoriteItem, 'id' | 'addedAt'>) => {
-    try {
-      const response = await fetch('/api/favorites', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(item),
-      });
-
-      if (response.ok) {
-        await loadFavorites();
-        toast({
-          title: "Añadido a favoritos",
-          description: `${item.title} ha sido añadido a tus favoritos.`,
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudo añadir a favoritos.",
-        variant: "destructive",
-      });
-    }
-  };
 
   // Remove from favorites
   const removeFromFavorites = async (id: string) => {
@@ -107,7 +81,7 @@ export function FavoritesPanel({ className, maxItems = 5 }: FavoritesPanelProps)
           description: "El elemento ha sido eliminado de tus favoritos.",
         });
       }
-    } catch (error) {
+    } catch (_) {
       toast({
         title: "Error",
         description: "No se pudo eliminar de favoritos.",
@@ -290,21 +264,23 @@ export function useFavorite(item: {
   const { toast } = useToast();
 
   // Check if item is favorite
-  const checkFavorite = async () => {
+  const checkFavorite = useCallback(async () => {
     try {
       const response = await fetch(`/api/favorites/check?type=${item.type}&itemId=${item.id}`);
       if (response.ok) {
         const data = await response.json();
         setIsFavorite(data.isFavorite);
       }
-    } catch (error) {
-      clientLogger.error('Failed to check favorite status:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Failed to check favorite status:', error);
+      }
     }
-  };
+  }, [item]);
 
   useEffect(() => {
     checkFavorite();
-  }, [item.id, item.type]);
+  }, [checkFavorite]);
 
   // Toggle favorite
   const toggleFavorite = async () => {
@@ -337,7 +313,7 @@ export function useFavorite(item: {
           });
         }
       }
-    } catch (error) {
+    } catch (_) {
       toast({
         title: "Error",
         description: "No se pudo actualizar favoritos.",

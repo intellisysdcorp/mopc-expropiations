@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,17 +12,8 @@ import {
   Shield,
   CheckCircle2,
   AlertTriangle,
-  Clock,
-  FileText,
-  Users,
-  MessageSquare,
-  BarChart3,
   Activity,
-  Settings,
-  Eye,
-  Download,
   RefreshCw,
-  Zap
 } from 'lucide-react';
 
 // Import validation components
@@ -73,23 +64,25 @@ export function ValidationDashboard({
   refreshInterval = 30000
 }: ValidationDashboardProps) {
   const [summary, setSummary] = useState<CaseValidationSummary | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, _setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [refreshing, setRefreshing] = useState(false);
   const { toast } = useToast();
 
   // Fetch validation summary
-  const fetchSummary = async () => {
+  const fetchSummary = useCallback(async () => {
     try {
       const response = await fetch(`/api/cases/${caseId}/validation-summary`);
       if (response.ok) {
         const data = await response.json();
         setSummary(data);
       }
-    } catch (error) {
-      clientLogger.error('Error fetching validation summary:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching validation summary:', error);
+      }
     }
-  };
+  }, [caseId]);
 
   // Refresh all validation data
   const refreshAll = async () => {
@@ -132,14 +125,15 @@ export function ValidationDashboard({
 
   useEffect(() => {
     fetchSummary();
-  }, [caseId]);
+  }, [fetchSummary]);
 
   useEffect(() => {
     if (autoRefresh) {
       const interval = setInterval(fetchSummary, refreshInterval);
       return () => clearInterval(interval);
     }
-  }, [autoRefresh, refreshInterval]);
+    return undefined
+  }, [autoRefresh, refreshInterval, fetchSummary]);
 
   if (loading && !summary) {
     return (
@@ -203,27 +197,44 @@ export function ValidationDashboard({
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {/* Overall Progress */}
               <div className="text-center">
-                <div className="text-3xl font-bold mb-2">{summary.overallProgress}%</div>
-                <div className="text-sm text-gray-500 mb-2">Overall Progress</div>
+                <div className="text-3xl font-bold mb-2">
+                  {summary.overallProgress}%
+                </div>
+                <div className="text-sm text-gray-500 mb-2">
+                  Overall Progress
+                </div>
                 <Progress value={summary.overallProgress} className="h-2" />
               </div>
 
               {/* Risk Score */}
               <div className="text-center">
-                <div className={`text-3xl font-bold mb-2 ${
-                  summary.riskScore >= 70 ? 'text-red-600' :
-                  summary.riskScore >= 40 ? 'text-yellow-600' : 'text-green-600'
-                }`}>
+                <div
+                  className={`text-3xl font-bold mb-2 ${
+                    summary.riskScore >= 70
+                      ? 'text-red-600'
+                      : summary.riskScore >= 40
+                        ? 'text-yellow-600'
+                        : 'text-green-600'
+                  }`}
+                >
                   {summary.riskScore}
                 </div>
                 <div className="text-sm text-gray-500 mb-2">Risk Score</div>
                 <div className="flex justify-center">
-                  <Badge className={
-                    summary.riskScore >= 70 ? 'bg-red-100 text-red-800' :
-                    summary.riskScore >= 40 ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
-                  }>
-                    {summary.riskScore >= 70 ? 'High Risk' :
-                     summary.riskScore >= 40 ? 'Medium Risk' : 'Low Risk'}
+                  <Badge
+                    className={
+                      summary.riskScore >= 70
+                        ? 'bg-red-100 text-red-800'
+                        : summary.riskScore >= 40
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-green-100 text-green-800'
+                    }
+                  >
+                    {summary.riskScore >= 70
+                      ? 'High Risk'
+                      : summary.riskScore >= 40
+                        ? 'Medium Risk'
+                        : 'Low Risk'}
                   </Badge>
                 </div>
               </div>
@@ -235,7 +246,8 @@ export function ValidationDashboard({
                 </div>
                 <div className="text-sm text-gray-500 mb-2">Open Issues</div>
                 <div className="text-xs text-gray-500">
-                  {summary.openObservations} observations • {summary.overdueItems} overdue
+                  {summary.openObservations} observations •{' '}
+                  {summary.overdueItems} overdue
                 </div>
               </div>
 
@@ -244,7 +256,9 @@ export function ValidationDashboard({
                 <div className="text-3xl font-bold mb-2 text-blue-600">
                   {summary.pendingSignatures}
                 </div>
-                <div className="text-sm text-gray-500 mb-2">Pending Actions</div>
+                <div className="text-sm text-gray-500 mb-2">
+                  Pending Actions
+                </div>
                 <div className="text-xs text-gray-500">
                   Signatures and approvals
                 </div>
@@ -284,13 +298,17 @@ export function ValidationDashboard({
             </div>
 
             {/* Alerts */}
-            {(summary.openObservations > 0 || summary.overdueItems > 0 || summary.riskScore >= 70) && (
+            {(summary.openObservations > 0 ||
+              summary.overdueItems > 0 ||
+              summary.riskScore >= 70) && (
               <Alert className="mt-4">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
                   {summary.riskScore >= 70 && 'High risk level detected. '}
-                  {summary.overdueItems > 0 && `${summary.overdueItems} overdue items require attention. `}
-                  {summary.openObservations > 0 && `${summary.openObservations} observations are pending resolution. `}
+                  {summary.overdueItems > 0 &&
+                    `${summary.overdueItems} overdue items require attention. `}
+                  {summary.openObservations > 0 &&
+                    `${summary.openObservations} observations are pending resolution. `}
                   Please review the details below.
                 </AlertDescription>
               </Alert>
@@ -313,22 +331,24 @@ export function ValidationDashboard({
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6 mt-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Validation Engine */}
-            <ValidationEngine
-              caseId={caseId}
-              stage={caseStage}
-              onValidationComplete={() => fetchSummary()}
-            />
+          {caseStage && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Validation Engine */}
+              <ValidationEngine
+                caseId={caseId}
+                stage={caseStage}
+                onValidationComplete={() => fetchSummary()}
+              />
 
-            {/* Risk Assessment Summary */}
-            <RiskAssessment
-              caseId={caseId}
-              stage={caseStage}
-              showAnalytics={true}
-              onRiskUpdate={() => fetchSummary()}
-            />
-          </div>
+              {/* Risk Assessment Summary */}
+              <RiskAssessment
+                caseId={caseId}
+                stage={caseStage}
+                showAnalytics={true}
+                onRiskUpdate={() => fetchSummary()}
+              />
+            </div>
+          )}
 
           {/* Time Tracking Overview */}
           <TimeTrackingDashboard
@@ -365,42 +385,45 @@ export function ValidationDashboard({
           />
         </TabsContent>
 
-        <TabsContent value="reviews" className="mt-6">
-          <ParallelReview
-            caseId={caseId}
-            caseStage={caseStage}
-            onReviewComplete={() => fetchSummary()}
-          />
-        </TabsContent>
+        {caseStage && (
+          <>
+            <TabsContent value="reviews" className="mt-6">
+              <ParallelReview
+                caseId={caseId}
+                caseStage={caseStage}
+                onReviewComplete={() => fetchSummary()}
+              />
+            </TabsContent>
 
-        <TabsContent value="approvals" className="mt-6">
-          <ApprovalMatrix
-            caseId={caseId}
-            caseStage={caseStage}
-            editable={editable}
-            onApprovalUpdate={() => fetchSummary()}
-          />
-        </TabsContent>
+            <TabsContent value="approvals" className="mt-6">
+              <ApprovalMatrix
+                caseId={caseId}
+                editable={editable}
+                onApprovalUpdate={() => fetchSummary()}
+              />
+            </TabsContent>
 
-        <TabsContent value="observations" className="mt-6">
-          <ObservationSystem
-            caseId={caseId}
-            stage={caseStage}
-            allowCreate={editable}
-            allowRespond={editable}
-            onObservationUpdate={() => fetchSummary()}
-          />
-        </TabsContent>
+            <TabsContent value="observations" className="mt-6">
+              <ObservationSystem
+                caseId={caseId}
+                stage={caseStage}
+                allowCreate={editable}
+                allowRespond={editable}
+                onObservationUpdate={() => fetchSummary()}
+              />
+            </TabsContent>
 
-        <TabsContent value="risk" className="mt-6">
-          <RiskAssessment
-            caseId={caseId}
-            stage={caseStage}
-            autoAssess={false}
-            showAnalytics={true}
-            onRiskUpdate={() => fetchSummary()}
-          />
-        </TabsContent>
+            <TabsContent value="risk" className="mt-6">
+              <RiskAssessment
+                caseId={caseId}
+                stage={caseStage}
+                autoAssess={false}
+                showAnalytics={true}
+                onRiskUpdate={() => fetchSummary()}
+              />
+            </TabsContent>
+          </>
+        )}
       </Tabs>
     </div>
   );

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,7 +28,6 @@ import {
   FileText,
   AlertTriangle,
   User,
-  Calendar,
   MoreHorizontal,
   Eye,
   Edit,
@@ -360,11 +360,12 @@ function CasesSection({
   departmentId?: string;
   userId?: string;
 }) {
+  const router = useRouter();
   const [cases, setCases] = useState<CaseItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchCases = async () => {
+  const fetchCases = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({ type, limit: '5' });
@@ -379,17 +380,21 @@ function CasesSection({
       const data: CasesResponse = await response.json();
       setCases(data.cases);
       setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error loading cases');
-      clientLogger.error('Error fetching cases:', err);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message);
+        clientLogger.error('Error fetching cases:', error);
+      } else {
+        setError('Error loading cases');
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [departmentId, type, userId]);
 
   useEffect(() => {
     fetchCases();
-  }, [departmentId, userId, type]);
+  }, [fetchCases]);
 
   return (
     <Card>
@@ -405,7 +410,7 @@ function CasesSection({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => window.push(`/cases?filter=${type}`)}
+            onClick={() => router.push(`/cases?filter=${type}`)}
           >
             Ver todos
           </Button>
@@ -461,6 +466,12 @@ function CasesSection({
 }
 
 export function DashboardCases({ departmentId, userId }: DashboardCasesProps) {
+  // Filter out undefined props to avoid exactOptionalPropertyTypes errors
+  const casesSectionProps = {
+    ...(departmentId && { departmentId }),
+    ...(userId && { userId })
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -469,16 +480,14 @@ export function DashboardCases({ departmentId, userId }: DashboardCasesProps) {
           description="Últimos casos creados en el sistema"
           type="recent"
           icon={<FileText className="h-5 w-5 text-blue-600" />}
-          departmentId={departmentId}
-          userId={userId}
+          {...casesSectionProps}
         />
         <CasesSection
           title="Casos Pendientes"
           description="Casos que requieren atención inmediata"
           type="pending"
           icon={<Clock className="h-5 w-5 text-yellow-600" />}
-          departmentId={departmentId}
-          userId={userId}
+          {...casesSectionProps}
         />
       </div>
 
@@ -488,16 +497,14 @@ export function DashboardCases({ departmentId, userId }: DashboardCasesProps) {
           description="Casos que han superado su fecha límite"
           type="overdue"
           icon={<AlertTriangle className="h-5 w-5 text-red-600" />}
-          departmentId={departmentId}
-          userId={userId}
+          {...casesSectionProps}
         />
         <CasesSection
           title="Alta Prioridad"
           description="Casos urgentes y de alta prioridad"
           type="high-priority"
           icon={<AlertTriangle className="h-5 w-5 text-orange-600" />}
-          departmentId={departmentId}
-          userId={userId}
+          {...casesSectionProps}
         />
       </div>
     </div>

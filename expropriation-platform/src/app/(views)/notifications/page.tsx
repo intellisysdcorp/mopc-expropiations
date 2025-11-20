@@ -4,17 +4,13 @@ import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
+    DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
@@ -26,15 +22,10 @@ import {
   Clock,
   AlertTriangle,
   Info,
-  FileText,
   User,
-  Calendar,
   Trash2,
-  Archive,
   Eye,
   Search,
-  Filter,
-  Settings,
   RefreshCw,
   Mail,
   MailOpen,
@@ -84,7 +75,7 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [stats, setStats] = useState<NotificationStats | null>(null)
   const [loading, setLoading] = useState(false)
-  const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all')
+  const [filter] = useState<'all' | 'unread' | 'read'>('all')
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [priorityFilter, setPriorityFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -92,7 +83,7 @@ export default function NotificationsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
 
-  const { user } = useAuth()
+  const {} = useAuth()
 
   const fetchNotifications = useCallback(async (page = 1, append = false) => {
     try {
@@ -165,7 +156,7 @@ export default function NotificationsPage() {
         })
       }
 
-    } catch (error) {
+    } catch {
       toast.error('Error al actualizar notificación')
     }
   }
@@ -193,7 +184,7 @@ export default function NotificationsPage() {
 
       toast.success('Notificación eliminada')
 
-    } catch (error) {
+    } catch {
       toast.error('Error al eliminar notificación')
     }
   }
@@ -222,7 +213,7 @@ export default function NotificationsPage() {
 
       toast.success('Todas las notificaciones marcadas como leídas')
 
-    } catch (error) {
+    } catch {
       toast.error('Error al marcar notificaciones como leídas')
     }
   }
@@ -281,7 +272,7 @@ export default function NotificationsPage() {
       setSelectedNotifications(new Set())
       toast.success(result.message)
 
-    } catch (error) {
+    } catch {
       toast.error('Error al realizar acción masiva')
     }
   }

@@ -9,7 +9,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Table,
   TableBody,
@@ -24,17 +23,13 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
 import {
   Plus,
   Edit,
   History,
-  Settings,
   Save,
-  RotateCcw,
-  Search,
-  Filter
+  Search
 } from 'lucide-react'
 import clientLogger from '@/lib/client-logger';
 
@@ -485,7 +480,7 @@ export function SystemConfigurationPanel() {
                       try {
                         const parsedValue = JSON.parse(e.target.value)
                         setSelectedConfig({...selectedConfig, value: parsedValue})
-                      } catch (error) {
+                      } catch {
                         // Invalid JSON, don't update
                       }
                     }}

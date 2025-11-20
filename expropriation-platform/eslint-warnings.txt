@@ -1,0 +1,122 @@
+"/src/components/dashboard/case-flow-visualization.tsx"
+  208:6  warning  React Hook useEffect has a missing dependency: 'fetchFlowData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/dashboard/dashboard-alerts.tsx"
+  250:6  warning  React Hook useEffect has a missing dependency: 'fetchAlerts'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  260:6  warning  React Hook useEffect has a missing dependency: 'fetchAlerts'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/dashboard/dashboard-cases.tsx"
+  391:6  warning  React Hook useEffect has a missing dependency: 'fetchCases'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/dashboard/dashboard-charts.tsx"
+  119:6  warning  React Hook useEffect has a missing dependency: 'fetchChartData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/dashboard/dashboard-stats.tsx"
+  169:6  warning  React Hook useEffect has a missing dependency: 'fetchStats'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/departments/department-permissions.tsx"
+  116:6  warning  React Hook useEffect has a missing dependency: 'fetchPermissions'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/departments/department-stages.tsx"
+  198:6  warning  React Hook useEffect has a missing dependency: 'fetchStages'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/departments/department-statistics.tsx"
+  107:6  warning  React Hook useEffect has a missing dependency: 'fetchStatistics'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/departments/department-status.tsx"
+  93:6  warning  React Hook useEffect has a missing dependency: 'fetchStatusHistory'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/documents/DocumentSearch.tsx"
+  156:6  warning  React Hook useCallback has a missing dependency: 'getActiveFilters'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  594:6  warning  React Hook useEffect has a missing dependency: 'performSearch'. Either include it or remove the dependency array       react-hooks/exhaustive-deps
+
+"/src/components/documents/DocumentViewer.tsx"
+   87:6   warning  React Hook useEffect has a missing dependency: 'loadPreview'. Either include it or remove the dependency array                                                                                                                                                                           react-hooks/exhaustive-deps
+
+"/src/components/favorites/favorites-panel.tsx"
+  279:6  warning  React Hook useEffect has a missing dependency: 'checkFavorite'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/navigation/enhanced-breadcrumbs.tsx"
+  95:9  warning  The 'allItems' conditional could make the dependencies of useMemo Hook (at line 124) change on every render. Move it inside the useMemo callback. Alternatively, wrap the initialization of 'allItems' in its own useMemo() Hook  react-hooks/exhaustive-deps
+
+"/src/components/navigation/enhanced-keyboard-shortcuts.tsx"
+  261:9  warning  The 'shortcuts' array makes the dependencies of useCallback Hook (at line 321) change on every render. To fix this, wrap the initialization of 'shortcuts' in its own useMemo() Hook  react-hooks/exhaustive-deps
+  505:6  warning  React Hook useEffect was passed a dependency list that is not an array literal. This means we can't statically verify whether you've passed the correct dependencies                  react-hooks/exhaustive-deps
+  505:6  warning  React Hook useEffect has a missing dependency: 'shortcuts'. Either include it or remove the dependency array                                                                          react-hooks/exhaustive-deps
+
+"/src/components/notifications/enhanced-notification-center.tsx"
+  94:6  warning  React Hook useEffect has a missing dependency: 'notifications.length'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/notifications/enhanced-toast-provider.tsx"
+  134:6  warning  React Hook useCallback has a missing dependency: 'dismiss'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/search/global-search.tsx"
+  49:25  warning  React Hook useCallback received a function whose dependencies are unknown. Pass an inline function instead  react-hooks/exhaustive-deps
+
+"/src/components/tutorial/tutorial-provider.tsx"
+  154:6  warning  React Hook useCallback has a missing dependency: 'completeTutorial'. Either include it or remove the dependency array         react-hooks/exhaustive-deps
+  169:6  warning  React Hook useCallback has a missing dependency: 'completeTutorial'. Either include it or remove the dependency array         react-hooks/exhaustive-deps
+  178:6  warning  React Hook useCallback has a missing dependency: 'markTutorialAsCompleted'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/users/department-assignment.tsx"
+  91:6  warning  React Hook useEffect has a missing dependency: 'fetchAssignments'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/users/user-activity-history.tsx"
+  86:6  warning  React Hook useEffect has a missing dependency: 'fetchActivityHistory'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/users/user-sessions.tsx"
+  68:6  warning  React Hook useEffect has a missing dependency: 'fetchSessions'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/validation/approval-matrix.tsx"
+  385:6  warning  React Hook useEffect has a missing dependency: 'fetchMatrices'. Either include it or remove the dependency array         react-hooks/exhaustive-deps
+  391:6  warning  React Hook useEffect has a missing dependency: 'calculateRequirement'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/validation/dynamic-checklist.tsx"
+  94:6  warning  React Hook useEffect has a missing dependency: 'fetchChecklistData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/validation/observation-system.tsx"
+  404:6  warning  React Hook useEffect has a missing dependency: 'fetchObservations'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/validation/parallel-review.tsx"
+  144:6  warning  React Hook useEffect has a missing dependency: 'fetchAssignments'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/validation/risk-assessment.tsx"
+  368:6  warning  React Hook useEffect has missing dependencies: 'fetchAnalytics', 'fetchAssessments', and 'showAnalytics'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  374:6  warning  React Hook useEffect has a missing dependency: 'runAssessment'. Either include it or remove the dependency array                                              react-hooks/exhaustive-deps
+
+"/src/components/validation/time-tracking-dashboard.tsx"
+  167:6  warning  React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/validation/validation-dashboard.tsx"
+  126:6  warning  React Hook useEffect has a missing dependency: 'fetchSummary'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  133:6  warning  React Hook useEffect has a missing dependency: 'fetchSummary'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/validation/validation-engine.tsx"
+  261:6  warning  React Hook useEffect has missing dependencies: 'fetchExecutions' and 'fetchRules'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  267:6  warning  React Hook useEffect has a missing dependency: 'runValidation'. Either include it or remove the dependency array                       react-hooks/exhaustive-deps
+
+"/src/components/workflow/case-timeline.tsx"
+  102:6  warning  React Hook useEffect has a missing dependency: 'fetchTimeline'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/workflow/checklist-manager.tsx"
+  95:6  warning  React Hook useEffect has a missing dependency: 'fetchChecklist'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/workflow/stage-progression-control.tsx"
+  99:6  warning  React Hook useEffect has a missing dependency: 'fetchProgressions'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/workflow/stage-return-dialog.tsx"
+  86:6  warning  React Hook useEffect has a missing dependency: 'fetchReturnOptions'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/components/workflow/workflow-manager.tsx"
+  98:6  warning  React Hook useEffect has a missing dependency: 'fetchCaseData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+"/src/hooks/use-case-form.ts"
+  290:6  warning  React Hook useEffect has missing dependencies: 'fetchCase', 'fetchDepartments', and 'fetchExistingDocuments'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  297:6  warning  React Hook useEffect has a missing dependency: 'fetchDepartmentUsers'. Either include it or remove the dependency array                                           react-hooks/exhaustive-deps
+
+"/src/hooks/use-websocket.ts"
+  257:6  warning  React Hook useCallback has missing dependencies: 'scheduleReconnect', 'startHeartbeat', and 'stopHeartbeat'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  273:6  warning  React Hook useCallback has a missing dependency: 'stopHeartbeat'. Either include it or remove the dependency array                                               react-hooks/exhaustive-deps
+
+"/src/hooks/useCase.ts"
+  41:6  warning  React Hook useEffect has a missing dependency: 'fetchCase'. Either include it or remove the dependency array  react-hooks/exhaustive-deps

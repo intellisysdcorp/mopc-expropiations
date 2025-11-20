@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'react-hot-toast'
 import {
   FileText,
@@ -48,15 +47,7 @@ const TEMPLATE_TYPES = [
   { value: 'FINANCIAL', label: 'Financiero', icon: FileText, color: 'bg-orange-100 text-orange-800' },
 ]
 
-const CATEGORIES = [
-  { value: 'ADMINISTRATIVE', label: 'Administrativo' },
-  { value: 'LEGAL', label: 'Legal' },
-  { value: 'TECHNICAL', label: 'Técnico' },
-  { value: 'FINANCIAL', label: 'Financiero' },
-]
-
 export function DocumentTemplates({ caseId, onDocumentCreated }: DocumentTemplatesProps) {
-  const { data: session } = useSession()
   const [templates, setTemplates] = useState<DocumentTemplate[]>([])
   const [caseContext, setCaseContext] = useState<any>({})
   const [loading, setLoading] = useState(true)
@@ -64,7 +55,7 @@ export function DocumentTemplates({ caseId, onDocumentCreated }: DocumentTemplat
   const [selectedType, setSelectedType] = useState('all')
   const [selectedTemplate, setSelectedTemplate] = useState<DocumentTemplate | null>(null)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [templateData, setTemplateData] = useState<any>({})
+  const [templateData, setTemplateData] = useState<Record<string, any>>({})
   const [customizations, setCustomizations] = useState({
     title: '',
     description: '',
@@ -72,12 +63,7 @@ export function DocumentTemplates({ caseId, onDocumentCreated }: DocumentTemplat
   })
   const [isCreating, setIsCreating] = useState(false)
 
-  // Fetch templates
-  useEffect(() => {
-    fetchTemplates()
-  }, [selectedType])
-
-  const fetchTemplates = async () => {
+  const fetchTemplates = useCallback(async () => {
     try {
       setLoading(true)
       const params = new URLSearchParams()
@@ -89,13 +75,20 @@ export function DocumentTemplates({ caseId, onDocumentCreated }: DocumentTemplat
       const data = await response.json()
       setTemplates(data.templates)
       setCaseContext(data.caseContext)
-    } catch (error) {
-      clientLogger.error('Error fetching templates:', error)
-      toast.error('Error al cargar las plantillas')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching templates:', error)
+        toast.error('Error al cargar las plantillas')
+      }
     } finally {
       setLoading(false)
     }
-  }
+  }, [caseId, selectedType]);
+
+  // Fetch templates
+  useEffect(() => {
+    fetchTemplates()
+  }, [fetchTemplates]);
 
   const handleTemplateSelect = (template: DocumentTemplate) => {
     setSelectedTemplate(template)
@@ -146,9 +139,11 @@ export function DocumentTemplates({ caseId, onDocumentCreated }: DocumentTemplat
       onDocumentCreated?.(document)
       setIsCreateDialogOpen(false)
       setSelectedTemplate(null)
-    } catch (error) {
-      clientLogger.error('Error creating document:', error)
-      toast.error('Error al crear el documento')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error creating document:', error)
+        toast.error('Error al crear el documento')
+      }
     } finally {
       setIsCreating(false)
     }
@@ -174,8 +169,8 @@ export function DocumentTemplates({ caseId, onDocumentCreated }: DocumentTemplat
   )
 
   const TemplateCard = ({ template }: { template: DocumentTemplate }) => {
-    const typeConfig = getTemplateTypeConfig(template.type)
-    const securityConfig = getSecurityLevelBadge(template.securityLevel)
+    const typeConfig = getTemplateTypeConfig(template.type)!
+    const securityConfig = getSecurityLevelBadge(template.securityLevel)!
 
     return (
       <Card className="hover:shadow-md transition-shadow cursor-pointer"

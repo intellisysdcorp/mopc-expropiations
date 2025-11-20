@@ -2,7 +2,6 @@
 
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
-import { useSession } from 'next-auth/react'
 import { toast } from 'react-hot-toast'
 import {
   Upload,
@@ -94,7 +93,6 @@ export function DocumentUpload({
   maxFiles = 10,
   disabled = false
 }: DocumentUploadProps) {
-  const { data: session } = useSession()
   const [uploads, setUploads] = useState<FileUploadProgress[]>([])
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [currentFile, setCurrentFile] = useState<File | null>(null)

@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma';
@@ -536,7 +537,7 @@ async function checkNotificationPreferences(
   }
 
   // Determine channels based on preferences
-  let channels: string[] = [];
+  const channels: string[] = [];
 
   if (preferences.enableInAppNotifications && (!requestedChannels || requestedChannels.includes('in_app'))) {
     channels.push('in_app');

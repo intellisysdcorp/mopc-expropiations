@@ -6,9 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -18,7 +16,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import {
   Bell,
   BellRing,
@@ -28,11 +25,8 @@ import {
   Clock,
   AlertTriangle,
   Info,
-  FileText,
   User,
-  Calendar,
   Trash2,
-  Archive,
   Eye
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -147,7 +141,7 @@ export function NotificationCenter({ className, onNotificationClick }: Notificat
         });
       }
 
-    } catch (error) {
+    } catch (_) {
       toast.error('Error al actualizar notificación');
     }
   };
@@ -179,7 +173,7 @@ export function NotificationCenter({ className, onNotificationClick }: Notificat
 
       toast.success('Notificación eliminada');
 
-    } catch (error) {
+    } catch (_) {
       toast.error('Error al eliminar notificación');
     }
   };
@@ -220,7 +214,7 @@ export function NotificationCenter({ className, onNotificationClick }: Notificat
 
       toast.success('Todas las notificaciones marcadas como leídas');
 
-    } catch (error) {
+    } catch (_) {
       toast.error('Error al marcar notificaciones como leídas');
     }
   };
@@ -290,7 +284,7 @@ export function NotificationCenter({ className, onNotificationClick }: Notificat
       setSelectedNotifications(new Set());
       toast.success(result.message);
 
-    } catch (error) {
+    } catch (_) {
       toast.error('Error al realizar acción masiva');
     }
   };

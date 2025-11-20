@@ -56,7 +56,7 @@ const DURATION_OPTIONS = [
 ]
 
 export default function CreateMeetingPage() {
-  const { data: session, status } = useSession()
+  const { status } = useSession()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [users, setUsers] = useState<User[]>([])

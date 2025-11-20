@@ -177,7 +177,6 @@ interface SelectInputProps {
 }
 
 export function SelectInput({
-  id,
   value,
   onChange,
   placeholder,

@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { resetPassword, verifyPasswordResetToken } from '@/lib/auth-utils';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
+
+import { resetPassword, verifyPasswordResetToken } from '@/lib/auth-utils';
 import { logger } from '@/lib/logger';
 
 const resetPasswordSchema = z.object({

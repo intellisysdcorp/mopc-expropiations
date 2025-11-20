@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +12,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  FlowChart,
   GitBranch,
   Clock,
   AlertTriangle,
@@ -68,7 +67,7 @@ const STAGE_LABELS: Record<string, string> = {
   'CIERRE_ARCHIVO': 'Cierre'
 };
 
-const STAGE_COLORS: Record<string, string> = {
+const STAGE_COLORS = {
   'RECEPCION_SOLICITUD': '#3b82f6',
   'VERIFICACION_REQUISITOS': '#6366f1',
   'CARGA_DOCUMENTOS': '#8b5cf6',
@@ -178,7 +177,7 @@ export function CaseFlowVisualization({ departmentId }: CaseFlowVisualizationPro
   const [selectedView, setSelectedView] = useState<'current' | 'historical' | 'predictive'>('current');
   const [timeRange, setTimeRange] = useState('30');
 
-  const fetchFlowData = async () => {
+  const fetchFlowData = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -195,17 +194,21 @@ export function CaseFlowVisualization({ departmentId }: CaseFlowVisualizationPro
       const data = await response.json();
       setFlowData(data);
       setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error loading flow data');
-      clientLogger.error('Error fetching flow data:', err);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message);
+        clientLogger.error('Error fetching flow data:', error);
+      } else {
+        setError('Error loading flow data');
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [departmentId, selectedView, timeRange]);
 
   useEffect(() => {
     fetchFlowData();
-  }, [departmentId, selectedView, timeRange]);
+  }, [fetchFlowData]);
 
   // Mock data for demonstration
   const mockFlowData: FlowData = {
@@ -219,7 +222,7 @@ export function CaseFlowVisualization({ departmentId }: CaseFlowVisualizationPro
         bottleneckLevel: 'low',
         description: 'Recepción inicial de solicitudes de expropiación',
         nextStages: ['VERIFICACION_REQUISITOS'],
-        color: STAGE_COLORS['RECEPCION_SOLICITUD']
+        color: STAGE_COLORS['RECEPCION_SOLICITUD'] || '#3b82f6'
       },
       {
         id: '2',
@@ -280,7 +283,7 @@ export function CaseFlowVisualization({ departmentId }: CaseFlowVisualizationPro
   const dataToDisplay = flowData || mockFlowData;
 
   const handleStageClick = (stage: string) => {
-    clientLogger.info('Clicked stage:', stage);
+    clientLogger.info('Clicked stage:', { stage });
     // Navigate to detailed stage view
   };
 
@@ -289,7 +292,7 @@ export function CaseFlowVisualization({ departmentId }: CaseFlowVisualizationPro
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <FlowChart className="h-5 w-5" />
+            <GitBranch className="h-5 w-5" />
             Visualización del Flujo de Casos
           </CardTitle>
           <CardDescription>

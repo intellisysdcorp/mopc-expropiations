@@ -13,7 +13,6 @@ interface LegalFinancialSectionProps {
 export function LegalFinancialSection({
   formData,
   onInputChange,
-  onNumberChange
 }: LegalFinancialSectionProps) {
   return (
     <Card>

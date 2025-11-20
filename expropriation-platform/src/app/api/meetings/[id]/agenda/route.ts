@@ -228,7 +228,7 @@ export async function POST(
 
     const addedItems = [];
     const errors = [];
-    let nextSequence = (meeting.agendaItems[0]?.sequence || 0) + 1;
+    const nextSequence = (meeting.agendaItems[0]?.sequence || 0) + 1;
 
     for (const [index, itemData] of validatedData.items.entries()) {
       try {

@@ -1,4 +1,4 @@
-import { PrismaClient, CaseStage, CaseStatus, Priority } from '@prisma/client';
+import { PrismaClient, CaseStage } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { logger } from '@/lib/logger';
 
@@ -8,7 +8,7 @@ async function main() {
   logger.info('🌱 Starting database seeding...');
 
   // Create roles
-  const superAdminRole = await prisma.role.upsert({
+await prisma.role.upsert({
     where: { name: 'super_admin' },
     update: {},
     create: {
@@ -27,7 +27,7 @@ async function main() {
     },
   });
 
-  const deptAdminRole = await prisma.role.upsert({
+await prisma.role.upsert({
     where: { name: 'department_admin' },
     update: {},
     create: {
@@ -46,7 +46,7 @@ async function main() {
     },
   });
 
-  const analystRole = await prisma.role.upsert({
+await prisma.role.upsert({
     where: { name: 'analyst' },
     update: {},
     create: {
@@ -65,7 +65,7 @@ async function main() {
     },
   });
 
-  const supervisorRole = await prisma.role.upsert({
+await prisma.role.upsert({
     where: { name: 'supervisor' },
     update: {},
     create: {
@@ -84,7 +84,7 @@ async function main() {
     },
   });
 
-  const observerRole = await prisma.role.upsert({
+await prisma.role.upsert({
     where: { name: 'observer' },
     update: {},
     create: {
@@ -104,7 +104,7 @@ async function main() {
   });
 
   // Create departments
-  const mainDepartment = await prisma.department.upsert({
+await prisma.role.upsert({
     where: { code: 'MOPC' },
     update: {},
     create: {
@@ -114,24 +114,24 @@ async function main() {
     },
   });
 
-  const legalDept = await prisma.department.upsert({
+await prisma.role.upsert({
     where: { code: 'LEGAL' },
     update: {},
     create: {
       name: 'Departamento Jurídico',
       code: 'LEGAL',
-      parentId: mainDepartment.id,
+      parentId: _mainDepartment.id,
       isActive: true,
     },
   });
 
-  const technicalDept = await prisma.department.upsert({
+await prisma.role.upsert({
     where: { code: 'TECHNICAL' },
     update: {},
     create: {
       name: 'Departamento Técnico',
       code: 'TECHNICAL',
-      parentId: mainDepartment.id,
+      parentId: _mainDepartment.id,
       isActive: true,
     },
   });
@@ -139,7 +139,7 @@ async function main() {
   // Create users
   const hashedPassword = await bcrypt.hash('admin123', 12);
 
-  const superAdmin = await prisma.user.upsert({
+await prisma.role.upsert({
     where: { email: 'admin@mopc.gob.do' },
     update: {},
     create: {
@@ -149,13 +149,13 @@ async function main() {
       firstName: 'Super',
       lastName: 'Admin',
       phone: '809-555-0100',
-      departmentId: mainDepartment.id,
-      roleId: superAdminRole.id,
+      departmentId: _mainDepartment.id,
+      roleId: _superAdminRole.id,
       isActive: true,
     },
   });
 
-  const deptAdmin = await prisma.user.upsert({
+await prisma.role.upsert({
     where: { email: 'dept.admin@mopc.gob.do' },
     update: {},
     create: {
@@ -165,13 +165,13 @@ async function main() {
       firstName: 'Dept',
       lastName: 'Admin',
       phone: '809-555-0101',
-      departmentId: legalDept.id,
-      roleId: deptAdminRole.id,
+      departmentId: _legalDept.id,
+      roleId: _deptAdminRole.id,
       isActive: true,
     },
   });
 
-  const analyst = await prisma.user.upsert({
+await prisma.role.upsert({
     where: { email: 'analyst@mopc.gob.do' },
     update: {},
     create: {
@@ -181,8 +181,8 @@ async function main() {
       firstName: 'Juan',
       lastName: 'Analista',
       phone: '809-555-0102',
-      departmentId: legalDept.id,
-      roleId: analystRole.id,
+      departmentId: _legalDept.id,
+      roleId: _analystRole.id,
       isActive: true,
     },
   });

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { CreateCaseInput, UpdateCaseInput } from '@/lib/validations/case'
+import { CreateCaseInput, UpdateCaseInput, Priority, CaseStatus, CaseStage } from '@/lib/validations/case'
 import { User, Department, Document, Case } from '@/types/client'
 import { formatDate } from '@/constants/case-constants'
 import { logger } from '@/lib/logger';
@@ -66,9 +66,9 @@ export function useCaseForm(mode: 'create' | 'edit', caseId?: string, initialDat
         fileNumber: initialData.fileNumber,
         title: initialData.title,
         description: initialData.description || '',
-        priority: initialData.priority,
-        status: initialData.status,
-        currentStage: initialData.currentStage,
+        priority: initialData.priority as Priority,
+        status: initialData.status as CaseStatus,
+        currentStage: initialData.currentStage as CaseStage,
         startDate: initialData.startDate ? new Date(initialData.startDate) : undefined,
         expectedEndDate: initialData.expectedEndDate ? new Date(initialData.expectedEndDate) : undefined,
         actualEndDate: initialData.actualEndDate ? new Date(initialData.actualEndDate) : undefined,
@@ -139,7 +139,7 @@ export function useCaseForm(mode: 'create' | 'edit', caseId?: string, initialDat
   }
 
   // API calls
-  const fetchCase = async () => {
+  const fetchCase = useCallback(async () => {
     if (!caseId) {
       return
     }
@@ -158,9 +158,9 @@ export function useCaseForm(mode: 'create' | 'edit', caseId?: string, initialDat
         fileNumber: data.fileNumber,
         title: data.title,
         description: data.description || '',
-        priority: data.priority,
-        status: data.status,
-        currentStage: data.currentStage,
+        priority: data.priority as Priority,
+        status: data.status as CaseStatus,
+        currentStage: data.currentStage as CaseStage,
         startDate: data.startDate ? new Date(data.startDate) : undefined,
         expectedEndDate: data.expectedEndDate ? new Date(data.expectedEndDate) : undefined,
         actualEndDate: data.actualEndDate ? new Date(data.actualEndDate) : undefined,
@@ -195,9 +195,9 @@ export function useCaseForm(mode: 'create' | 'edit', caseId?: string, initialDat
       logger.error('Error fetching case:', error)
       throw error
     }
-  }
+  }, [caseId])
 
-  const fetchDepartments = async () => {
+  const fetchDepartments = useCallback(async () => {
     try {
       const response = await fetch('/api/departments')
       if (!response.ok) {
@@ -211,9 +211,9 @@ export function useCaseForm(mode: 'create' | 'edit', caseId?: string, initialDat
       logger.error('Error fetching departments:', error)
       throw error
     }
-  }
+  }, [])
 
-  const fetchDepartmentUsers = async (departmentId: string) => {
+  const fetchDepartmentUsers = useCallback(async (departmentId: string) => {
     try {
       const response = await fetch(`/api/departments/${departmentId}/users`)
       if (!response.ok) {
@@ -234,9 +234,9 @@ export function useCaseForm(mode: 'create' | 'edit', caseId?: string, initialDat
       logger.error('Error fetching users:', error)
       throw error
     }
-  }
+  }, [mode])
 
-  const fetchExistingDocuments = async () => {
+  const fetchExistingDocuments = useCallback(async () => {
     try {
       const response = await fetch('/api/documents?limit=50')
       if (response.ok) {
@@ -246,7 +246,7 @@ export function useCaseForm(mode: 'create' | 'edit', caseId?: string, initialDat
     } catch (error) {
       logger.error('Error fetching existing documents:', error)
     }
-  }
+  }, [])
 
   const generateCaseNumber = async () => {
     const today = new Date()
@@ -265,7 +265,7 @@ export function useCaseForm(mode: 'create' | 'edit', caseId?: string, initialDat
         createdAtTo: formatDate(tomorrow),
       })
 
-      const response = await fetch(`/api/cases?${params}`)
+      const response = await fetch(`/api/cases?${params.toString()}`)
       if (response.ok) {
         const data = await response.json()
         index = (data.cases?.length || 0) + 1
@@ -287,14 +287,14 @@ export function useCaseForm(mode: 'create' | 'edit', caseId?: string, initialDat
         fetchCase()
       }
     }
-  }, [status, mode, caseId, initialData])
+  }, [status, mode, caseId, initialData, fetchCase, fetchDepartments, fetchExistingDocuments])
 
   // Fetch users when department is selected
   useEffect(() => {
     if (formData.departmentId) {
       fetchDepartmentUsers(formData.departmentId)
     }
-  }, [formData.departmentId])
+  }, [formData.departmentId, fetchDepartmentUsers])
 
   return {
     // State

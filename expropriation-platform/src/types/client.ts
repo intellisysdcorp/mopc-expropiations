@@ -263,6 +263,38 @@ export interface UserWithDepartment extends User {
   role: Role;
 }
 
+// User type returned by API endpoints (includes role and extended fields)
+export interface DepartmentUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  username: string;
+  phone?: string;
+  isActive: boolean;
+  isSuspended: boolean;
+  lastLoginAt?: Date;
+  createdAt: Date;
+  role: {
+    id: string;
+    name: string;
+    description: string;
+  };
+  _count?: {
+    createdCases: number;
+    assignedCases: number;
+    supervisedCases: number;
+    activities: number;
+    documents: number;
+  };
+  totalCases?: number;
+}
+
+// Helper type for users in forms (with computed fields)
+export interface FormUser extends DepartmentUser {
+  name: string; // Computed from firstName + lastName
+}
+
 export interface CaseWithDetails extends Case {
   department: Department;
   createdBy?: {

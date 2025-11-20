@@ -16,8 +16,6 @@ import {
   Edit,
   Trash2,
   MoreHorizontal,
-  ChevronDown as ChevronDownIcon,
-  ChevronRight as ChevronRightIcon,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -26,7 +24,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { toast } from 'react-hot-toast';
 import { Department } from '@/lib/types/department';
 
 
@@ -254,7 +251,6 @@ export const DepartmentTree: React.FC<DepartmentTreeProps> = ({
   loading = false,
   showStats = true,
   searchable = true,
-  expandable = true,
   actions = true,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');

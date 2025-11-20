@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,8 +32,6 @@ import {
   AlertTriangle,
   Trash2,
   Shield,
-  Eye,
-  EyeOff,
   RefreshCw,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -57,7 +55,7 @@ interface UserSessionsProps {
   userName: string;
 }
 
-export function UserSessions({ userId, userName }: UserSessionsProps) {
+export function UserSessions({ userId }: UserSessionsProps) {
   const [loading, setLoading] = useState(true);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [activeOnly, setActiveOnly] = useState(true);
@@ -65,11 +63,7 @@ export function UserSessions({ userId, userName }: UserSessionsProps) {
   const [sessionToTerminate, setSessionToTerminate] = useState<Session | null>(null);
   const [terminating, setTerminating] = useState(false);
 
-  useEffect(() => {
-    fetchSessions();
-  }, [userId, activeOnly]);
-
-  const fetchSessions = async () => {
+  const fetchSessions = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -81,13 +75,19 @@ export function UserSessions({ userId, userName }: UserSessionsProps) {
 
       const data = await response.json();
       setSessions(data);
-    } catch (error) {
-      clientLogger.error('Error fetching sessions:', error);
-      toast.error('Error al cargar las sesiones');
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching sessions:', error);
+        toast.error('Error al cargar las sesiones');
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeOnly, userId]);
+
+  useEffect(() => {
+    fetchSessions();
+  }, [fetchSessions]);
 
   const getDeviceIcon = (userAgent?: string) => {
     if (!userAgent) {return <Monitor className="h-4 w-4" />;}
@@ -249,7 +249,7 @@ export function UserSessions({ userId, userName }: UserSessionsProps) {
           </CardHeader>
           <CardContent>
             <div className="text-sm">
-              {sessions.length > 0 ? formatDate(sessions[0].lastAccessAt) : 'Nunca'}
+              {sessions.length > 0 ? formatDate(sessions[0]!.lastAccessAt) : 'Nunca'}
             </div>
             {currentSession && (
               <p className="text-xs text-muted-foreground">

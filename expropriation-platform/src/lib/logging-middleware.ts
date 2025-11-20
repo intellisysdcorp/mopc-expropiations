@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
-import { loggers, createRequestLogger } from './logger';
+import { loggers } from './logger';
 
 // Request context interface
 interface RequestContext {
@@ -63,14 +64,6 @@ export function withLogging(
     };
 
     activeRequests.set(requestId, requestContext);
-
-    // Create request-scoped logger
-    const requestLogger = createRequestLogger(requestId, undefined, {
-      method,
-      url,
-      ip,
-      userAgent,
-    });
 
     try {
       // Log request start
@@ -149,16 +142,6 @@ export function withAuthenticatedLogging(
     };
 
     activeRequests.set(requestId, requestContext);
-
-    // Create request-scoped logger with user context
-    const requestLogger = createRequestLogger(requestId, userId, {
-      method,
-      url,
-      ip,
-      userAgent,
-      userRole: context.user?.role,
-      userDepartment: context.user?.departmentId,
-    });
 
     try {
       // Log authenticated request start
@@ -250,7 +233,7 @@ export function cleanupOldRequests(maxAge: number = 5 * 60 * 1000): number {
 export function logSlowRequests(threshold: number = 5000): void {
   const now = Date.now();
 
-  for (const [requestId, context] of activeRequests.entries()) {
+  for (const [, context] of activeRequests.entries()) {
     const duration = now - context.startTime;
     if (duration > threshold) {
       loggers.performance.slowQuery(

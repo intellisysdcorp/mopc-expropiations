@@ -1,6 +1,5 @@
 import { Server as SocketIOServer } from 'socket.io';
 import { Server as HttpServer } from 'http';
-import { NextApiRequest, NextApiResponse } from 'next';
 import { verify } from 'jsonwebtoken';
 import { prisma } from './prisma';
 import { v4 as uuidv4 } from 'uuid';
@@ -168,7 +167,7 @@ class WebSocketNotificationServer {
       socket.on('send-notification', async (data: NotificationData) => {
         try {
           await this.sendNotification(data);
-        } catch (error) {
+        } catch (_) {
           socket.emit('error', { message: 'Failed to send notification' });
         }
       });

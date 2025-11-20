@@ -13,8 +13,6 @@ import type {
   MeetingCommitment,
   MeetingDocument,
   MeetingMinutes,
-  MeetingTemplate,
-  MeetingNotification
 } from '@prisma/client';
 
 // Export Prisma types as server-only types

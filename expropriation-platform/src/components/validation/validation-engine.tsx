@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -19,13 +20,9 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
-  RefreshCw,
   Play,
   Settings,
-  FileText,
   Shield,
-  Clock,
-  BarChart3,
   Activity,
   List,
   Eye,
@@ -92,13 +89,12 @@ export function ValidationEngine({
   entityType = 'case',
   entityId,
   autoRun = false,
-  showDetails = true,
   onValidationComplete
 }: ValidationEngineProps) {
   const [rules, setRules] = useState<ValidationRule[]>([]);
   const [executions, setExecutions] = useState<ValidationExecution[]>([]);
   const [summary, setSummary] = useState<ValidationSummary | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
   const [validating, setValidating] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedRule, setSelectedRule] = useState<ValidationRule | null>(null);
@@ -107,7 +103,7 @@ export function ValidationEngine({
   const { toast } = useToast();
 
   // Fetch validation rules
-  const fetchRules = async () => {
+  const fetchRules = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -119,8 +115,10 @@ export function ValidationEngine({
         const data = await response.json();
         setRules(data);
       }
-    } catch (error) {
-      clientLogger.error('Error fetching validation rules:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching validation rules:', error);
+      }
       toast({
         title: 'Error',
         description: 'Failed to fetch validation rules',
@@ -129,10 +127,10 @@ export function ValidationEngine({
     } finally {
       setLoading(false);
     }
-  };
+  }, [stage, toast]);
 
   // Fetch validation executions
-  const fetchExecutions = async () => {
+  const fetchExecutions = useCallback(async () => {
     try {
       const params = new URLSearchParams();
       params.append('caseId', caseId);
@@ -146,13 +144,15 @@ export function ValidationEngine({
         setExecutions(data);
         calculateSummary(data);
       }
-    } catch (error) {
-      clientLogger.error('Error fetching validation executions:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching validation executions:', error);
+      }
     }
-  };
+  }, [caseId, entityId, entityType, stage]);
 
   // Run validation
-  const runValidation = async () => {
+  const runValidation = useCallback(async () => {
     try {
       setValidating(true);
 
@@ -188,8 +188,10 @@ export function ValidationEngine({
         const error = await response.json();
         throw new Error(error.error || 'Validation failed');
       }
-    } catch (error) {
-      clientLogger.error('Error running validation:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error running validation:', error);
+      }
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Validation failed',
@@ -198,7 +200,7 @@ export function ValidationEngine({
     } finally {
       setValidating(false);
     }
-  };
+  }, [caseId, entityId, entityType, onValidationComplete, rules, stage, toast]);
 
   // Calculate summary
   const calculateSummary = (executions: ValidationExecution[]) => {
@@ -262,13 +264,13 @@ export function ValidationEngine({
   useEffect(() => {
     fetchRules();
     fetchExecutions();
-  }, [caseId, stage, entityType, entityId]);
+  }, [fetchRules, fetchExecutions]);
 
   useEffect(() => {
     if (autoRun && rules.length > 0) {
       runValidation();
     }
-  }, [autoRun, rules]);
+  }, [autoRun, rules, runValidation]);
 
   const filteredExecutions = getFilteredExecutions();
 
@@ -294,7 +296,9 @@ export function ValidationEngine({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">Passed</p>
-                  <p className="text-2xl font-bold text-green-600">{summary.passed}</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {summary.passed}
+                  </p>
                 </div>
                 <CheckCircle2 className="h-8 w-8 text-green-500" />
               </div>
@@ -306,7 +310,9 @@ export function ValidationEngine({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">Failed</p>
-                  <p className="text-2xl font-bold text-red-600">{summary.failed}</p>
+                  <p className="text-2xl font-bold text-red-600">
+                    {summary.failed}
+                  </p>
                 </div>
                 <XCircle className="h-8 w-8 text-red-500" />
               </div>
@@ -348,17 +354,28 @@ export function ValidationEngine({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="REQUIRED_FIELD">Required Field</SelectItem>
-                    <SelectItem value="DOCUMENT_COMPLETENESS">Document</SelectItem>
+                    <SelectItem value="REQUIRED_FIELD">
+                      Required Field
+                    </SelectItem>
+                    <SelectItem value="DOCUMENT_COMPLETENESS">
+                      Document
+                    </SelectItem>
                     <SelectItem value="BUSINESS_RULE">Business Rule</SelectItem>
-                    <SelectItem value="REGULATORY_COMPLIANCE">Compliance</SelectItem>
+                    <SelectItem value="REGULATORY_COMPLIANCE">
+                      Compliance
+                    </SelectItem>
                     <SelectItem value="TIME_LIMIT">Time Limit</SelectItem>
-                    <SelectItem value="FINANCIAL_THRESHOLD">Financial</SelectItem>
+                    <SelectItem value="FINANCIAL_THRESHOLD">
+                      Financial
+                    </SelectItem>
                     <SelectItem value="APPROVAL_MATRIX">Approval</SelectItem>
                   </SelectContent>
                 </Select>
 
-                <Select value={filterSeverity} onValueChange={setFilterSeverity}>
+                <Select
+                  value={filterSeverity}
+                  onValueChange={setFilterSeverity}
+                >
                   <SelectTrigger className="w-32">
                     <SelectValue placeholder="Severity" />
                   </SelectTrigger>
@@ -396,12 +413,16 @@ export function ValidationEngine({
             <div className="mb-6">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium">Validation Progress</span>
-                <span className="text-sm text-gray-500">{summary.coverage}%</span>
+                <span className="text-sm text-gray-500">
+                  {summary.coverage}%
+                </span>
               </div>
               <Progress value={summary.coverage} className="h-2" />
               <div className="mt-2 flex justify-between text-xs text-gray-500">
                 <span>{summary.passed} passed</span>
-                <span>{summary.failed + summary.warnings + summary.info} issues</span>
+                <span>
+                  {summary.failed + summary.warnings + summary.info} issues
+                </span>
               </div>
             </div>
           )}
@@ -418,7 +439,8 @@ export function ValidationEngine({
                 <Alert>
                   <XCircle className="h-4 w-4" />
                   <AlertDescription>
-                    {summary.failed} validation rules failed. Please review the issues below.
+                    {summary.failed} validation rules failed. Please review the
+                    issues below.
                   </AlertDescription>
                 </Alert>
               )}
@@ -427,68 +449,90 @@ export function ValidationEngine({
                 <Alert>
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
-                    {summary.warnings} warnings detected. These may need attention.
+                    {summary.warnings} warnings detected. These may need
+                    attention.
                   </AlertDescription>
                 </Alert>
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Execution Summary</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span>Total Rules Executed:</span>
-                        <span className="font-medium">{summary.total}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Passed:</span>
-                        <span className="font-medium text-green-600">{summary.passed}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Failed (Errors):</span>
-                        <span className="font-medium text-red-600">{summary.failed}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Warnings:</span>
-                        <span className="font-medium text-yellow-600">{summary.warnings}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Info:</span>
-                        <span className="font-medium text-blue-600">{summary.info}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                {summary && (
+                  <>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">
+                          Execution Summary
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          <div className="flex justify-between">
+                            <span>Total Rules Executed:</span>
+                            <span className="font-medium">{summary.total}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Passed:</span>
+                            <span className="font-medium text-green-600">
+                              {summary.passed}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Failed (Errors):</span>
+                            <span className="font-medium text-red-600">
+                              {summary.failed}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Warnings:</span>
+                            <span className="font-medium text-yellow-600">
+                              {summary.warnings}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Info:</span>
+                            <span className="font-medium text-blue-600">
+                              {summary.info}
+                            </span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Performance Metrics</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span>Coverage:</span>
-                        <span className="font-medium">{summary.coverage}%</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Execution Time:</span>
-                        <span className="font-medium">{summary.executionTime}ms</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Last Run:</span>
-                        <span className="font-medium">
-                          {executions.length > 0
-                            ? new Date(Math.max(...executions.map(e => new Date(e.executedAt).getTime()))).toLocaleString()
-                            : 'Never'
-                          }
-                        </span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">
+                          Performance Metrics
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          <div className="flex justify-between">
+                            <span>Coverage:</span>
+                            <span className="font-medium">
+                              {summary.coverage}%
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Execution Time:</span>
+                            <span className="font-medium">
+                              {summary.executionTime}ms
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Last Run:</span>
+                            <span className="font-medium">
+                              {executions.length > 0 ? new Date(
+                                Math.max(
+                                  ...executions.map((e) => new Date(e.executedAt).getTime())
+                                )).toLocaleString()
+                                : 'Never'}
+                            </span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </>
+                )}
               </div>
             </TabsContent>
 
@@ -497,14 +541,18 @@ export function ValidationEngine({
                 <div className="text-center py-8 text-gray-500">
                   <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p>No validation executions found</p>
-                  <p className="text-sm mt-2">Run validation to see execution results</p>
+                  <p className="text-sm mt-2">
+                    Run validation to see execution results
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {filteredExecutions.map((execution) => (
                     <Card
                       key={execution.id}
-                      className={execution.passed ? 'border-green-200' : 'border-red-200'}
+                      className={
+                        execution.passed ? 'border-green-200' : 'border-red-200'
+                      }
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
@@ -515,19 +563,31 @@ export function ValidationEngine({
                               <XCircle className="h-5 w-5 text-red-600" />
                             )}
                             <div>
-                              <div className="font-medium">{execution.rule.name}</div>
+                              <div className="font-medium">
+                                {execution.rule.name}
+                              </div>
                               <div className="text-sm text-gray-500">
                                 {execution.rule.description}
                               </div>
                               <div className="flex items-center gap-2 mt-1">
-                                <Badge className={getRuleTypeColor(execution.rule.type)}>
+                                <Badge
+                                  className={getRuleTypeColor(
+                                    execution.rule.type
+                                  )}
+                                >
                                   {execution.rule.type.replace('_', ' ')}
                                 </Badge>
-                                <Badge className={getSeverityColor(execution.rule.severity)}>
+                                <Badge
+                                  className={getSeverityColor(
+                                    execution.rule.severity
+                                  )}
+                                >
                                   {execution.rule.severity}
                                 </Badge>
                                 <span className="text-xs text-gray-500">
-                                  {new Date(execution.executedAt).toLocaleString()}
+                                  {new Date(
+                                    execution.executedAt
+                                  ).toLocaleString()}
                                 </span>
                               </div>
                             </div>
@@ -545,7 +605,8 @@ export function ValidationEngine({
                         {!execution.passed && (
                           <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded">
                             <p className="text-sm text-red-800">
-                              <strong>Error:</strong> {execution.rule.errorMessage}
+                              <strong>Error:</strong>{' '}
+                              {execution.rule.errorMessage}
                             </p>
                             {execution.errors && (
                               <div className="mt-1 text-xs text-red-600">
@@ -583,10 +644,16 @@ export function ValidationEngine({
                                 <Badge className={getRuleTypeColor(rule.type)}>
                                   {rule.type.replace('_', ' ')}
                                 </Badge>
-                                <Badge className={getSeverityColor(rule.severity)}>
+                                <Badge
+                                  className={getSeverityColor(rule.severity)}
+                                >
                                   {rule.severity}
                                 </Badge>
-                                <Badge variant={rule.isActive ? 'default' : 'secondary'}>
+                                <Badge
+                                  variant={
+                                    rule.isActive ? 'default' : 'secondary'
+                                  }
+                                >
                                   {rule.isActive ? 'Active' : 'Inactive'}
                                 </Badge>
                               </div>
@@ -634,7 +701,9 @@ export function ValidationEngine({
             {selectedRule.description && (
               <div>
                 <Label>Description</Label>
-                <p className="text-sm text-gray-600">{selectedRule.description}</p>
+                <p className="text-sm text-gray-600">
+                  {selectedRule.description}
+                </p>
               </div>
             )}
 

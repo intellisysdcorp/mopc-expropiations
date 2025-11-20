@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
@@ -169,7 +170,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Return signature without encrypted data
-    const { signatureData, ...sanitizedSignature } = signature;
+    const { signatureData: _, ...sanitizedSignature } = signature;
 
     return NextResponse.json(sanitizedSignature, { status: 201 });
   } catch (error) {

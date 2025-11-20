@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
@@ -263,7 +264,7 @@ function evaluateBusinessRule(rule: any, context?: any) {
     }
 
     return { passed: true };
-  } catch (error) {
+  } catch (_) {
     return {
       passed: false,
       errors: { message: 'Invalid business rule expression' }

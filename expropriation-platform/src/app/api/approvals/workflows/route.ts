@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
@@ -29,12 +30,6 @@ const createWorkflowSchema = z.object({
   dueDate: z.string().datetime().optional(),
 });
 
-const updateApprovalSchema = z.object({
-  decision: z.nativeEnum(ApprovalStatus),
-  comments: z.string().optional(),
-  conditions: z.array(z.string()).optional(),
-  delegationTo: z.string().optional(),
-});
 
 // GET /api/approvals/workflows - Get approval workflows
 export async function GET(request: NextRequest) {

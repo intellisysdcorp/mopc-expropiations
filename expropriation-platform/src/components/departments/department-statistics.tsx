@@ -1,22 +1,17 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
 import {
-  Building,
   Users,
   Briefcase,
   TrendingUp,
-  Activity,
   Clock,
-  CheckCircle2,
   AlertCircle,
   BarChart3,
   PieChart,
-  Calendar,
   Target,
 } from 'lucide-react';
 
@@ -78,12 +73,12 @@ interface DepartmentStatisticsProps {
   refreshInterval?: number;
 }
 
-export function DepartmentStatistics({ departmentId, refreshInterval = 30000 }: DepartmentStatisticsProps) {
+export function DepartmentStatistics({ departmentId, refreshInterval: _refreshInterval = 30000 }: DepartmentStatisticsProps) {
   const [statistics, setStatistics] = useState<DepartmentStatistics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchStatistics = async () => {
+  const fetchStatistics = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/departments/${departmentId}/statistics`);
@@ -100,16 +95,11 @@ export function DepartmentStatistics({ departmentId, refreshInterval = 30000 }: 
     } finally {
       setLoading(false);
     }
-  };
+  }, [departmentId]);
 
   useEffect(() => {
     fetchStatistics();
-
-    if (refreshInterval > 0) {
-      const interval = setInterval(fetchStatistics, refreshInterval);
-      return () => clearInterval(interval);
-    }
-  }, [departmentId, refreshInterval]);
+  }, [fetchStatistics]);
 
   if (loading) {
     return (
@@ -330,7 +320,7 @@ export function DepartmentStatistics({ departmentId, refreshInterval = 30000 }: 
                 <div className="col-span-9 text-center">Gráfica</div>
               </div>
 
-              {trends.map((trend, index) => {
+              {trends.map((trend) => {
                 const maxUsers = Math.max(...trends.map(t => t.newUsers));
                 const maxCases = Math.max(...trends.map(t => t.newCases));
                 const maxCompleted = Math.max(...trends.map(t => t.completedCases));

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -124,7 +124,7 @@ export function DashboardStats({ departmentId }: { departmentId?: string }) {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -152,21 +152,21 @@ export function DashboardStats({ departmentId }: { departmentId?: string }) {
 
       setLastUpdated(new Date());
       setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error loading statistics');
-      clientLogger.error('Error fetching dashboard stats:', err);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message);
+        clientLogger.error('Error fetching dashboard stats:', error);
+      } else {
+        setError('Error loading statistics');
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [departmentId]);
 
   useEffect(() => {
     fetchStats();
-
-    // Auto-refresh every 5 minutes
-    const interval = setInterval(fetchStats, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [departmentId]);
+  }, [fetchStats]);
 
   if (loading && !stats) {
     return (

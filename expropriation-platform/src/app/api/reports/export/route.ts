@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
     }
 
     const options: ExportOptions = await request.json();
-    const { format: exportFormat, dateRange, departmentId } = options;
+    const { format: exportFormat } = options;
 
     // Fetch data based on options
     const data = await fetchExportData(options);
@@ -79,7 +80,7 @@ async function fetchExportData(options: ExportOptions) {
     includeCases ? fetchCases(departmentFilter, startDate, endDate) : Promise.resolve([]),
 
     // Alerts (if requested)
-    includeAlerts ? fetchAlerts(departmentFilter, startDate, endDate) : Promise.resolve([]),
+    includeAlerts ? fetchAlerts() : Promise.resolve([]),
 
     // Departments for reference
     fetchDepartments()
@@ -180,7 +181,7 @@ async function fetchCases(departmentFilter: any, startDate: Date, endDate: Date)
   });
 }
 
-async function fetchAlerts(departmentFilter: any, startDate: Date, endDate: Date) {
+async function fetchAlerts() {
   // Mock alerts data - in a real implementation, this would query from the alerts system
   return [
     {

@@ -1,16 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DataTable } from '@/components/ui/data-table';
 import { UserForm } from '@/components/users/user-form';
 import { UserActivityHistory } from '@/components/users/user-activity-history';
@@ -19,10 +17,6 @@ import { UserPasswordManagement } from '@/components/users/user-password-managem
 import { RolePermissionMatrix } from '@/components/users/role-permission-matrix';
 import {
   Plus,
-  Search,
-  Filter,
-  Download,
-  RefreshCw,
   Eye,
   Edit,
   Trash2,
@@ -92,6 +86,9 @@ interface Role {
   name: string;
   description: string;
   permissions: any;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
   userCount?: number;
 }
 
@@ -125,6 +122,24 @@ export default function UsersManagementPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<Record<string, any>>({});
 
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      await Promise.all([
+        fetchUsers(),
+        fetchDepartments(),
+        fetchRoles(),
+      ]);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error('Error al cargar los datos');
+        clientLogger.error('Error loading data:', error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Check authentication and permissions
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -142,7 +157,7 @@ export default function UsersManagementPage() {
 
       loadData();
     }
-  }, [status, session, router, isSuperAdmin, isDepartmentAdmin]);
+  }, [status, session, router, isSuperAdmin, isDepartmentAdmin, loadData]);
 
   // Handle URL parameters for automatic dialog opening
   useEffect(() => {
@@ -161,22 +176,6 @@ export default function UsersManagementPage() {
       }
     }
   }, []);
-
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      await Promise.all([
-        fetchUsers(),
-        fetchDepartments(),
-        fetchRoles(),
-      ]);
-    } catch (error) {
-      toast.error('Error al cargar los datos');
-      clientLogger.error('Error loading data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchUsers = async (page = 1, limit = 10, search = '', filters = {}) => {
     const params = new URLSearchParams({
@@ -225,7 +224,7 @@ export default function UsersManagementPage() {
         throw new Error(error.error || 'Error al crear usuario');
       }
 
-      const newUser = await response.json();
+      await response.json();
       toast.success('Usuario creado correctamente');
       setShowCreateDialog(false);
       await fetchUsers(pagination.page, pagination.limit, searchTerm, filters);
@@ -250,7 +249,7 @@ export default function UsersManagementPage() {
         throw new Error(error.error || 'Error al actualizar usuario');
       }
 
-      const updatedUser = await response.json();
+      await response.json();
       toast.success('Usuario actualizado correctamente');
       setShowEditDialog(false);
       setSelectedUser(null);
@@ -337,7 +336,7 @@ export default function UsersManagementPage() {
       window.URL.revokeObjectURL(url);
 
       toast.success(`Usuarios exportados en formato ${format.toUpperCase()}`);
-    } catch (error) {
+    } catch {
       toast.error('Error al exportar usuarios');
     }
   };
@@ -553,17 +552,17 @@ export default function UsersManagementPage() {
     {
       label: 'Activar',
       icon: <UserCheck className="h-4 w-4" />,
-      onClick: (selectedItems: User[]) => handleBulkOperation('ACTIVATE'),
+      onClick: (_selectedItems: User[]) => handleBulkOperation('ACTIVATE'),
     },
     {
       label: 'Desactivar',
       icon: <UserX className="h-4 w-4" />,
-      onClick: (selectedItems: User[]) => handleBulkOperation('DEACTIVATE'),
+      onClick: (_selectedItems: User[]) => handleBulkOperation('DEACTIVATE'),
     },
     {
       label: 'Suspender',
       icon: <Lock className="h-4 w-4" />,
-      onClick: (selectedItems: User[]) => {
+      onClick: (_selectedItems: User[]) => {
         // Show suspension reason dialog
         const reason = prompt('Razón de la suspensión:');
         if (reason) {
@@ -574,12 +573,12 @@ export default function UsersManagementPage() {
     {
       label: 'Reactivar',
       icon: <Unlock className="h-4 w-4" />,
-      onClick: (selectedItems: User[]) => handleBulkOperation('UNSUSPEND'),
+      onClick: (_selectedItems: User[]) => handleBulkOperation('UNSUSPEND'),
     },
     {
       label: 'Forzar cierre de sesión',
       icon: <Monitor className="h-4 w-4" />,
-      onClick: (selectedItems: User[]) => handleBulkOperation('FORCE_LOGOUT'),
+      onClick: (_selectedItems: User[]) => handleBulkOperation('FORCE_LOGOUT'),
     },
   ];
 
@@ -756,7 +755,7 @@ export default function UsersManagementPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción eliminará permanentemente al usuario "{selectedUser?.firstName} {selectedUser?.lastName}".
+              Esta acción eliminará permanentemente al usuario &quot;{selectedUser?.firstName} {selectedUser?.lastName}&quot;.
               Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>

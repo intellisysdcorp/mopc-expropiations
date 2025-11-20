@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,17 +29,11 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import {
   Clock,
-  Play,
-  Pause,
-  Square,
   AlertTriangle,
-  TrendingUp,
-  Calendar,
   BarChart3,
   Activity,
   Timer,
   AlertCircle,
-  CheckCircle2,
   Plus
 } from 'lucide-react';
 import clientLogger from '@/lib/client-logger';
@@ -126,7 +120,7 @@ export function TimeTrackingDashboard({
   const { toast } = useToast();
 
   // Fetch data
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -152,8 +146,10 @@ export function TimeTrackingDashboard({
         const analyticsData = await analyticsResponse.json();
         setAnalytics(analyticsData);
       }
-    } catch (error) {
-      clientLogger.error('Error fetching time tracking data:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching time tracking data:', error);
+      }
       toast({
         title: 'Error',
         description: 'Failed to fetch time tracking data',
@@ -162,7 +158,7 @@ export function TimeTrackingDashboard({
     } finally {
       setLoading(false);
     }
-  };
+  }, [caseId, departmentId, endDate, startDate, toast]);
 
   useEffect(() => {
     fetchData();
@@ -170,7 +166,7 @@ export function TimeTrackingDashboard({
     // Set up refresh interval
     const interval = setInterval(fetchData, refreshInterval);
     return () => clearInterval(interval);
-  }, [caseId, departmentId, startDate, endDate, refreshInterval]);
+  }, [fetchData, refreshInterval]);
 
   // Handle time entry submission
   const handleSubmitTimeEntry = async () => {
@@ -202,7 +198,7 @@ export function TimeTrackingDashboard({
       });
 
       if (response.ok) {
-        const newEntry = await response.json();
+        await response.json();
         toast({
           title: 'Success',
           description: `Time tracking entry created: ${selectedAction}`,
@@ -223,8 +219,10 @@ export function TimeTrackingDashboard({
         const error = await response.json();
         throw new Error(error.error || 'Failed to create time entry');
       }
-    } catch (error) {
-      clientLogger.error('Error creating time entry:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error creating time entry:', error);
+      }
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to create time entry',

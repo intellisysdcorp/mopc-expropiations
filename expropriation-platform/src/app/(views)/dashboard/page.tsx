@@ -2,7 +2,6 @@
 
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -11,30 +10,24 @@ import { KeyboardShortcutsPanel } from '@/components/help/keyboard-shortcuts-pan
 import { useKeyboardShortcuts, commonShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { useTutorial } from '@/components/tutorial/tutorial-provider';
 import {
-  Building2,
-  Users,
   FileText,
-  Settings,
   BarChart3,
   AlertTriangle,
   Clock,
   TrendingUp,
-  Activity,
   HelpCircle,
-  Keyboard,
-  Calendar
+  Keyboard
 } from 'lucide-react';
 import { DashboardStats } from '@/components/dashboard/dashboard-stats';
 import { DashboardCharts } from '@/components/dynamic';
 import { DashboardCases } from '@/components/dashboard/dashboard-cases';
 import { DashboardAlerts } from '@/components/dashboard/dashboard-alerts';
 import { GlobalSearch } from '@/components/search/global-search';
-import { FavoritesPanel } from '@/components/favorites/favorites-panel';
 import { DataExport } from '@/components/export/data-export';
 import { CaseCalendar } from '@/components/calendar/case-calendar';
 
 export default function DashboardPage() {
-  const { user, signOut, isSuperAdmin, isDepartmentAdmin, isAnalyst, isSupervisor } = useAuth();
+  const { user } = useAuth();
   const { startTutorial } = useTutorial();
   const router = useRouter();
 

@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
@@ -158,23 +159,7 @@ async function getDepartmentData(departmentFilter: any, startDate: Date, endDate
     }
   });
 
-  const departmentPerformance = await prisma.case.groupBy({
-    by: ['departmentId'],
-    where: {
-      deletedAt: null,
-      createdAt: {
-        gte: startDate,
-        lte: endDate
-      }
-    },
-    _count: {
-      id: true
-    },
-    _avg: {
-      // This would need to be calculated properly in production
-    }
-  });
-
+  
   const data = departmentStats.map(dept => ({
     name: dept.name,
     cases: dept._count.cases,

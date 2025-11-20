@@ -97,4 +97,9 @@ export const REQUIRED_FIELDS = [
 ]
 
 // Date formatting utility
-export const formatDate = (date: Date) => date.toISOString().split('T')[0]
+export const formatDate = (date: Date): string => {
+  if (!date) return ''
+  const isoString = date.toISOString()
+  const parts = isoString.split('T')
+  return parts[0] || ''
+}

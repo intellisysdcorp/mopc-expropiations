@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,13 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -33,14 +26,9 @@ import {
   Edit,
   Trash2,
   Eye,
-  DollarSign,
   Shield,
-  Users,
   CheckCircle2,
-  AlertTriangle,
   Info,
-  ArrowUpDown,
-  Save,
   X
 } from 'lucide-react';
 import clientLogger from '@/lib/client-logger';
@@ -107,7 +95,6 @@ export function ApprovalMatrix({
   currency = 'DOP',
   editable = false,
   showHistory = false,
-  onApprovalUpdate
 }: ApprovalMatrixProps) {
   const [matrices, setMatrices] = useState<ApprovalMatrix[]>([]);
   const [currentMatrix, setCurrentMatrix] = useState<ApprovalMatrix | null>(null);
@@ -132,8 +119,52 @@ export function ApprovalMatrix({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
+    // Calculate approval requirement
+  const calculateRequirement = useCallback((matrix: ApprovalMatrix, value: number) => {
+    const applicableLevel = matrix.levels
+      .filter((level) => level.isActive)
+      .find(
+        (level) =>
+          value >= level.minAmount &&
+          (level.maxAmount === 0 || value <= level.maxAmount)
+      );
+
+    if (!applicableLevel) {
+      setRequirement(null);
+      return;
+    }
+
+    // Calculate current approval status (this would normally come from the API)
+    const requirementBase: CaseApprovalRequirement = {
+      caseId: caseId || '',
+      caseType,
+      estimatedValue: value,
+      currency,
+      requiredLevel: applicableLevel.name,
+      requiredApprovers: applicableLevel.requiredApprovers,
+      autoApprove: applicableLevel.autoApprove,
+      currentApprovals: 0, // This would be calculated from actual approvals
+      pendingApprovals: applicableLevel.requiredApprovers,
+      completedApprovals: 0,
+      status: 'PENDING',
+    };
+
+    const nextLevelCandidate = matrix.levels
+      .filter((level) => level.isActive)
+      .find(
+        (level) =>
+          level.sequence > applicableLevel.sequence && value >= level.minAmount
+      );
+
+    const requirement: CaseApprovalRequirement = nextLevelCandidate
+      ? { ...requirementBase, nextLevel: nextLevelCandidate }
+      : requirementBase;
+
+    setRequirement(requirement);
+  }, [caseId, caseType, currency]);
+
   // Fetch approval matrices
-  const fetchMatrices = async () => {
+  const fetchMatrices = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/approval-matrices');
@@ -148,8 +179,10 @@ export function ApprovalMatrix({
           calculateRequirement(matrix, estimatedValue);
         }
       }
-    } catch (error) {
-      clientLogger.error('Error fetching approval matrices:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching approval matrices:', error);
+      }
       toast({
         title: 'Error',
         description: 'Failed to fetch approval matrices',
@@ -158,39 +191,9 @@ export function ApprovalMatrix({
     } finally {
       setLoading(false);
     }
-  };
+  }, [calculateRequirement, caseType, estimatedValue, toast]);
 
-  // Calculate approval requirement
-  const calculateRequirement = (matrix: ApprovalMatrix, value: number) => {
-    const applicableLevel = matrix.levels
-      .filter(level => level.isActive)
-      .find(level => value >= level.minAmount && (level.maxAmount === 0 || value <= level.maxAmount));
 
-    if (!applicableLevel) {
-      setRequirement(null);
-      return;
-    }
-
-    // Calculate current approval status (this would normally come from the API)
-    const requirement: CaseApprovalRequirement = {
-      caseId: caseId || '',
-      caseType,
-      estimatedValue: value,
-      currency,
-      requiredLevel: applicableLevel.name,
-      requiredApprovers: applicableLevel.requiredApprovers,
-      autoApprove: applicableLevel.autoApprove,
-      currentApprovals: 0, // This would be calculated from actual approvals
-      pendingApprovals: applicableLevel.requiredApprovers,
-      completedApprovals: 0,
-      nextLevel: matrix.levels
-        .filter(level => level.isActive)
-        .find(level => level.sequence > applicableLevel.sequence && value >= level.minAmount),
-      status: 'PENDING',
-    };
-
-    setRequirement(requirement);
-  };
 
   // Create approval level
   const createLevel = async () => {
@@ -256,8 +259,10 @@ export function ApprovalMatrix({
         const error = await response.json();
         throw new Error(error.error || 'Failed to create approval level');
       }
-    } catch (error) {
-      clientLogger.error('Error creating approval level:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error creating approval level:', error);
+      }
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to create approval level',
@@ -324,8 +329,10 @@ export function ApprovalMatrix({
         const error = await response.json();
         throw new Error(error.error || 'Failed to update approval level');
       }
-    } catch (error) {
-      clientLogger.error('Error updating approval level:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error updating approval level:', error);
+      }
       toast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to update approval level',
@@ -364,8 +371,10 @@ export function ApprovalMatrix({
       } else {
         throw new Error('Failed to delete approval level');
       }
-    } catch (error) {
-      clientLogger.error('Error deleting approval level:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error deleting approval level:', error);
+      }
       toast({
         title: 'Error',
         description: 'Failed to delete approval level',
@@ -395,13 +404,13 @@ export function ApprovalMatrix({
 
   useEffect(() => {
     fetchMatrices();
-  }, []);
+  }, [fetchMatrices]);
 
   useEffect(() => {
     if (currentMatrix) {
       calculateRequirement(currentMatrix, estimatedValue);
     }
-  }, [currentMatrix, estimatedValue]);
+  }, [currentMatrix, estimatedValue, calculateRequirement]);
 
   if (loading) {
     return (

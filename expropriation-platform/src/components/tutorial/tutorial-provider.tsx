@@ -140,6 +140,21 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
     }
   }, [tutorials, completedTutorials]);
 
+  const markTutorialAsCompleted = useCallback((tutorialId: string) => {
+    const newCompleted = [...completedTutorials, tutorialId];
+    setCompletedTutorials(newCompleted);
+    localStorage.setItem('completed-tutorials', JSON.stringify(newCompleted));
+  }, [completedTutorials]);
+
+  const completeTutorial = useCallback(() => {
+    if (activeTutorial) {
+      markTutorialAsCompleted(activeTutorial.id);
+      setActiveTutorial(null);
+      setCurrentStep(0);
+      setIsActive(false);
+    }
+  }, [activeTutorial, markTutorialAsCompleted]);
+
   const nextStep = useCallback(() => {
     if (activeTutorial && currentStep < activeTutorial.steps.length - 1) {
       const nextStepIndex = currentStep + 1;
@@ -147,11 +162,11 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
 
       // Execute action if available
       const step = activeTutorial.steps[nextStepIndex];
-      step.action?.();
+      step?.action?.();
     } else {
       completeTutorial();
     }
-  }, [activeTutorial, currentStep]);
+  }, [activeTutorial, currentStep, completeTutorial]);
 
   const previousStep = useCallback(() => {
     if (currentStep > 0) {
@@ -161,30 +176,15 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
 
   const skipTutorial = useCallback(() => {
     if (activeTutorial) {
-      const canSkip = activeTutorial.steps[currentStep].canSkip !== false;
+      const canSkip = activeTutorial.steps[currentStep]?.canSkip !== false;
       if (canSkip) {
         completeTutorial();
       }
     }
-  }, [activeTutorial, currentStep]);
-
-  const completeTutorial = useCallback(() => {
-    if (activeTutorial) {
-      markTutorialAsCompleted(activeTutorial.id);
-      setActiveTutorial(null);
-      setCurrentStep(0);
-      setIsActive(false);
-    }
-  }, [activeTutorial]);
+  }, [activeTutorial, currentStep, completeTutorial]);
 
   const resetTutorial = useCallback((tutorialId: string) => {
     const newCompleted = completedTutorials.filter(id => id !== tutorialId);
-    setCompletedTutorials(newCompleted);
-    localStorage.setItem('completed-tutorials', JSON.stringify(newCompleted));
-  }, [completedTutorials]);
-
-  const markTutorialAsCompleted = useCallback((tutorialId: string) => {
-    const newCompleted = [...completedTutorials, tutorialId];
     setCompletedTutorials(newCompleted);
     localStorage.setItem('completed-tutorials', JSON.stringify(newCompleted));
   }, [completedTutorials]);

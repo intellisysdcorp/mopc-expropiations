@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
@@ -15,15 +16,6 @@ const createTimeEntrySchema = z.object({
   endTime: z.string().datetime().optional(),
   duration: z.number().optional(),
   pausedDuration: z.number().optional(),
-  alertThreshold: z.number().optional(),
-});
-
-const updateTimeEntrySchema = z.object({
-  endTime: z.string().datetime().optional(),
-  duration: z.number().optional(),
-  pausedDuration: z.number().optional(),
-  reason: z.string().optional(),
-  justification: z.string().optional(),
   alertThreshold: z.number().optional(),
 });
 

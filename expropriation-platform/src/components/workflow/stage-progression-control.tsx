@@ -1,10 +1,15 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import {
   Select,
   SelectContent,
@@ -23,27 +28,17 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import {
   ArrowRight,
-  Play,
   RotateCcw,
-  CheckCircle2,
   Clock,
   AlertTriangle,
   Info,
-  User,
-  Calendar,
   BarChart3,
   Eye,
-  Settings
+  Settings,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 import clientLogger from '@/lib/client-logger';
 
@@ -87,7 +82,7 @@ export function StageProgressionControl({
 }: StageProgressionControlProps) {
   const [availableStages, setAvailableStages] = useState<Stage[]>([]);
   const [progressions, setProgressions] = useState<StageProgression[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, _setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -98,12 +93,7 @@ export function StageProgressionControl({
   const [observations, setObservations] = useState('');
   const [progressionType, setProgressionType] = useState<'FORWARD' | 'BACKWARD'>('FORWARD');
 
-  useEffect(() => {
-    fetchStages();
-    fetchProgressions();
-  }, [caseId]);
-
-  const fetchStages = async () => {
+  const fetchStages = useCallback(async () => {
     try {
       const response = await fetch('/api/stages');
 
@@ -113,12 +103,14 @@ export function StageProgressionControl({
 
       const stages = await response.json();
       setAvailableStages(stages);
-    } catch (err) {
-      clientLogger.error('Error fetching stages:', err);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching stages:', error);
+      }
     }
-  };
+  }, []);
 
-  const fetchProgressions = async () => {
+  const fetchProgressions = useCallback(async () => {
     try {
       const response = await fetch(`/api/cases/${caseId}/stage-progression`);
 
@@ -128,10 +120,17 @@ export function StageProgressionControl({
 
       const data = await response.json();
       setProgressions(data.progressions);
-    } catch (err) {
-      clientLogger.error('Error fetching progressions:', err);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching progressions:', error);
+      }
     }
-  };
+  }, [caseId]);
+
+  useEffect(() => {
+    fetchStages();
+    fetchProgressions();
+  }, [fetchStages, fetchProgressions]);
 
   const handleProgression = async () => {
     if (!selectedStage || !reason.trim()) {
@@ -160,7 +159,7 @@ export function StageProgressionControl({
         throw new Error(errorData.error || 'Failed to progress stage');
       }
 
-      const result = await response.json();
+      await response.json();
 
       toast.success(
         progressionType === 'BACKWARD'

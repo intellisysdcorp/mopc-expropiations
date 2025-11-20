@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Command,
   Search,
@@ -16,9 +16,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Save,
-  X,
   Keyboard,
-  ChevronDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,15 +30,12 @@ import {
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
 interface KeyboardShortcut {
@@ -69,11 +64,11 @@ export function KeyboardShortcutsProvider({
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isMac, setIsMac] = useState(false);
-  const [isClient, setIsClient] = useState(false);
+  const [_isClient, setIsClient] = useState(false);
   const router = useRouter();
 
   // Default shortcuts
-  const defaultShortcuts: KeyboardShortcut[] = [
+  const defaultShortcuts: KeyboardShortcut[] = useMemo(() => [
     // Navigation
     {
       id: 'dashboard',
@@ -261,9 +256,12 @@ export function KeyboardShortcutsProvider({
       category: 'navigation',
       global: true,
     },
-  ];
+  ], [router]);
 
-  const shortcuts = [...defaultShortcuts, ...propShortcuts];
+  const shortcuts = useMemo(
+    () => [...defaultShortcuts, ...propShortcuts], 
+    [defaultShortcuts, propShortcuts]
+  );
 
   // Handle keyboard events
   const handleKeyDown = useCallback(
@@ -350,7 +348,7 @@ export function KeyboardShortcutsProvider({
     if (!acc[shortcut.category]) {
       acc[shortcut.category] = [];
     }
-    acc[shortcut.category].push(shortcut);
+    acc[shortcut.category]!.push(shortcut);
     return acc;
   }, {} as Record<string, KeyboardShortcut[]>);
 
@@ -507,7 +505,7 @@ export function useKeyboardShortcuts(
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, deps);
+  }, [shortcuts, deps]);
 }
 
 // Quick access floating button

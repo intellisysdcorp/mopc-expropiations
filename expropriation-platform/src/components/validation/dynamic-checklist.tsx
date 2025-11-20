@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,13 +10,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import {
   CheckCircle2,
@@ -28,7 +21,6 @@ import {
   Download,
   RefreshCw,
   Eye,
-  Edit
 } from 'lucide-react';
 import clientLogger from '@/lib/client-logger';
 
@@ -82,7 +74,6 @@ interface DynamicChecklistProps {
 }
 
 export function DynamicChecklist({
-  caseId,
   stage,
   caseStageId,
   templateId,
@@ -97,12 +88,7 @@ export function DynamicChecklist({
   const [selectedItem, setSelectedItem] = useState<ChecklistItem | null>(null);
   const { toast } = useToast();
 
-  // Fetch checklist template and completions
-  useEffect(() => {
-    fetchChecklistData();
-  }, [caseStageId]);
-
-  const fetchChecklistData = async () => {
+  const fetchChecklistData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -125,8 +111,10 @@ export function DynamicChecklist({
         const data = await completionsResponse.json();
         setCompletions(data);
       }
-    } catch (error) {
-      clientLogger.error('Error fetching checklist data:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching checklist data:', error);
+      }
       toast({
         title: 'Error',
         description: 'Failed to load checklist data',
@@ -135,7 +123,12 @@ export function DynamicChecklist({
     } finally {
       setLoading(false);
     }
-  };
+  }, [caseStageId, stage, templateId, toast]);
+
+  // Fetch checklist template and completions
+  useEffect(() => {
+    fetchChecklistData();
+  }, [fetchChecklistData]);
 
   // Calculate progress
   const calculateProgress = () => {
@@ -219,8 +212,10 @@ export function DynamicChecklist({
       } else {
         throw new Error('Failed to update completion');
       }
-    } catch (error) {
-      clientLogger.error('Error updating completion:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error updating completion:', error);
+      }
       toast({
         title: 'Error',
         description: 'Failed to update checklist item',
@@ -265,8 +260,10 @@ export function DynamicChecklist({
           return newCompletions;
         });
       }
-    } catch (error) {
-      clientLogger.error('Error updating notes:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error updating notes:', error);
+      }
     }
   };
 

@@ -1,5 +1,5 @@
 import { logger } from '@/lib/logger';
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-hot-toast'
@@ -11,7 +11,7 @@ export const useCase = (caseId: string) => {
   const [caseData, setCaseData] = useState<Case | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const fetchCase = async () => {
+  const fetchCase = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch(`/api/cases/${caseId}`)
@@ -32,13 +32,13 @@ export const useCase = (caseId: string) => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [caseId, router])
 
   useEffect(() => {
     if (status === 'authenticated' && caseId) {
       fetchCase()
     }
-  }, [status, caseId])
+  }, [status, caseId, fetchCase])
 
   const refreshCase = () => {
     fetchCase()

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,19 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
   ChevronLeft,
   ChevronRight,
-  Search,
   Calendar,
-  Filter,
   Download,
   User,
   FileText,
@@ -91,11 +81,7 @@ export function UserActivityHistory({ userId, userName }: UserActivityHistoryPro
     search: '',
   });
 
-  useEffect(() => {
-    fetchActivityHistory();
-  }, [userId, pagination.page, pagination.limit, filters]);
-
-  const fetchActivityHistory = async () => {
+  const fetchActivityHistory = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -113,12 +99,18 @@ export function UserActivityHistory({ userId, userName }: UserActivityHistoryPro
       setActivities(data.activities);
       setStats(data.statistics);
       setPagination(data.pagination);
-    } catch (error) {
-      clientLogger.error('Error fetching activity history:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching activity history:', error);
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, pagination, userId]);
+
+  useEffect(() => {
+    fetchActivityHistory();
+  }, [fetchActivityHistory]);
 
   const getActionIcon = (action: string) => {
     switch (action.toLowerCase()) {
@@ -215,8 +207,10 @@ export function UserActivityHistory({ userId, userName }: UserActivityHistoryPro
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-    } catch (error) {
-      clientLogger.error('Error exporting activity:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error exporting activity:', error);
+      }
     }
   };
 

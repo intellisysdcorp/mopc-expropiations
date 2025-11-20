@@ -1,23 +1,18 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import {
   Clock,
-  CheckCircle2,
-  AlertTriangle,
   TrendingUp,
-  Users,
   FileText,
   BarChart3,
   Activity,
-  Settings,
   Eye,
   Download,
   RefreshCw
@@ -28,7 +23,6 @@ import { toast } from 'react-hot-toast';
 // Import workflow components
 import { CaseTimeline } from './case-timeline';
 import { ChecklistManager } from './checklist-manager';
-import { StageReturnDialog } from './stage-return-dialog';
 import { StageProgressionControl } from './stage-progression-control';
 import { NotificationCenter } from '@/components/notifications/notification-center';
 import clientLogger from '@/lib/client-logger';
@@ -96,14 +90,9 @@ export function WorkflowManager({ caseId, className }: WorkflowManagerProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [_refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => {
-    fetchCaseData();
-    fetchWorkflowStats();
-  }, [caseId, refreshKey]);
-
-  const fetchCaseData = async () => {
+  const fetchCaseData = useCallback(async () => {
     try {
       const response = await fetch(`/api/cases/${caseId}`);
 
@@ -118,9 +107,9 @@ export function WorkflowManager({ caseId, className }: WorkflowManagerProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [caseId]);
 
-  const fetchWorkflowStats = async () => {
+  const fetchWorkflowStats = useCallback(async () => {
     try {
       // This would be a new API endpoint for workflow statistics
       const response = await fetch('/api/cases/stats');
@@ -131,10 +120,17 @@ export function WorkflowManager({ caseId, className }: WorkflowManagerProps) {
 
       const data = await response.json();
       setWorkflowStats(data);
-    } catch (err) {
-      clientLogger.error('Error fetching workflow stats:', err);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching workflow stats:', error);
+      }
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchCaseData();
+    fetchWorkflowStats();
+  }, [fetchCaseData, fetchWorkflowStats]);
 
   const handleStageChange = () => {
     // Refresh data when stage changes

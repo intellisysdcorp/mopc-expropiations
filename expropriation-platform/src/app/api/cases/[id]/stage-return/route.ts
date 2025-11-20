@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { prisma } from '@/lib/prisma';
@@ -233,8 +234,8 @@ export async function POST(
     }
 
     // Check if approval is required
-    let approvedAt = new Date();
-    let approverId = user.id;
+    const approvedAt = new Date();
+    const approverId = user.id;
 
     if (validatedData.requiresApproval && user.role.name !== 'super_admin') {
       // For now, auto-approve for department_admin and supervisor

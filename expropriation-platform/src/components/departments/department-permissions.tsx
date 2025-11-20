@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BarChart3 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import {
@@ -58,6 +58,7 @@ interface Role {
     id: string;
     name: string;
   }>;
+  permissions?: Record<string, boolean>;
 }
 
 interface Department {
@@ -86,13 +87,13 @@ export function DepartmentPermissions({
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('direct');
   const [showBulkDialog, setShowBulkDialog] = useState(false);
-  const [bulkAction, setBulkAction] = useState<'grant' | 'revoke'>('grant');
+  const [bulkAction, _setBulkAction] = useState<'grant' | 'revoke'>('grant');
   const [showExpirationDialog, setShowExpirationDialog] = useState(false);
   const [selectedPermissionForExpiration, setSelectedPermissionForExpiration] = useState<string | null>(null);
   const [expirationDate, setExpirationDate] = useState('');
 
   // Fetch permissions data
-  const fetchPermissions = async () => {
+  const fetchPermissions = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/departments/${departmentId}/permissions`);
@@ -103,17 +104,19 @@ export function DepartmentPermissions({
       setDepartmentPermissions(data.departmentPermissions || []);
       setInheritedPermissions(data.inheritedPermissions || []);
       setRoleBasedPermissions(data.roleBasedPermissions || []);
-    } catch (error) {
-      toast.error('Error al cargar permisos');
-      clientLogger.error('Error fetching permissions:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error('Error al cargar permisos');
+        clientLogger.error('Error fetching permissions:', error);
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [departmentId]);
 
   useEffect(() => {
     fetchPermissions();
-  }, [departmentId]);
+  }, [fetchPermissions]);
 
   // Filter permissions based on search
   const filteredPermissions = permissions.filter(permission =>
@@ -128,7 +131,7 @@ export function DepartmentPermissions({
     if (!acc[permission.type]) {
       acc[permission.type] = [];
     }
-    acc[permission.type].push(permission);
+    acc[permission.type]!.push(permission);
     return acc;
   }, {} as Record<string, Permission[]>);
 
@@ -595,7 +598,7 @@ export function DepartmentPermissions({
                             <div>
                               <h4 className="font-medium mb-2">Permisos del Rol:</h4>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                {Object.entries(role.permissions).map(([key, value]) => (
+                                {Object.entries(role.permissions).map(([key]) => (
                                   <div key={key} className="flex items-center gap-2 text-sm">
                                     <CheckCircle2 className="h-4 w-4 text-green-600" />
                                     <span className="capitalize">{key.replace(/_/g, ' ')}</span>
@@ -623,7 +626,7 @@ export function DepartmentPermissions({
               {bulkAction === 'grant' ? 'Otorgar Permisos' : 'Revocar Permisos'}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              ¿Estás seguro de que deseas {bulkAction === 'grant' ? 'otorgar' : 'revocar'} {selectedPermissions.length} permiso(s) al departamento "{department.name}"?
+              ¿Estás seguro de que deseas {bulkAction === 'grant' ? 'otorgar' : 'revocar'} {selectedPermissions.length} permiso(s) al departamento &quot;{department.name}&quot;?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

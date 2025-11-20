@@ -1,29 +1,28 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useState, useEffect, useCallback } from 'react'
 import {
-  FileText,
-  Download,
-  Eye,
-  Trash2,
-  Edit,
-  Search,
-  Filter,
-  MoreHorizontal,
-  History,
-  Calendar,
-  User,
   AlertTriangle,
+  Archive,
+  Calendar,
   CheckCircle,
   Clock,
-  Archive,
-  Lock,
+  Download,
+  Edit,
+  Eye,
+  FileText,
+  Filter,
   Grid3x3,
+  History,
   List,
+  Lock,
+  MoreHorizontal,
   RefreshCw,
+  Search,
   SortAsc,
-  SortDesc
+  SortDesc,
+  Trash2,
+  User,
 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -97,8 +96,7 @@ const SECURITY_LEVELS = [
   { value: 'RESTRICTED', label: 'Restringido', icon: Lock, color: 'bg-red-100 text-red-800' },
 ]
 
-export function DocumentList({ caseId, onDocumentSelect, refreshTrigger }: DocumentListProps) {
-  const { data: session } = useSession()
+export function DocumentList({ caseId, onDocumentSelect, refreshTrigger: _refreshTrigger }: DocumentListProps) {
   const [documents, setDocuments] = useState<Document[]>([])
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
@@ -117,10 +115,10 @@ export function DocumentList({ caseId, onDocumentSelect, refreshTrigger }: Docum
     total: 0,
     pages: 0,
   })
-  const [stats, setStats] = useState<any>({})
+  const [, setStats] = useState<any>({})
 
   // Fetch documents
-  const fetchDocuments = async (resetPage = false) => {
+  const fetchDocuments = useCallback(async (resetPage = false) => {
     try {
       setLoading(true)
 
@@ -146,37 +144,41 @@ export function DocumentList({ caseId, onDocumentSelect, refreshTrigger }: Docum
       if (resetPage) {
         setPagination(prev => ({ ...prev, page: 1 }))
       }
-    } catch (error) {
-      clientLogger.error('Error fetching documents:', error)
-      toast.error('Error al cargar los documentos')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching documents:', error)
+        toast.error('Error al cargar los documentos')
+      }
     } finally {
       setLoading(false)
     }
-  }
+  }, [caseId, filters, pagination.limit, pagination.page, searchQuery, sortBy, sortOrder]);
 
   useEffect(() => {
     fetchDocuments()
-  }, [caseId, searchQuery, filters, sortBy, sortOrder, pagination.page, refreshTrigger])
+  }, [fetchDocuments])
 
-  const handleDownload = async (document: Document) => {
+  const handleDownload = async (documentItem: Document) => {
     try {
-      const response = await fetch(`/api/documents/${document.id}/download`)
+      const response = await fetch(`/api/documents/${documentItem.id}/download`)
       if (!response.ok) throw new Error('Download failed')
 
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = document.originalFileName || document.fileName
+      a.download = documentItem.originalFileName || documentItem.fileName;
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
       window.URL.revokeObjectURL(url)
 
       toast.success('Documento descargado exitosamente')
-    } catch (error) {
-      clientLogger.error('Download error:', error)
-      toast.error('Error al descargar el documento')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Download error:', error)
+        toast.error('Error al descargar el documento')
+      }
     }
   }
 
@@ -198,18 +200,16 @@ export function DocumentList({ caseId, onDocumentSelect, refreshTrigger }: Docum
 
       toast.success('Documento eliminado exitosamente')
       fetchDocuments()
-    } catch (error) {
-      clientLogger.error('Delete error:', error)
-      toast.error('Error al eliminar el documento')
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Delete error:', error)
+        toast.error('Error al eliminar el documento')
+      }
     }
   }
 
   const getDocumentTypeConfig = (type: string) => {
     return DOCUMENT_TYPES.find(t => t.value === type) || DOCUMENT_TYPES[13]
-  }
-
-  const getStatusConfig = (status: string) => {
-    return STATUSES.find(s => s.value === status) || STATUSES[0]
   }
 
   const getSecurityConfig = (level: string) => {
@@ -228,9 +228,8 @@ export function DocumentList({ caseId, onDocumentSelect, refreshTrigger }: Docum
   }
 
   const DocumentCard = ({ document }: { document: Document }) => {
-    const typeConfig = getDocumentTypeConfig(document.documentType)
-    const statusConfig = getStatusConfig(document.status)
-    const securityConfig = getSecurityConfig(document.securityLevel)
+    const typeConfig = getDocumentTypeConfig(document.documentType)!;
+    const securityConfig = getSecurityConfig(document.securityLevel)!;
 
     return (
       <Card className="hover:shadow-md transition-shadow">

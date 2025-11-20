@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -22,32 +22,10 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import {
-  RotateCcw,
-  AlertTriangle,
-  Info,
-  Clock,
-  User,
-  Calendar,
-  ArrowLeft,
-  MessageSquare,
-  FileText
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { RotateCcw, AlertTriangle, Info, Clock } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 interface AvailableStage {
@@ -82,7 +60,6 @@ interface StageReturnDialogProps {
 
 export function StageReturnDialog({
   caseId,
-  currentStage,
   onReturnComplete,
   children,
   className
@@ -102,13 +79,7 @@ export function StageReturnDialog({
   const [requiresApproval, setRequiresApproval] = useState(true);
   const [notifyStakeholders, setNotifyStakeholders] = useState(true);
 
-  useEffect(() => {
-    if (open) {
-      fetchReturnOptions();
-    }
-  }, [open, caseId]);
-
-  const fetchReturnOptions = async () => {
+ const fetchReturnOptions = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -134,7 +105,13 @@ export function StageReturnDialog({
     } finally {
       setLoading(false);
     }
-  };
+  }, [caseId]);
+
+  useEffect(() => {
+    if (open) {
+      fetchReturnOptions();
+    }
+  }, [fetchReturnOptions, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -167,7 +144,7 @@ export function StageReturnDialog({
         throw new Error(errorData.error || 'Failed to return case');
       }
 
-      const result = await response.json();
+      await response.json();
 
       toast.success('Caso devuelto exitosamente');
       setOpen(false);

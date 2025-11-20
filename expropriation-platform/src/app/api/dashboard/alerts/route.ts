@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
@@ -14,7 +15,6 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const departmentId = searchParams.get('departmentId');
-    const userId = searchParams.get('userId');
     const severity = searchParams.get('severity');
     const limit = parseInt(searchParams.get('limit') || '20');
 

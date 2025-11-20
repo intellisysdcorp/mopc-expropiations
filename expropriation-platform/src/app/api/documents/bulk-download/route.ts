@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
@@ -6,7 +7,6 @@ import { z } from 'zod';
 import fs from 'fs/promises';
 import path from 'path';
 import archiver from 'archiver';
-import { Writable } from 'stream';
 import { DocumentActionType } from '@prisma/client';
 import { logger } from '@/lib/logger';
 
@@ -205,14 +205,6 @@ async function createZipDownload(
 ) {
   return new Promise<Response>((resolve, reject) => {
     try {
-      // Create a transform stream for the ZIP
-      const passThrough = new Writable({
-        write(chunk, encoding, callback) {
-          // This will be handled by the Response
-          callback();
-        },
-      });
-
       // Create archiver instance
       const archive = archiver('zip', {
         zlib: { level: 9 }, // Maximum compression
@@ -231,7 +223,7 @@ async function createZipDownload(
       });
 
       // Collect archive data
-      let chunks: Buffer[] = [];
+      const chunks: Buffer[] = [];
       archive.on('data', (chunk) => {
         chunks.push(chunk);
       });

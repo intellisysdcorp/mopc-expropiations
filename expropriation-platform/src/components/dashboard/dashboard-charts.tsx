@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   BarChart,
   Bar,
@@ -12,8 +12,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
   Area,
   AreaChart,
   Legend
@@ -21,7 +19,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, Download, Filter } from 'lucide-react';
+import { TrendingUp, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import clientLogger from '@/lib/client-logger';
 
@@ -91,7 +89,7 @@ export function DashboardCharts({ departmentId }: DashboardChartsProps) {
   const [selectedPeriod, setSelectedPeriod] = useState('30');
   const [chartType, setChartType] = useState<'overview' | 'department' | 'stage' | 'performance'>('overview');
 
-  const fetchChartData = async () => {
+  const fetchChartData = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -108,17 +106,21 @@ export function DashboardCharts({ departmentId }: DashboardChartsProps) {
       const data = await response.json();
       setChartData(data);
       setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error loading charts');
-      clientLogger.error('Error fetching chart data:', err);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message);
+        clientLogger.error('Error fetching chart data:', error);
+      } else {
+        setError('Error loading charts');
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [chartType, departmentId, selectedPeriod]);
 
   useEffect(() => {
     fetchChartData();
-  }, [departmentId, selectedPeriod, chartType]);
+  }, [fetchChartData]);
 
   if (loading && !chartData) {
     return (
@@ -280,7 +282,7 @@ export function DashboardCharts({ departmentId }: DashboardChartsProps) {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent = 0 }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
@@ -313,7 +315,7 @@ export function DashboardCharts({ departmentId }: DashboardChartsProps) {
                 />
                 <YAxis />
                 <Tooltip
-                  formatter={(value, name) => [value, 'Casos']}
+                  formatter={(value) => [value, 'Casos']}
                   labelFormatter={(value) => value.replace('_', ' ')}
                 />
                 <Bar dataKey="value" name="casos">
@@ -332,7 +334,7 @@ export function DashboardCharts({ departmentId }: DashboardChartsProps) {
             <CardHeader>
               <CardTitle>Rendimiento por Departamento</CardTitle>
               <CardDescription>
-                Eficiencia y tasa de completación
+                Eficiencia y tasa de terminación
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -392,7 +394,7 @@ export function DashboardCharts({ departmentId }: DashboardChartsProps) {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent = 0 }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"

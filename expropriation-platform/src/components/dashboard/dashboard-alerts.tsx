@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   AlertTriangle,
   AlertCircle,
@@ -17,7 +16,7 @@ import {
   Filter,
   RefreshCw
 } from 'lucide-react';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import clientLogger from '@/lib/client-logger';
 
@@ -220,7 +219,7 @@ export function DashboardAlerts({ departmentId, userId }: DashboardAlertsProps) 
   const [selectedSeverity, setSelectedSeverity] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
 
-  const fetchAlerts = async () => {
+  const fetchAlerts = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({ limit: '50' });
@@ -238,17 +237,21 @@ export function DashboardAlerts({ departmentId, userId }: DashboardAlertsProps) 
       setAlerts(data.alerts);
       setSummary(data.summary);
       setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error loading alerts');
-      clientLogger.error('Error fetching alerts:', err);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message);
+        clientLogger.error('Error fetching alerts:', error);
+      } else {
+        setError('Error loading alerts');
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [departmentId, selectedSeverity, selectedType, userId]);
 
   useEffect(() => {
     fetchAlerts();
-  }, [departmentId, userId, selectedSeverity, selectedType]);
+  }, [fetchAlerts]);
 
   // Auto-refresh every 2 minutes for critical alerts
   useEffect(() => {
@@ -258,7 +261,7 @@ export function DashboardAlerts({ departmentId, userId }: DashboardAlertsProps) 
       }
     }, 2 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [summary]);
+  }, [summary, fetchAlerts]);
 
   const getFilteredAlerts = () => {
     let filtered = alerts;

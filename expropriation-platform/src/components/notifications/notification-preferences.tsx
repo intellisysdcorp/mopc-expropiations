@@ -19,26 +19,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from '@/components/ui/alert';
+import { Alert } from '@/components/ui/alert';
 import {
   Mail,
-  MessageSquare,
-  Smartphone,
   Bell,
   Clock,
   Settings,
   RefreshCw,
   Trash2,
-  Filter,
-  Volume2,
-  VolumeX
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { cn } from '@/lib/utils';
 import clientLogger from '@/lib/client-logger';
 
 interface NotificationPreferences {
@@ -115,7 +105,7 @@ const NOTIFICATION_TYPES = [
 
 export function NotificationPreferences({ className, onSave }: NotificationPreferencesProps) {
   const [preferences, setPreferences] = useState<NotificationPreferences>(DEFAULT_PREFERENCES as NotificationPreferences);
-  const [originalPreferences, setOriginalPreferences] = useState<NotificationPreferences>(DEFAULT_PREFERENCES as NotificationPreferences);
+  const [_originalPreferences, setOriginalPreferences] = useState<NotificationPreferences>(DEFAULT_PREFERENCES as NotificationPreferences);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);

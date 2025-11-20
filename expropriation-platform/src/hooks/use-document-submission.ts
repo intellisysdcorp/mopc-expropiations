@@ -97,7 +97,7 @@ export function useDocumentSubmission() {
         message: `${documents.length} documento(s) subido(s) exitosamente`,
         uploadedCount: documents.length
       }
-    } catch (error) {
+    } catch (_) {
       return {
         success: false,
         message: 'Algunos documentos no pudieron ser subidos',

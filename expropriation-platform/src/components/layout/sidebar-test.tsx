@@ -12,7 +12,6 @@ import {
   Settings,
   Building2,
   FileImage,
-  Database
 } from 'lucide-react'
 
 const moduleInfo = [
@@ -166,7 +165,7 @@ export function SidebarTest() {
                     <ul className="space-y-2 text-sm text-muted-foreground">
                       <li>• Haz clic en el menú lateral para navegar entre módulos</li>
                       <li>• Usa el botón ☰ para colapsar/expandir el sidebar</li>
-                      <li>• Los submenús se despliegan automáticamente</li>
+                      <li>• Los sub-menús se despliegan automáticamente</li>
                       <li>• El estado activo se muestra con resaltado</li>
                     </ul>
                   </div>

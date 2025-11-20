@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
@@ -18,18 +19,6 @@ const createObservationSchema = z.object({
   deadline: z.string().datetime().optional(),
   parentObservationId: z.string().optional(),
   responseTo: z.string().optional(),
-  tags: z.string().optional(),
-});
-
-const updateObservationSchema = z.object({
-  title: z.string().optional(),
-  description: z.string().optional(),
-  category: z.string().optional(),
-  subcategory: z.string().optional(),
-  priority: z.nativeEnum(ObservationPriority).optional(),
-  status: z.nativeEnum(ObservationStatus).optional(),
-  assignedTo: z.string().optional(),
-  deadline: z.string().datetime().optional(),
   tags: z.string().optional(),
 });
 

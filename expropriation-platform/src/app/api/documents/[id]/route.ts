@@ -1,11 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import fs from 'fs/promises';
-import path from 'path';
-import crypto from 'crypto';
 import { DocumentStatus, DocumentSecurityLevel, DocumentActionType } from '@prisma/client';
 import { logger } from '@/lib/logger';
 
@@ -19,11 +17,6 @@ const updateDocumentSchema = z.object({
   customFields: z.record(z.any()).optional(),
   retentionPeriod: z.number().optional(),
   expiresAt: z.string().datetime().optional(),
-});
-
-const changeStatusSchema = z.object({
-  status: z.nativeEnum(DocumentStatus),
-  reason: z.string().optional(),
 });
 
 // GET /api/documents/[id] - Get a specific document
