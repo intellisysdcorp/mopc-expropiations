@@ -7,7 +7,7 @@ import { queryMonitor } from '@/lib/query-monitor'
 // Only Super Admin and Department Admin can access performance metrics
 const allowedRoles = ['SUPER_ADMIN', 'DEPARTMENT_ADMIN']
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 

@@ -8,8 +8,8 @@ import { isAfter } from 'date-fns';
 import { logger } from '@/lib/logger';
 
 const calendarSchema = z.object({
-  start: z.string().datetime(),
-  end: z.string().datetime(),
+  start: z.iso.datetime(),
+  end: z.iso.datetime(),
   filters: z.object({
     types: z.array(z.string()).optional(),
     priorities: z.array(z.string()).optional(),
@@ -44,7 +44,7 @@ function getPriorityFromCase(casePriority: string): 'low' | 'medium' | 'high' | 
 }
 
 // Helper function to calculate deadlines based on case stages
-function calculateStageDeadlines(case_: any): CalendarEvent[] {
+function calculateStageDeadlines(currentCase: any): CalendarEvent[] {
   const events: CalendarEvent[] = [];
   const now = new Date();
 
@@ -70,41 +70,41 @@ function calculateStageDeadlines(case_: any): CalendarEvent[] {
   };
 
   // Add deadline for current stage
-  if (case_.currentStage && stageDeadlines[case_.currentStage]) {
-    const deadlineDate = new Date(case_.updatedAt);
-    deadlineDate.setDate(deadlineDate.getDate() + stageDeadlines[case_.currentStage]);
+  if (currentCase.currentStage && stageDeadlines[currentCase.currentStage]) {
+    const deadlineDate = new Date(currentCase.updatedAt);
+    deadlineDate.setDate(deadlineDate.getDate() + stageDeadlines[currentCase.currentStage]!);
 
     if (isAfter(deadlineDate, now)) {
       events.push({
-        id: `deadline-${case_.id}`,
-        title: `Plazo: ${case_.currentStage.replace(/_/g, ' ')}`,
+        id: `deadline-${currentCase.id}`,
+        title: `Plazo: ${currentCase.currentStage.replace(/_/g, ' ')}`,
         date: deadlineDate.toISOString(),
         type: 'deadline',
-        priority: getPriorityFromCase(case_.priority),
+        priority: getPriorityFromCase(currentCase.priority),
         status: isAfter(deadlineDate, now) ? 'pending' : 'overdue',
-        description: `Plazo para completar la etapa actual del caso ${case_.fileNumber}`,
-        caseId: case_.id,
-        caseNumber: case_.fileNumber,
-        assignedTo: case_.assignedUser?.name || `${case_.assignedUser?.firstName} ${case_.assignedUser?.lastName}`.trim(),
-        department: case_.department?.name,
+        description: `Plazo para completar la etapa actual del caso ${currentCase.fileNumber}`,
+        caseId: currentCase.id,
+        caseNumber: currentCase.fileNumber,
+        assignedTo: `${currentCase.assignedTo?.firstName} ${currentCase.assignedTo?.lastName}`.trim(),
+        department: currentCase.department?.name,
       });
     }
   }
 
   // Add expected end date if exists
-  if (case_.expectedEndDate) {
+  if (currentCase.expectedEndDate) {
     events.push({
-      id: `enddate-${case_.id}`,
+      id: `enddate-${currentCase.id}`,
       title: `Fecha límite del caso`,
-      date: case_.expectedEndDate.toISOString(),
+      date: currentCase.expectedEndDate.toISOString(),
       type: 'milestone',
-      priority: getPriorityFromCase(case_.priority),
-      status: isAfter(new Date(case_.expectedEndDate), now) ? 'pending' : 'overdue',
-      description: `Fecha esperada de finalización del caso ${case_.fileNumber}`,
-      caseId: case_.id,
-      caseNumber: case_.fileNumber,
-      assignedTo: case_.assignedUser?.name || `${case_.assignedUser?.firstName} ${case_.assignedUser?.lastName}`.trim(),
-      department: case_.department?.name,
+      priority: getPriorityFromCase(currentCase.priority),
+      status: isAfter(new Date(currentCase.expectedEndDate), now) ? 'pending' : 'overdue',
+      description: `Fecha esperada de finalización del caso ${currentCase.fileNumber}`,
+      caseId: currentCase.id,
+      caseNumber: currentCase.fileNumber,
+      assignedTo: `${currentCase.assignedTo?.firstName} ${currentCase.assignedTo?.lastName}`.trim(),
+      department: currentCase.department?.name,
     });
   }
 
@@ -144,12 +144,38 @@ async function getMeetingEvents(startDate: Date, endDate: Date, session: any): P
     ];
   }
 
-  const meetings = await prisma.technicalMeeting.findMany({
-    where,
+  const meetings = await prisma.meeting.findMany({
+    where: {
+      scheduledStart: {
+        gte: startDate,
+        lte: endDate,
+      },
+      ...(session.user.role !== 'SUPER_ADMIN' && {
+        OR: [
+          { organizerId: session.user.id },
+          {
+            participants: {
+              some: {
+                userId: session.user.id
+              }
+            }
+          },
+          {
+            case: {
+              department: {
+                OR: [
+                  { id: session.user.departmentId },
+                  { parentId: session.user.departmentId }
+                ]
+              }
+            }
+          }
+        ]
+      })
+    },
     include: {
       organizer: {
         select: {
-          name: true,
           firstName: true,
           lastName: true
         }
@@ -165,10 +191,10 @@ async function getMeetingEvents(startDate: Date, endDate: Date, session: any): P
     },
   });
 
-  return meetings.map(meeting => ({
+  return meetings.map((meeting: any) => ({
     id: meeting.id,
     title: meeting.title,
-    date: meeting.scheduledDate.toISOString(),
+    date: meeting.scheduledStart.toISOString(),
     type: 'meeting' as const,
     priority: meeting.priority.toLowerCase() as any,
     status: meeting.status === 'COMPLETED' ? 'completed' :
@@ -176,7 +202,7 @@ async function getMeetingEvents(startDate: Date, endDate: Date, session: any): P
     description: meeting.description,
     caseId: meeting.caseId,
     caseNumber: meeting.case?.fileNumber,
-    assignedTo: meeting.organizer?.name || `${meeting.organizer?.firstName} ${meeting.organizer?.lastName}`.trim(),
+    assignedTo: `${meeting.organizer?.firstName} ${meeting.organizer?.lastName}`.trim(),
     department: meeting.case?.department?.name,
   }));
 }
@@ -199,11 +225,11 @@ async function getReminderEvents(startDate: Date, endDate: Date, session: any): 
         lt: lastMonth
       },
       status: {
-        notIn: ['COMPLETED', 'ARCHIVED', 'CANCELLED']
+        notIn: ['COMPLETADO', 'ARCHIVED', 'CANCELLED']
       },
       ...(session.user.role !== 'SUPER_ADMIN' && {
         OR: [
-          { assignedUserId: session.user.id },
+          { assignedToId: session.user.id },
           {
             assignments: {
               some: {
@@ -223,9 +249,8 @@ async function getReminderEvents(startDate: Date, endDate: Date, session: any): 
       })
     },
     include: {
-      assignedUser: {
+      assignedTo: {
         select: {
-          name: true,
           firstName: true,
           lastName: true
         }
@@ -309,7 +334,7 @@ export async function GET(request: NextRequest) {
         ],
         ...(session.user.role !== 'SUPER_ADMIN' && {
           OR: [
-            { assignedUserId: session.user.id },
+            { assignedToId: session.user.id },
             {
               assignments: {
                 some: {
@@ -329,9 +354,8 @@ export async function GET(request: NextRequest) {
         })
       },
       include: {
-        assignedUser: {
+        assignedTo: {
           select: {
-            name: true,
             firstName: true,
             lastName: true
           }
@@ -404,7 +428,7 @@ export async function GET(request: NextRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid calendar parameters', details: error.errors },
+        { error: 'Invalid calendar parameters', details: error.issues },
         { status: 400 }
       );
     }

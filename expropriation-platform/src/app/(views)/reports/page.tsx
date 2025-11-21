@@ -23,7 +23,7 @@ import { DateFilter, useDateFilter } from '@/components/dashboard/date-filter';
 import { ExportTools } from '@/components/dashboard/export-tools';
 
 export default function ReportsPage() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const router = useRouter();
   const { updateDateRange, updatePeriod } = useDateFilter();
 
@@ -122,71 +122,80 @@ export default function ReportsPage() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-6">
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Resumen General del Período
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Estadísticas y métricas clave para el período seleccionado
-                </p>
-              </div>
-              <DashboardStats departmentId={user?.departmentId} />
-            </TabsContent>
+            {user?.departmentId && (
+              <>
+                <TabsContent value="overview" className="space-y-6">
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      Resumen General del Período
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Estadísticas y métricas clave para el período seleccionado
+                    </p>
+                  </div>
+                    <DashboardStats departmentId={user?.departmentId} />
+                </TabsContent>
+                <TabsContent value="analytics" className="space-y-6">
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      Análisis Detallado
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Visualizaciones interactivas y tendencias
+                    </p>
+                  </div>
+                    <DashboardCharts departmentId={user?.departmentId} />
+                </TabsContent>
+              </>
+            )}
 
-            <TabsContent value="analytics" className="space-y-6">
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Análisis Detallado
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Visualizaciones interactivas y tendencias
-                </p>
-              </div>
-              <DashboardCharts departmentId={user?.departmentId} />
-            </TabsContent>
+            {user?.departmentId && user.id && (
+              <>
+                <TabsContent value="cases" className="space-y-6">
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      Análisis de Casos
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Listado detallado y estado de casos
+                    </p>
+                  </div>
+                  <DashboardCases
+                    departmentId={user?.departmentId}
+                    userId={user?.id}
+                  />
+                </TabsContent>
 
-            <TabsContent value="cases" className="space-y-6">
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Análisis de Casos
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Listado detallado y estado de casos
-                </p>
-              </div>
-              <DashboardCases
-                departmentId={user?.departmentId}
-                userId={user?.id}
-              />
-            </TabsContent>
+                <TabsContent value="alerts" className="space-y-6">
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      Sistema de Alertas
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Alertas críticas y requerimientos de atención
+                    </p>
+                  </div>
+                  <DashboardAlerts
+                    departmentId={user?.departmentId}
+                    userId={user?.id}
+                  />
+                </TabsContent>
+              </>
+            )}
 
-            <TabsContent value="alerts" className="space-y-6">
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Sistema de Alertas
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Alertas críticas y requerimientos de atención
-                </p>
-              </div>
-              <DashboardAlerts
-                departmentId={user?.departmentId}
-                userId={user?.id}
-              />
-            </TabsContent>
-
-            <TabsContent value="export" className="space-y-6">
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Herramientas de Exportación
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Genere reportes personalizados en PDF y Excel
-                </p>
-              </div>
-              <ExportTools departmentId={user?.departmentId} />
-            </TabsContent>
+            {user?.departmentId && (
+              <TabsContent value="export" className="space-y-6">
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Herramientas de Exportación
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Genere reportes personalizados en PDF y Excel
+                  </p>
+                </div>
+                <ExportTools departmentId={user?.departmentId} />
+              </TabsContent>
+            )}
           </Tabs>
 
           {/* Quick Actions Footer */}
