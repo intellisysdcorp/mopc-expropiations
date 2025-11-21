@@ -35,15 +35,8 @@ async function generateExcel(data: any[], dataType: string) {
   const worksheet = workbook.addWorksheet(dataType);
 
   if (data.length > 0) {
-    // Add headers
-    const headers = Object.keys(data[0]);
-    worksheet.addRow(headers);
-
-    // Add data rows
-    data.forEach(row => {
-      const values = headers.map(header => row[header]);
-      worksheet.addRow(values);
-    });
+    worksheet.columns = Object.keys(data[0]).map(key => ({ header: key, key: key }));
+    worksheet.addRows(data);
   }
 
   const excelBuffer = await workbook.xlsx.writeBuffer();

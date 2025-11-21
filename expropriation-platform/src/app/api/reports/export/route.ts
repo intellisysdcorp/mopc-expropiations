@@ -298,7 +298,7 @@ async function generatePDFReport(data: any, options: ExportOptions): Promise<Buf
   }
 
   // Footer
-  const totalPages = doc.internal.getNumberOfPages();
+  const totalPages = doc.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
     doc.setFontSize(8);
@@ -313,7 +313,7 @@ async function generatePDFReport(data: any, options: ExportOptions): Promise<Buf
   return Buffer.from(doc.output('arraybuffer'));
 }
 
-async function generateExcelReport(data: any, options: ExportOptions): Promise<Buffer> {
+async function generateExcelReport(data: any, options: ExportOptions): Promise<ExcelJS.Buffer> {
   const workbook = new ExcelJS.Workbook();
 
   // Statistics Sheet
@@ -331,7 +331,7 @@ async function generateExcelReport(data: any, options: ExportOptions): Promise<B
       ['Casos Vencidos', data.statistics.overdueCases],
       ['Tasa de Completación (%)', data.statistics.completionRate.toFixed(1)]
     ];
-    statsData.forEach(row => statsSheet.addRow(row));
+    statsSheet.addRows(statsData);
   }
 
   // Cases Sheet
@@ -357,7 +357,7 @@ async function generateExcelReport(data: any, options: ExportOptions): Promise<B
         case_.expectedEndDate ? format(new Date(case_.expectedEndDate), 'dd/MM/yyyy') : ''
       ]);
     });
-    casesData.forEach(row => casesSheet.addRow(row));
+    casesSheet.addRows(data.cases);
   }
 
   // Alerts Sheet
@@ -377,7 +377,7 @@ async function generateExcelReport(data: any, options: ExportOptions): Promise<B
         format(new Date(alert.createdAt), 'dd/MM/yyyy HH:mm')
       ]);
     });
-    alertsData.forEach(row => alertsSheet.addRow(row));
+    alertsSheet.addRows(data.alerts);
   }
 
   // Departments Sheet (reference)
@@ -390,9 +390,8 @@ async function generateExcelReport(data: any, options: ExportOptions): Promise<B
     data.departments.forEach((dept: any) => {
       deptData.push([dept.id, dept.name, dept.code]);
     });
-    deptData.forEach(row => deptSheet.addRow(row));
+    deptSheet.addRows(data.departments);
   }
 
-  const excelBuffer = await workbook.xlsx.writeBuffer();
-  return Buffer.from(excelBuffer);
+  return workbook.xlsx.writeBuffer();
 }

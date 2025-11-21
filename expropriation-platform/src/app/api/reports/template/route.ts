@@ -172,7 +172,7 @@ async function generatePDFTemplate(): Promise<Buffer> {
   return Buffer.from(doc.output('arraybuffer'));
 }
 
-async function generateExcelTemplate(): Promise<Buffer> {
+async function generateExcelTemplate(): Promise<ExcelJS.Buffer> {
   const workbook = new ExcelJS.Workbook();
 
   // Instructions Sheet
@@ -271,6 +271,5 @@ async function generateExcelTemplate(): Promise<Buffer> {
   ];
   chartTemplate.forEach(row => chartSheet.addRow(row));
 
-  const excelBuffer = await workbook.xlsx.writeBuffer();
-  return Buffer.from(excelBuffer);
+  return workbook.xlsx.writeBuffer();
 }
