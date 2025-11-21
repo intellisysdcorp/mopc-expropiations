@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import jsPDF from 'jspdf';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
@@ -173,9 +173,10 @@ async function generatePDFTemplate(): Promise<Buffer> {
 }
 
 async function generateExcelTemplate(): Promise<Buffer> {
-  const workbook = XLSX.utils.book_new();
+  const workbook = new ExcelJS.Workbook();
 
   // Instructions Sheet
+  const instructionsSheet = workbook.addWorksheet('Instrucciones');
   const instructionsData = [
     ['Instrucciones de Uso'],
     [],
@@ -194,11 +195,10 @@ async function generateExcelTemplate(): Promise<Buffer> {
     [],
     ['Generado: ' + new Date().toLocaleDateString('es-ES')]
   ];
-
-  const instructionsSheet = XLSX.utils.aoa_to_sheet(instructionsData);
-  XLSX.utils.book_append_sheet(workbook, instructionsSheet, 'Instrucciones');
+  instructionsData.forEach(row => instructionsSheet.addRow(row));
 
   // Statistics Template Sheet
+  const statsSheet = workbook.addWorksheet('Estadísticas');
   const statsTemplate = [
     ['Estadísticas Generales'],
     [],
@@ -214,33 +214,30 @@ async function generateExcelTemplate(): Promise<Buffer> {
     ['Usuarios Activos', '', 'usuarios', 'Usuarios activos en el período'],
     ['Departamentos', '', 'departamentos', 'Departamentos involucrados']
   ];
-
-  const statsSheet = XLSX.utils.aoa_to_sheet(statsTemplate);
-  XLSX.utils.book_append_sheet(workbook, statsSheet, 'Estadísticas');
+  statsTemplate.forEach(row => statsSheet.addRow(row));
 
   // Cases Template Sheet
+  const casesSheet = workbook.addWorksheet('Casos');
   const casesTemplate = [
     ['Lista de Casos'],
     [],
     ['ID', 'Número de Caso', 'Título', 'Propietario', 'Dirección', 'Ciudad', 'Provincia', 'Estado', 'Prioridad', 'Departamento', 'Creado por', 'Asignado a', 'Fecha de Creación', 'Fecha Límite', 'Fecha de Cierre', 'Progreso (%)', 'Observaciones'],
     ['(Ej: caso-001)', '(Ej: EXP-2024-001)', '(Ej: Expropiación Urbana)', '(Ej: Juan Pérez)', '(Ej: Calle Principal #123)', '(Ej: Santo Domingo)', '(Ej: Santo Domingo)', '(Ej: EN_PROGRESO)', '(Ej: HIGH)', '(Ej: Legal)', '(Ej: Admin User)', '(Ej: Analyst User)', '(Ej: 01/01/2024)', '(Ej: 31/12/2024)', '(Ej: 15/06/2024)', '(Ej: 75)', '(Ej: En revisión legal)']
   ];
-
-  const casesSheet = XLSX.utils.aoa_to_sheet(casesTemplate);
-  XLSX.utils.book_append_sheet(workbook, casesSheet, 'Casos');
+  casesTemplate.forEach(row => casesSheet.addRow(row));
 
   // Alerts Template Sheet
+  const alertsSheet = workbook.addWorksheet('Alertas');
   const alertsTemplate = [
     ['Alertas Críticas'],
     [],
     ['ID', 'Tipo', 'Severidad', 'Título', 'Mensaje', 'Caso ID', 'Departamento', 'Asignado a', 'Fecha de Creación', 'Estado', 'Acción Tomada', 'Fecha de Resolución'],
     ['(Ej: alert-001)', '(Ej: overdue)', '(Ej: high)', '(Ej: Caso Vencido)', '(Ej: El caso EXP-001 está vencido)', '(Ej: caso-001)', '(Ej: Legal)', '(Ej: John Doe)', '(Ej: 01/01/2024)', '(Ej: active)', '(Ej: Contactar propietario)', '(Ej: 02/01/2024)']
   ];
-
-  const alertsSheet = XLSX.utils.aoa_to_sheet(alertsTemplate);
-  XLSX.utils.book_append_sheet(workbook, alertsSheet, 'Alertas');
+  alertsTemplate.forEach(row => alertsSheet.addRow(row));
 
   // Departments Reference Sheet
+  const deptSheet = workbook.addWorksheet('Departamentos');
   const deptTemplate = [
     ['Departamentos de Referencia'],
     [],
@@ -250,11 +247,10 @@ async function generateExcelTemplate(): Promise<Buffer> {
     ['dept-003', 'Financiero', 'FIN', 'Departamento Financiero'],
     ['dept-004', 'Administración', 'ADMIN', 'Departamento Administrativo']
   ];
-
-  const deptSheet = XLSX.utils.aoa_to_sheet(deptTemplate);
-  XLSX.utils.book_append_sheet(workbook, deptSheet, 'Departamentos');
+  deptTemplate.forEach(row => deptSheet.addRow(row));
 
   // Chart Data Template Sheet
+  const chartSheet = workbook.addWorksheet('Datos Gráficos');
   const chartTemplate = [
     ['Datos para Gráficos'],
     [],
@@ -273,10 +269,8 @@ async function generateExcelTemplate(): Promise<Buffer> {
     ['Por Estado - En Progreso', '', 'Casos en progreso'],
     ['Por Estado - Completado', '', 'Casos completados']
   ];
+  chartTemplate.forEach(row => chartSheet.addRow(row));
 
-  const chartSheet = XLSX.utils.aoa_to_sheet(chartTemplate);
-  XLSX.utils.book_append_sheet(workbook, chartSheet, 'Datos Gráficos');
-
-  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+  const excelBuffer = await workbook.xlsx.writeBuffer();
   return Buffer.from(excelBuffer);
 }
