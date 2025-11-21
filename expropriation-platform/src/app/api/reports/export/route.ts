@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import jsPDF from 'jspdf';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { logger } from '@/lib/logger';
@@ -298,7 +298,7 @@ async function generatePDFReport(data: any, options: ExportOptions): Promise<Buf
   }
 
   // Footer
-  const totalPages = doc.internal.getNumberOfPages();
+  const totalPages = doc.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
     doc.setFontSize(8);
@@ -313,11 +313,12 @@ async function generatePDFReport(data: any, options: ExportOptions): Promise<Buf
   return Buffer.from(doc.output('arraybuffer'));
 }
 
-async function generateExcelReport(data: any, options: ExportOptions): Promise<Buffer> {
-  const workbook = XLSX.utils.book_new();
+async function generateExcelReport(data: any, options: ExportOptions): Promise<ExcelJS.Buffer> {
+  const workbook = new ExcelJS.Workbook();
 
   // Statistics Sheet
   if (options.includeStatistics) {
+    const statsSheet = workbook.addWorksheet('Estadísticas');
     const statsData = [
       ['Estadísticas Generales'],
       [],
@@ -330,13 +331,12 @@ async function generateExcelReport(data: any, options: ExportOptions): Promise<B
       ['Casos Vencidos', data.statistics.overdueCases],
       ['Tasa de Completación (%)', data.statistics.completionRate.toFixed(1)]
     ];
-
-    const statsSheet = XLSX.utils.aoa_to_sheet(statsData);
-    XLSX.utils.book_append_sheet(workbook, statsSheet, 'Estadísticas');
+    statsSheet.addRows(statsData);
   }
 
   // Cases Sheet
   if (options.includeCases && data.cases.length > 0) {
+    const casesSheet = workbook.addWorksheet('Casos');
     const casesData = [
       ['ID', 'Número de Caso', 'Título', 'Propietario', 'Dirección', 'Estado', 'Prioridad', 'Departamento', 'Creado por', 'Asignado a', 'Fecha de Creación', 'Fecha Límite']
     ];
@@ -357,13 +357,12 @@ async function generateExcelReport(data: any, options: ExportOptions): Promise<B
         case_.expectedEndDate ? format(new Date(case_.expectedEndDate), 'dd/MM/yyyy') : ''
       ]);
     });
-
-    const casesSheet = XLSX.utils.aoa_to_sheet(casesData);
-    XLSX.utils.book_append_sheet(workbook, casesSheet, 'Casos');
+    casesSheet.addRows(data.cases);
   }
 
   // Alerts Sheet
   if (options.includeAlerts && data.alerts.length > 0) {
+    const alertsSheet = workbook.addWorksheet('Alertas');
     const alertsData = [
       ['ID', 'Tipo', 'Severidad', 'Título', 'Mensaje', 'Fecha de Creación']
     ];
@@ -378,13 +377,12 @@ async function generateExcelReport(data: any, options: ExportOptions): Promise<B
         format(new Date(alert.createdAt), 'dd/MM/yyyy HH:mm')
       ]);
     });
-
-    const alertsSheet = XLSX.utils.aoa_to_sheet(alertsData);
-    XLSX.utils.book_append_sheet(workbook, alertsSheet, 'Alertas');
+    alertsSheet.addRows(data.alerts);
   }
 
   // Departments Sheet (reference)
   if (data.departments.length > 0) {
+    const deptSheet = workbook.addWorksheet('Departamentos');
     const deptData = [
       ['ID', 'Nombre', 'Código']
     ];
@@ -392,11 +390,8 @@ async function generateExcelReport(data: any, options: ExportOptions): Promise<B
     data.departments.forEach((dept: any) => {
       deptData.push([dept.id, dept.name, dept.code]);
     });
-
-    const deptSheet = XLSX.utils.aoa_to_sheet(deptData);
-    XLSX.utils.book_append_sheet(workbook, deptSheet, 'Departamentos');
+    deptSheet.addRows(data.departments);
   }
 
-  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
-  return Buffer.from(excelBuffer);
+  return workbook.xlsx.writeBuffer();
 }
