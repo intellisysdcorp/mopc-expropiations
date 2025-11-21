@@ -119,8 +119,10 @@ export default function NotificationsPage() {
       setTotalPages(data.pagination.pages)
       setCurrentPage(data.pagination.page)
 
-    } catch (error) {
-      clientLogger.error('Error fetching notifications:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching notifications:', error)
+      }
       toast.error('Error al cargar notificaciones')
     } finally {
       setLoading(false)
@@ -141,13 +143,14 @@ export default function NotificationsPage() {
 
       if (!response.ok) throw new Error('Failed to update notification')
 
-      setNotifications(prev =>
-        prev.map(n =>
-          n.id === notificationId
-            ? { ...n, isRead, readAt: isRead ? new Date() : undefined }
-            : n
-        )
-      )
+      setNotifications((prev) =>
+        prev.map(n => {
+          if (n.id !== notificationId) return n;
+          const output = { ...n, isRead };
+          if (isRead) output.readAt = new Date();
+          return output;
+        })
+      );
 
       if (stats) {
         setStats({
@@ -251,13 +254,15 @@ export default function NotificationsPage() {
           })
         }
       } else {
-        setNotifications(prev =>
-          prev.map(n =>
-            selectedNotifications.has(n.id)
-              ? { ...n, isRead: action === 'mark_read', readAt: action === 'mark_read' ? new Date() : undefined }
-              : n
-          )
+        setNotifications((prev) =>
+          prev.map(n => {
+            if (!selectedNotifications.has(n.id)) return n;
+            const output = { ...n, isRead: action === 'mark_read' }
+            if (output.isRead) output.readAt = new Date();
+            return output
+          })
         )
+
         if (stats && action === 'mark_read') {
           const markedAsRead = Array.from(selectedNotifications).filter(id =>
             notifications.find(n => n.id === id && !n.isRead)
