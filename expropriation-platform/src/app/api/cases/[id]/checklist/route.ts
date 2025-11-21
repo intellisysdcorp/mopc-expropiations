@@ -44,17 +44,9 @@ export async function GET(
         stageAssignments: {
           where: { isActive: true },
           include: {
-            checklistCompletions: {
+            stageChecklistCompletions: {
               include: {
-                checklist: true,
-                completedByUser: {
-                  select: {
-                    id: true,
-                    firstName: true,
-                    lastName: true,
-                    email: true
-                  }
-                }
+                checklist: true
               }
             }
           }
@@ -104,13 +96,13 @@ export async function GET(
 
     // Get current stage assignment
     const currentAssignment = caseData.stageAssignments.find(
-      assignment => assignment.stage === targetStage
+      (assignment: any) => assignment.stage === targetStage
     );
 
     // Map checklist items with completion status
     const checklistWithStatus = checklistItems.map(item => {
-      const completion = currentAssignment?.checklistCompletions.find(
-        c => c.checklistId === item.id
+      const completion = currentAssignment?.stageChecklistCompletions?.find(
+        (c: any) => c.checklistId === item.id
       );
 
       return {
@@ -119,7 +111,7 @@ export async function GET(
           id: completion.id,
           isCompleted: completion.isCompleted,
           completedAt: completion.completedAt,
-          completedBy: completion.completedByUser,
+          completedBy: completion.completedBy,
           notes: completion.notes,
           attachmentPath: completion.attachmentPath
         } : null
@@ -206,9 +198,9 @@ export async function POST(
     // Create checklist item
     const checklistItem = await prisma.stageChecklist.create({
       data: {
-        stage: caseData.currentStage as any,
+        stage: caseData.currentStage,
         title: validatedData.title,
-        description: validatedData.description,
+        description: validatedData.description || null,
         isRequired: validatedData.isRequired,
         itemType: validatedData.itemType,
         sequence: validatedData.sequence || 1,
@@ -242,7 +234,7 @@ export async function POST(
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         { status: 400 }
       );
     }
@@ -279,7 +271,7 @@ export async function PUT(
           stageAssignments: {
             where: { isActive: true },
             include: {
-              checklistCompletions: true
+              stageChecklistCompletions: true
             }
           }
         }
@@ -330,7 +322,7 @@ export async function PUT(
 
     // Update or create checklist completion
     let completion;
-    const existingCompletion = currentAssignment.checklistCompletions.find(
+    const existingCompletion = currentAssignment.stageChecklistCompletions?.find(
       c => c.checklistId === validatedData.checklistId
     );
 
@@ -341,8 +333,8 @@ export async function PUT(
           isCompleted: validatedData.isCompleted,
           completedAt: validatedData.isCompleted ? new Date() : null,
           completedBy: validatedData.isCompleted ? user.id : null,
-          notes: validatedData.notes,
-          attachmentPath: validatedData.attachmentPath
+          notes: validatedData.notes || null,
+          attachmentPath: validatedData.attachmentPath || null
         }
       });
     } else {
@@ -353,8 +345,8 @@ export async function PUT(
           isCompleted: validatedData.isCompleted,
           completedAt: validatedData.isCompleted ? new Date() : null,
           completedBy: validatedData.isCompleted ? user.id : null,
-          notes: validatedData.notes,
-          attachmentPath: validatedData.attachmentPath
+          notes: validatedData.notes || null,
+          attachmentPath: validatedData.attachmentPath || null
         }
       });
     }
@@ -396,7 +388,7 @@ export async function PUT(
     });
 
     const completedRequiredItems = allCompletions.filter(
-      c => c.checklist.isRequired
+      c => c.checklist?.isRequired
     ).length;
 
     const progressPercentage = allChecklistItems.length > 0
@@ -419,7 +411,7 @@ export async function PUT(
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         { status: 400 }
       );
     }

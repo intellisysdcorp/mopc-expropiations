@@ -9,14 +9,14 @@ const configSchema = z.object({
   value: z.any(),
   type: z.enum(['string', 'number', 'boolean', 'json', 'array']),
   category: z.string().min(1),
-  description: z.string().optional(),
+  description: z.string().nullable(),
   environment: z.string().optional(),
   isRequired: z.boolean().default(false),
   isPublic: z.boolean().default(false),
   validation: z.any().optional()
 })
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const session = await auth()
 
@@ -127,8 +127,8 @@ export async function POST(request: NextRequest) {
       data: {
         configurationId: config.id,
         key: config.key,
-        oldValue: null,
-        newValue: config.value,
+        oldValue: {},
+        newValue: config.value as any,
         type: config.type,
         category: config.category,
         changeReason: 'Initial configuration created',
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
     logger.error('Error creating system configuration:', error)
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }

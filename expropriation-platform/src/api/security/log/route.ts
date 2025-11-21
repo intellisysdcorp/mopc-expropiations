@@ -8,8 +8,7 @@ export async function POST(request: NextRequest) {
     const { event, details, level = 'info' } = body;
 
     // Add request context
-    const ip = request.ip ||
-               request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
                request.headers.get('x-real-ip') ||
                'unknown';
 

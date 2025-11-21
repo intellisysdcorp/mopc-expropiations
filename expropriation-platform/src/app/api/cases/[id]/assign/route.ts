@@ -23,12 +23,12 @@ export async function PUT(
 
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Invalid input', details: validationResult.error.errors },
+        { error: 'Invalid input', details: validationResult.error.issues },
         { status: 400 }
       )
     }
 
-    const { assignedToId, supervisedById, reason } = validationResult.data
+    const { assignedToId, supervisedById = null, reason = null } = validationResult.data
 
     // Get user to check permissions
     const user = await prisma.user.findUnique({
