@@ -6,14 +6,14 @@ import { z } from 'zod'
 
 const configSchema = z.object({
   key: z.string().min(1),
-  value: z.any(),
+  value: z.union([z.string(), z.number(), z.boolean(), z.array(z.unknown()), z.record(z.string(), z.unknown())]),
   type: z.enum(['string', 'number', 'boolean', 'json', 'array']),
   category: z.string().min(1),
   description: z.string().nullable(),
   environment: z.string().optional(),
   isRequired: z.boolean().default(false),
   isPublic: z.boolean().default(false),
-  validation: z.any().optional()
+  validation: z.record(z.string(), z.unknown()).optional()
 })
 
 export async function GET(request: NextRequest) {
@@ -32,7 +32,10 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category')
     const environment = searchParams.get('environment')
 
-    const where: any = {}
+    const where: {
+      category?: string;
+      environment?: string;
+    } = {}
     if (category && category !== 'all') {
       where.category = category
     }
@@ -127,8 +130,8 @@ export async function POST(request: NextRequest) {
       data: {
         configurationId: config.id,
         key: config.key,
-        oldValue: {},
-        newValue: config.value as any,
+        oldValue: 'null',
+        newValue: JSON.stringify(config.value),
         type: config.type,
         category: config.category,
         changeReason: 'Initial configuration created',

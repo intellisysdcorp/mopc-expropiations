@@ -23,7 +23,7 @@ export async function PUT(
 
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Invalid input', details: validationResult.error.errors },
+        { error: 'Invalid input', details: validationResult.error.issues },
         { status: 400 }
       )
     }
@@ -69,59 +69,66 @@ export async function PUT(
       )
     }
 
-    // Define stage order for validation
+    // Define stage order for validation (main workflow stages only)
     const stageOrder = [
-      'INITIAL_REVIEW',
-      'LEGAL_REVIEW',
-      'TECHNICAL_EVALUATION',
-      'APPRAISAL',
-      'NEGOTIATION',
-      'DOCUMENTATION',
-      'PUBLIC_CONSULTATION',
-      'APPROVAL',
-      'PAYMENT',
-      'TRANSFER',
-      'FINAL_CLOSURE',
-      'QUALITY_CONTROL',
-      'AUDIT',
-      'REPORTING',
-      'ARCHIVE_PREPARATION',
-      'COMPLETED'
+      'RECEPCION_SOLICITUD',
+      'VERIFICACION_REQUISITOS',
+      'CARGA_DOCUMENTOS',
+      'ASIGNACION_ANALISTA',
+      'ANALISIS_PRELIMINAR',
+      'NOTIFICACION_PROPIETARIO',
+      'PERITAJE_TECNICO',
+      'DETERMINACION_VALOR',
+      'OFERTA_COMPRA',
+      'NEGOCIACION',
+      'APROBACION_ACUERDO',
+      'ELABORACION_ESCRITURA',
+      'FIRMA_DOCUMENTOS',
+      'REGISTRO_PROPIEDAD',
+      'DESEMBOLSO_PAGO',
+      'ENTREGA_INMUEBLE',
+      'CIERRE_ARCHIVO'
     ]
+
+    // Define special stages that aren't part of the main workflow
+    const specialStages = ['SUSPENDED', 'CANCELLED']
 
     const currentStage = existingCase.currentStage
     const currentStageIndex = stageOrder.indexOf(currentStage)
     const newStageIndex = stageOrder.indexOf(stage)
 
-    // Allow special stages (SUSPENDED, CANCELLED) from any stage
-    if (stage === 'SUSPENDED' || stage === 'CANCELLED') {
-      // Allow transition to these stages
-    } else if (currentStage === 'SUSPENDED') {
-      // Only allow forward progression from suspended
-      if (newStageIndex <= currentStageIndex) {
-        return NextResponse.json(
-          { error: 'Cannot move backwards from suspended stage' },
-          { status: 400 }
-        )
+    // Handle stage transitions based on current and target stages
+    if (specialStages.includes(stage)) {
+      // Allow transition to special stages from any stage
+    } else if (specialStages.includes(currentStage)) {
+      // Handle transitions from special stages
+      if (currentStage === 'SUSPENDED') {
+        // From suspended, only allow forward progression to main workflow stages
+        if (newStageIndex === -1 || newStageIndex <= 0) {
+          return NextResponse.json(
+            { error: 'From suspended stage, can only move forward to main workflow stages' },
+            { status: 400 }
+          )
+        }
+      } else if (currentStage === 'CANCELLED') {
+        // From cancelled, only allow moving back to initial stage
+        if (stage !== 'RECEPCION_SOLICITUD') {
+          return NextResponse.json(
+            { error: 'Cancelled cases can only be moved back to initial review stage' },
+            { status: 400 }
+          )
+        }
       }
-    } else if (currentStage === 'CANCELLED') {
-      // Only allow moving back to INITIAL_REVIEW from cancelled
-      if (stage !== 'INITIAL_REVIEW') {
-        return NextResponse.json(
-          { error: 'Cancelled cases can only be moved back to initial review' },
-          { status: 400 }
-        )
-      }
-    } else if (currentStage === 'COMPLETED') {
-      // Only allow moving to SUSPENDED from completed
+    } else if (currentStage === 'CIERRE_ARCHIVO') {
+      // From completed stage, only allow moving to suspended
       if (stage !== 'SUSPENDED') {
         return NextResponse.json(
           { error: 'Completed cases can only be suspended' },
           { status: 400 }
         )
       }
-    } else if (newStageIndex < currentStageIndex) {
-      // Don't allow backwards progression in normal workflow
+    } else if (newStageIndex === -1 || newStageIndex < currentStageIndex) {
+      // For main workflow stages, don't allow backwards progression
       return NextResponse.json(
         { error: 'Cannot move backwards in workflow' },
         { status: 400 }
@@ -137,10 +144,12 @@ export async function PUT(
       where: { id: caseId },
       data: {
         currentStage: stage,
-        // Update progress percentage based on stage
-        progressPercentage: Math.round((newStageIndex / (stageOrder.length - 1)) * 100),
+        // Update progress percentage based on stage (special stages keep current progress)
+        progressPercentage: stage === 'SUSPENDED' || stage === 'CANCELLED' ?
+                           existingCase.progressPercentage :
+                           Math.round((newStageIndex / (stageOrder.length - 1)) * 100),
         // Update status based on stage
-        status: stage === 'COMPLETED' ? 'COMPLETADO' :
+        status: stage === 'CIERRE_ARCHIVO' ? 'COMPLETADO' :
                 stage === 'SUSPENDED' ? 'SUSPENDED' :
                 stage === 'CANCELLED' ? 'CANCELLED' :
                 existingCase.status === 'PENDIENTE' ? 'EN_PROGRESO' : existingCase.status
@@ -197,7 +206,7 @@ export async function PUT(
         action: 'stage_change',
         previousValue: JSON.stringify({ stage: currentStage }),
         newValue: JSON.stringify({ stage }),
-        reason,
+        reason: reason || null,
         notes: notes || `Etapa cambiada de ${currentStage} a ${stage}`,
         duration: durationInDays
       }

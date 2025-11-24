@@ -4,13 +4,21 @@ import { Server as SocketIOServer } from 'socket.io';
 import { initializeWebSocket } from '@/lib/websocket-server';
 import { logger } from '@/lib/logger';
 
+interface EnhancedNextApiResponse extends NextApiResponse {
+  socket: {
+    server: NetServer & {
+      io?: SocketIOServer;
+    };
+  };
+}
+
 export const config = {
   api: {
     bodyParser: false,
   },
 };
 
-const SocketHandler = (req: NextApiRequest, res: NextApiResponse & { socket: any }) => {
+const SocketHandler = (req: NextApiRequest, res: EnhancedNextApiResponse) => {
   if (res.socket.server.io) {
     logger.info('Socket.IO server already running');
     res.end();
@@ -19,7 +27,7 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponse & { socket: any
 
   logger.info('Initializing Socket.IO server...');
 
-  const httpServer: NetServer = res.socket.server as any;
+  const httpServer: NetServer = res.socket.server;
   const io = new SocketIOServer(httpServer, {
     path: '/api/socket/io',
     addTrailingSlash: false,

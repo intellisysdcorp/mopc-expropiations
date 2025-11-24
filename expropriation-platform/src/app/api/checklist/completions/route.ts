@@ -121,8 +121,8 @@ export async function POST(request: NextRequest) {
           },
           data: {
             isCompleted: completion.isCompleted,
-            notes: completion.notes,
-            attachmentPath: completion.attachmentPath,
+            notes: completion.notes || null,
+            attachmentPath: completion.attachmentPath || null,
             completedAt: completion.isCompleted ? new Date() : null,
             completedBy: completion.isCompleted ? session.user.id : null,
           },
@@ -142,8 +142,8 @@ export async function POST(request: NextRequest) {
             caseStageId: body.caseStageId,
             itemId: completion.itemId,
             isCompleted: completion.isCompleted,
-            notes: completion.notes,
-            attachmentPath: completion.attachmentPath,
+            notes: completion.notes || null,
+            attachmentPath: completion.attachmentPath || null,
             completedAt: completion.isCompleted ? new Date() : null,
             completedBy: completion.isCompleted ? session.user.id : null,
           },
@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       );
     }

@@ -187,7 +187,19 @@ export async function PUT(
     }
 
     // Handle suspension logic
-    const updateData: any = { ...validatedData };
+    const updateData: {
+      firstName?: string;
+      lastName?: string;
+      email?: string;
+      roleId?: string;
+      departmentId?: string;
+      isActive?: boolean;
+      isSuspended?: boolean;
+      suspensionReason?: string | null;
+      suspendedAt?: Date | null;
+      suspendedBy?: string | null;
+      lockedUntil?: Date | null;
+    } = { ...validatedData };
 
     if (validatedData.isSuspended && !existingUser.isSuspended) {
       updateData.suspendedAt = new Date();
@@ -345,7 +357,12 @@ export async function DELETE(
 /**
  * Remove sensitive user data for server response
  */
-function removeSensitiveData (userObject: any) {
+function removeSensitiveData (userObject: {
+  [key: string]: unknown;
+  passwordHash?: string;
+  twoFactorSecret?: string | null;
+  backupCodes?: string | null;
+}) {
   const { passwordHash: _1, twoFactorSecret: _2, backupCodes: _3, ...sanitizedUser } = userObject;
-  return sanitizedUser
+  return sanitizedUser;
 }

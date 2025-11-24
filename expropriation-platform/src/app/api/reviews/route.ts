@@ -166,7 +166,11 @@ export async function GET(request: NextRequest) {
     const reviewerId = searchParams.get('reviewerId') || session.user.id;
     const decision = searchParams.get('decision');
 
-    const where: any = {};
+    const where: {
+      assignmentId?: string;
+      reviewerId?: string;
+      decision?: string;
+    } = {};
 
     if (assignmentId) where.assignmentId = assignmentId;
     if (reviewerId) where.reviewerId = reviewerId;

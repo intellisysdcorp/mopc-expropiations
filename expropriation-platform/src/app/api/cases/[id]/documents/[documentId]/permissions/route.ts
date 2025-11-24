@@ -9,32 +9,25 @@ import { logger } from '@/lib/logger';
 // Validation schemas
 const updatePermissionSchema = z.object({
   userId: z.string(),
-  permissions: z.object({
-    canView: z.boolean(),
-    canEdit: z.boolean(),
-    canDownload: z.boolean(),
-    canShare: z.boolean(),
-    canDelete: z.boolean(),
-    canManageVersions: z.boolean(),
-  }),
-  expiresAt: z.string().datetime().optional(),
+  canView: z.boolean(),
+  canEdit: z.boolean(),
+  canDownload: z.boolean(),
+  canShare: z.boolean(),
+  canDelete: z.boolean(),
+  canManageVersions: z.boolean().optional(),
+  expiresAt: z.iso.datetime().optional(),
 });
 
 const shareSchema = z.object({
   userIds: z.array(z.string()),
-  permissions: z.object({
-    canView: z.boolean(),
-    canEdit: z.boolean(),
-    canDownload: z.boolean(),
-    canShare: z.boolean(),
-  }),
+  shareType: z.string().default('DIRECT'),
   message: z.string().optional(),
-  expiresAt: z.string().datetime().optional(),
+  expiresAt: z.iso.datetime().optional(),
 });
 
 // GET /api/cases/[id]/documents/[documentId]/permissions - Get document permissions
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string; documentId: string }> }
 ) {
   try {
@@ -118,19 +111,11 @@ export async function GET(
     const shares = await prisma.documentShare.findMany({
       where: { documentId },
       include: {
-        sharedBy: {
+        sharer: {
           select: {
             id: true,
             firstName: true,
             lastName: true,
-          },
-        },
-        sharedWithUser: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
           },
         },
       },
@@ -148,22 +133,18 @@ export async function GET(
     return NextResponse.json({
       permissions: permissions.map(perm => ({
         ...perm,
-        user: {
+        user: perm.user ? {
           ...perm.user,
           fullName: `${perm.user.firstName} ${perm.user.lastName}`,
-        },
+        } : null,
         createdAt: perm.createdAt.toISOString(),
         updatedAt: perm.updatedAt.toISOString(),
       })),
       shares: shares.map(share => ({
         ...share,
-        sharedBy: {
-          ...share.sharedBy,
-          fullName: `${share.sharedBy.firstName} ${share.sharedBy.lastName}`,
-        },
-        sharedWithUser: share.sharedWithUser ? {
-          ...share.sharedWithUser,
-          fullName: `${share.sharedWithUser.firstName} ${share.sharedWithUser.lastName}`,
+        sharer: share.sharer ? {
+          ...share.sharer,
+          fullName: `${share.sharer.firstName} ${share.sharer.lastName}`,
         } : null,
         createdAt: share.createdAt.toISOString(),
         expiresAt: share.expiresAt?.toISOString(),
@@ -257,29 +238,39 @@ export async function POST(
         // Upsert permission
         result = await prisma.documentPermission.upsert({
           where: {
-            documentId_userId: {
+            documentId_userId_roleId_departmentId: {
               documentId,
               userId: validatedData.userId,
+              roleId: null,
+              departmentId: null,
             },
-          },
+          } as any, // Cast to any to handle nullable fields in unique constraint
           update: {
-            permissions: validatedData.permissions,
+            canView: validatedData.canView,
+            canEdit: validatedData.canEdit,
+            canDownload: validatedData.canDownload,
+            canShare: validatedData.canShare,
+            canDelete: validatedData.canDelete,
             expiresAt: validatedData.expiresAt ? new Date(validatedData.expiresAt) : null,
-            updatedById: session.user.id,
+            grantedBy: session.user.id,
           },
           create: {
             documentId,
             userId: validatedData.userId,
-            permissions: validatedData.permissions,
+            canView: validatedData.canView,
+            canEdit: validatedData.canEdit,
+            canDownload: validatedData.canDownload,
+            canShare: validatedData.canShare,
+            canDelete: validatedData.canDelete,
             expiresAt: validatedData.expiresAt ? new Date(validatedData.expiresAt) : null,
-            createdById: session.user.id,
+            grantedBy: session.user.id,
           },
         });
 
         // Create activity log
         await prisma.activity.create({
           data: {
-            action: 'DOCUMENT_PERMISSION_UPDATED',
+            action: 'UPDATED',
             entityType: 'document',
             entityId: documentId,
             description: `Document permissions updated for user ${validatedData.userId}`,
@@ -288,7 +279,13 @@ export async function POST(
             metadata: {
               documentId,
               targetUserId: validatedData.userId,
-              permissions: validatedData.permissions,
+              permissions: {
+                canView: validatedData.canView,
+                canEdit: validatedData.canEdit,
+                canDownload: validatedData.canDownload,
+                canShare: validatedData.canShare,
+                canDelete: validatedData.canDelete,
+              },
             },
           },
         });
@@ -305,21 +302,13 @@ export async function POST(
             prisma.documentShare.create({
               data: {
                 documentId,
-                sharedById: session.user.id,
-                sharedWithUserId: userId,
-                permissions: validatedData.permissions,
-                message: validatedData.message,
+                shareToken: `share_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`,
+                shareType: validatedData.shareType,
+                permissions: { canView: true }, // Basic share permissions
+                sharedBy: session.user.id,
+                sharedWith: userId,
+                message: validatedData.message || null,
                 expiresAt: validatedData.expiresAt ? new Date(validatedData.expiresAt) : null,
-              },
-              include: {
-                sharedWithUser: {
-                  select: {
-                    id: true,
-                    firstName: true,
-                    lastName: true,
-                    email: true,
-                  },
-                },
               },
             })
           )
@@ -327,17 +316,17 @@ export async function POST(
 
         // Create notifications for shared users
         await Promise.all(
-          shares.map(share =>
+          validatedData.userIds.map(userId =>
             prisma.notification.create({
               data: {
-                type: 'DOCUMENT_SHARED',
+                type: 'INFO',
                 title: 'Documento Compartido',
                 message: `Se ha compartido un documento contigo: ${validatedData.message || 'Sin mensaje'}`,
-                userId: share.sharedWithUserId,
-                caseId,
+                userId,
+                entityType: 'document',
+                entityId: documentId,
                 metadata: {
                   documentId,
-                  shareId: share.id,
                   sharedBy: session.user.id,
                 },
               },
@@ -348,7 +337,7 @@ export async function POST(
         // Create activity log
         await prisma.activity.create({
           data: {
-            action: 'DOCUMENT_SHARED',
+            action: 'UPLOADED',
             entityType: 'document',
             entityId: documentId,
             description: `Document shared with ${validatedData.userIds.length} user(s)`,
@@ -357,7 +346,6 @@ export async function POST(
             metadata: {
               documentId,
               sharedWithUserIds: validatedData.userIds,
-              permissions: validatedData.permissions,
             },
           },
         });
@@ -381,19 +369,18 @@ export async function POST(
         await prisma.documentShare.updateMany({
           where: {
             documentId,
-            sharedWithUserId: userId,
+            sharedWith: userId,
             isActive: true,
           },
           data: {
             isActive: false,
-            revokedAt: new Date(),
           },
         });
 
         // Create activity log
         await prisma.activity.create({
           data: {
-            action: 'DOCUMENT_PERMISSION_REVOKED',
+            action: 'DELETED',
             entityType: 'document',
             entityId: documentId,
             description: `Document permissions revoked for user ${userId}`,
@@ -419,7 +406,7 @@ export async function POST(
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       );
     }
@@ -433,7 +420,7 @@ export async function POST(
 
 // DELETE /api/cases/[id]/documents/[documentId]/permissions - Remove all custom permissions
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string; documentId: string }> }
 ) {
   try {
@@ -498,14 +485,13 @@ export async function DELETE(
       },
       data: {
         isActive: false,
-        revokedAt: new Date(),
       },
     });
 
     // Create activity log
     await prisma.activity.create({
       data: {
-        action: 'DOCUMENT_PERMISSIONS_CLEARED',
+        action: 'DELETED',
         entityType: 'document',
         entityId: documentId,
         description: 'All custom document permissions removed',
@@ -589,7 +575,12 @@ async function getUserEffectivePermission(
 
   if (permission) {
     return {
-      ...permission.permissions,
+      canView: permission.canView,
+      canEdit: permission.canEdit,
+      canDownload: permission.canDownload,
+      canShare: permission.canShare,
+      canDelete: permission.canDelete,
+      canManageVersions: false, // Not in the permission model
       source: 'explicit_permission',
     };
   }
@@ -598,7 +589,7 @@ async function getUserEffectivePermission(
   const share = await prisma.documentShare.findFirst({
     where: {
       documentId,
-      sharedWithUserId: userId,
+      sharedWith: userId,
       isActive: true,
       OR: [
         { expiresAt: null },
@@ -608,8 +599,14 @@ async function getUserEffectivePermission(
   });
 
   if (share) {
+    // Default permissions for shares
     return {
-      ...share.permissions,
+      canView: true,
+      canEdit: false,
+      canDownload: true,
+      canShare: false,
+      canDelete: false,
+      canManageVersions: false,
       source: 'share',
     };
   }
@@ -653,9 +650,15 @@ async function hasDepartmentAccess(userId: string, departmentId: string): Promis
   if (!user) return false;
 
   const sameDepartment = user.departmentId === departmentId;
-  const hasAdminAccess = user.role?.permissions?.admin ||
-                        user.role?.permissions?.allDepartments ||
-                        user.role?.permissions?.viewAllCases;
+
+  // Handle JSON permissions properly
+  const permissions = user.role?.permissions;
+  let hasAdminAccess = false;
+
+  if (permissions && typeof permissions === 'object' && permissions !== null) {
+    const perms = permissions as any;
+    hasAdminAccess = perms.admin || perms.allDepartments || perms.viewAllCases;
+  }
 
   return sameDepartment || hasAdminAccess;
 }

@@ -21,14 +21,40 @@ import { toast } from 'react-hot-toast';
 
 export default function DocumentsPage() {
   const [activeTab, setActiveTab] = useState('upload');
-  const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [selectedDocument, setSelectedDocument] = useState<{
+    id: string;
+    filename: string;
+    originalName: string;
+    mimeType: string;
+    size: number;
+    path: string;
+    uploadedBy: string;
+    createdAt: Date;
+    metadata?: Record<string, unknown>;
+  } | null>(null);
 
-  const handleUploadComplete = (documents: any[]) => {
+  const handleUploadComplete = (documents: {
+    id: string;
+    filename: string;
+    originalName: string;
+    mimeType: string;
+    size: number;
+  }[]) => {
     toast.success(`${documents.length} documento(s) cargados exitosamente`);
     setActiveTab('search');
   };
 
-  const handleDocumentSelect = (document: any) => {
+  const handleDocumentSelect = (document: {
+    id: string;
+    filename: string;
+    originalName: string;
+    mimeType: string;
+    size: number;
+    path: string;
+    uploadedBy: string;
+    createdAt: Date;
+    metadata?: Record<string, unknown>;
+  }) => {
     setSelectedDocument(document);
   };
 
