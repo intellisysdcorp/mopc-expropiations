@@ -44,7 +44,13 @@ export async function GET(request: NextRequest) {
 
       if (severityDiff !== 0) return severityDiff;
 
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      // If both dates exist, compare them; otherwise, put null dates last
+      if (a.createdAt && b.createdAt) {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+      if (a.createdAt) return -1; // a has a date, b doesn't, so a comes first
+      if (b.createdAt) return 1;  // b has a date, a doesn't, so b comes first
+      return 0; // both are null
     });
 
     // Filter by severity if specified
@@ -97,23 +103,44 @@ async function getOverdueCaseAlerts(departmentFilter: any, limit: number) {
     take: limit
   });
 
-  return overdueCases.map(case_ => ({
-    id: `overdue-${case_.id}`,
-    type: 'overdue',
-    severity: 'critical',
-    title: `Caso Vencido: ${case_.fileNumber}`,
-    message: `El caso "${case_.title}" está ${Math.floor(
+  return overdueCases.map(case_ => {
+    if (!case_.expectedEndDate) {
+      return {
+        id: `overdue-${case_.id}`,
+        type: 'overdue',
+        severity: 'critical',
+        title: `Caso Vencido: ${case_.fileNumber}`,
+        message: `El caso "${case_.title}" está vencido (sin fecha de finalización definida).`,
+        caseId: case_.id,
+        departmentName: case_.department.name,
+        assignedTo: case_.assignedTo ? `${case_.assignedTo.firstName} ${case_.assignedTo.lastName}` : null,
+        actionUrl: `/cases/${case_.id}`,
+        createdAt: case_.createdAt,
+        isActionable: true,
+        actionText: 'Revisar Caso'
+      };
+    }
+
+    const daysOverdue = Math.floor(
       (new Date().getTime() - new Date(case_.expectedEndDate).getTime()) /
       (1000 * 60 * 60 * 24)
-    )} días vencido.`,
-    caseId: case_.id,
-    departmentName: case_.department.name,
-    assignedTo: case_.assignedTo ? `${case_.assignedTo.firstName} ${case_.assignedTo.lastName}` : null,
-    actionUrl: `/cases/${case_.id}`,
-    createdAt: case_.expectedEndDate,
-    isActionable: true,
-    actionText: 'Revisar Caso'
-  }));
+    );
+
+    return {
+      id: `overdue-${case_.id}`,
+      type: 'overdue',
+      severity: 'critical',
+      title: `Caso Vencido: ${case_.fileNumber}`,
+      message: `El caso "${case_.title}" tiene ${daysOverdue} días vencido.`,
+      caseId: case_.id,
+      departmentName: case_.department.name,
+      assignedTo: case_.assignedTo ? `${case_.assignedTo.firstName} ${case_.assignedTo.lastName}` : null,
+      actionUrl: `/cases/${case_.id}`,
+      createdAt: case_.expectedEndDate,
+      isActionable: true,
+      actionText: 'Revisar Caso'
+    };
+  });
 }
 
 async function getDeadlineAlerts(departmentFilter: any, limit: number) {
@@ -141,6 +168,23 @@ async function getDeadlineAlerts(departmentFilter: any, limit: number) {
   });
 
   return upcomingDeadlines.map(case_ => {
+    if (!case_.expectedEndDate) {
+      return {
+        id: `deadline-${case_.id}`,
+        type: 'deadline',
+        severity: 'medium',
+        title: `Fecha Límite Próxima: ${case_.fileNumber}`,
+        message: `El caso "${case_.title}" necesita fecha límite definida.`,
+        caseId: case_.id,
+        departmentName: case_.department.name,
+        assignedTo: case_.assignedTo ? `${case_.assignedTo.firstName} ${case_.assignedTo.lastName}` : null,
+        actionUrl: `/cases/${case_.id}`,
+        createdAt: case_.createdAt,
+        isActionable: true,
+        actionText: 'Establecer Fecha Límite'
+      };
+    }
+
     const daysUntilDue = Math.floor(
       (new Date(case_.expectedEndDate).getTime() - new Date().getTime()) /
       (1000 * 60 * 60 * 24)

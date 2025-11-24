@@ -5,20 +5,21 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { ActivityType } from '@prisma/client';
 import { logger } from '@/lib/logger';
+import { CaseStageEnum, ChecklistItemTypeEnum } from '@/lib/validations/checklist';
 
 // Validation schemas
 const createChecklistTemplateSchema = z.object({
   name: z.string().min(1, 'Template name is required'),
-  description: z.string().optional(),
-  stage: z.string(),
+  description: z.string().nullable().optional(),
+  stage: CaseStageEnum,
   defaultItems: z.array(z.object({
     title: z.string(),
-    description: z.string().optional(),
-    type: z.string(),
+    description: z.string().nullable().optional(),
+    type: ChecklistItemTypeEnum,
     isRequired: z.boolean().default(true),
     sequence: z.number(),
-    estimatedTime: z.number().optional(),
-    validationRule: z.string().optional(),
+    estimatedTime: z.number().nullable().optional(),
+    validationRule: z.string().nullable().optional(),
     attachmentRequired: z.boolean().default(false),
     attachmentTypes: z.array(z.string()).optional(),
     dependencies: z.array(z.string()).optional(),
@@ -40,8 +41,8 @@ export async function GET(request: NextRequest) {
     const stage = searchParams.get('stage');
     const isActive = searchParams.get('isActive');
 
-    const where: any = {};
-    if (stage) where.stage = stage;
+    const where: Record<string, unknown> = {};
+    if (stage) where.stage = stage as any;
     if (isActive !== null) where.isActive = isActive === 'true';
 
     const templates = await prisma.checklistTemplate.findMany({
@@ -79,8 +80,8 @@ export async function POST(request: NextRequest) {
     const template = await prisma.checklistTemplate.create({
       data: {
         name: validatedData.name,
-        description: validatedData.description,
-        stage: validatedData.stage as any,
+        description: validatedData.description ?? null,
+        stage: validatedData.stage,
         defaultItems: validatedData.defaultItems || [],
         autoGenerate: validatedData.autoGenerate,
       },
@@ -91,21 +92,38 @@ export async function POST(request: NextRequest) {
 
     // Create checklist items if provided
     if (validatedData.defaultItems && validatedData.defaultItems.length > 0) {
-      await prisma.checklistItem.createMany({
-        data: validatedData.defaultItems.map((item, _index) => ({
+      const checklistItemsData = validatedData.defaultItems.map((item) => {
+        const itemData: any = {
           templateId: template.id,
           title: item.title,
-          description: item.description,
-          type: item.type as any,
+          type: item.type,
           isRequired: item.isRequired,
           sequence: item.sequence,
-          estimatedTime: item.estimatedTime,
-          validationRule: item.validationRule,
           attachmentRequired: item.attachmentRequired,
-          attachmentTypes: item.attachmentTypes,
-          dependencies: item.dependencies,
           autoValidate: item.autoValidate,
-        })),
+        };
+
+        if (item.description !== null && item.description !== undefined) {
+          itemData.description = item.description;
+        }
+        if (item.estimatedTime !== null && item.estimatedTime !== undefined) {
+          itemData.estimatedTime = item.estimatedTime;
+        }
+        if (item.validationRule !== null && item.validationRule !== undefined) {
+          itemData.validationRule = item.validationRule;
+        }
+        if (item.attachmentTypes) {
+          itemData.attachmentTypes = item.attachmentTypes;
+        }
+        if (item.dependencies) {
+          itemData.dependencies = item.dependencies;
+        }
+
+        return itemData;
+      });
+
+      await prisma.checklistItem.createMany({
+        data: checklistItemsData,
       });
     }
 
@@ -124,7 +142,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       );
     }

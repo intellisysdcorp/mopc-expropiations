@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { logger } from '@/lib/logger';
+import type { CaseStatus, Priority } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
@@ -241,10 +242,10 @@ async function getOverdueCases(whereClause: any, limit: number) {
     assignedTo: case_.assignedTo,
     documentCount: case_._count.documents,
     activityCount: case_._count.activities,
-    overdueDays: Math.floor(
+    overdueDays: case_.expectedEndDate ? Math.floor(
       (new Date().getTime() - new Date(case_.expectedEndDate).getTime()) /
       (1000 * 60 * 60 * 24)
-    ),
+    ) : 0,
     urgency: 'critical' as const
   }));
 
@@ -316,7 +317,7 @@ async function getAssignedCases(whereClause: any, limit: number) {
     assignedTo: case_.assignedTo,
     documentCount: case_._count.documents,
     activityCount: case_._count.activities,
-    daysInCurrentStage: calculateDaysInCurrentStage(case_.id, case_.updatedAt),
+    daysInCurrentStage: calculateDaysInCurrentStage(case_.updatedAt),
     urgency: calculateUrgency(case_.priority, case_.expectedEndDate, case_.status)
   }));
 
@@ -440,7 +441,7 @@ function getPendingReason(stage: string): string {
   return reasons[stage] || 'En proceso';
 }
 
-function calculateDaysInCurrentStage(caseId: string, updatedAt: Date): number {
+function calculateDaysInCurrentStage(updatedAt: Date): number {
   // This would ideally be calculated based on stage progression history
   // For now, return days since last update
   return Math.floor(
