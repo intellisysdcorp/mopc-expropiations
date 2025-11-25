@@ -163,7 +163,7 @@ async function fetchCasesData(options: any, session: any) {
   // Department-based access control
   if (session.user.role !== 'SUPER_ADMIN') {
     where.OR = [
-      { assignedUserId: session.user.id },
+      { assignedToId: session.user.id },
       {
         assignments: {
           some: { userId: session.user.id }
@@ -184,9 +184,8 @@ async function fetchCasesData(options: any, session: any) {
     where,
     include: {
       department: { select: { name: true } },
-      assignedUser: {
+      assignedTo: {
         select: {
-          name: true,
           firstName: true,
           lastName: true
         }
@@ -204,8 +203,7 @@ async function fetchCasesData(options: any, session: any) {
     propertyAddress: case_.propertyAddress,
     ownerName: case_.ownerName,
     estimatedValue: case_.estimatedValue,
-    assignedTo: case_.assignedUser?.name ||
-               `${case_.assignedUser?.firstName} ${case_.assignedUser?.lastName}`.trim() || '',
+    assignedTo: `${case_.assignedTo?.firstName} ${case_.assignedTo?.lastName}`.trim() || '',
     createdAt: case_.createdAt,
     updatedAt: case_.updatedAt,
     department: case_.department?.name || '',
@@ -233,19 +231,20 @@ async function fetchUsersData(options: any, session: any) {
     where,
     include: {
       department: { select: { name: true } },
+      role: { select: { name: true } },
       _count: {
-        select: { cases: true }
+        select: { createdCases: true }
       }
     },
     orderBy: { [options.sortBy]: options.sortOrder },
   });
 
   return users.map(user => ({
-    name: user.name || `${user.firstName} ${user.lastName}`.trim(),
+    name: `${user.firstName} ${user.lastName}`.trim(),
     email: user.email,
-    role: user.role,
+    role: user.role?.name || '',
     department: user.department?.name || '',
-    position: user.position || '',
+    position: user.jobTitle || '',
     isActive: user.isActive,
     lastLogin: user.lastLoginAt,
     createdAt: user.createdAt,
@@ -391,9 +390,10 @@ export async function POST(request: NextRequest) {
     await prisma.activity.create({
       data: {
         userId: session.user.id,
-        type: 'EXPORTED',
+        action: 'EXPORTED',
         entityType: options.dataType.toUpperCase(),
-        details: {
+        entityId: `export_${options.dataType}_${Date.now()}`,
+        metadata: {
           format: options.format,
           recordCount: data.length,
           dateRange: options.dateRange,

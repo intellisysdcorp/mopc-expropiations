@@ -7,7 +7,7 @@ import { logger } from '@/lib/logger';
 
 // GET /api/meetings/[id]/participants - Get meeting participants
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -22,7 +22,6 @@ export async function GET(
       include: {
         organizer: { select: { id: true } },
         chair: { select: { id: true } },
-        department: { select: { id: true } },
       },
     });
 
@@ -102,8 +101,8 @@ export async function POST(
     // Validate request body
     const participantSchema = z.object({
       participants: z.array(z.object({
-        userId: z.string().optional(),
-        email: z.string().email().optional(),
+        userId: z.string(),
+        email: z.email().optional(),
         name: z.string().optional(),
         phone: z.string().optional(),
         organization: z.string().optional(),
@@ -138,7 +137,6 @@ export async function POST(
       include: {
         organizer: { select: { id: true } },
         chair: { select: { id: true } },
-        department: { select: { id: true } },
         _count: { select: { participants: true } },
       },
     });
@@ -193,23 +191,27 @@ export async function POST(
           continue;
         }
 
+        const { id: meetingId } = await params;
+        const createMeetingParticipant: any = {
+          meetingId,
+          userId: participantData.userId,
+          role: participantData.role,
+          isExternal: !participantData.userId,
+          canEditAgenda: participantData.permissions?.canEditAgenda || false,
+          canUploadDocs: participantData.permissions?.canUploadDocs || false,
+          canVote: participantData.permissions?.canVote || false,
+          canInviteOthers: participantData.permissions?.canInviteOthers || false,
+          invitedBy: session.user.id,
+        }
+
+        if (participantData.email) createMeetingParticipant.email = participantData.email;
+        if (participantData.name) createMeetingParticipant.name = participantData.name;
+        if (participantData.organization) createMeetingParticipant.organization = participantData.organization;
+        if (participantData.phone) createMeetingParticipant.phone = participantData.phone;
+
         // Create participant
         const participant = await prisma.meetingParticipant.create({
-          data: {
-            meetingId: (await params).id,
-            userId: participantData.userId,
-            email: participantData.email,
-            name: participantData.name,
-            phone: participantData.phone,
-            organization: participantData.organization,
-            role: participantData.role,
-            isExternal: !participantData.userId,
-            canEditAgenda: participantData.permissions?.canEditAgenda || false,
-            canUploadDocs: participantData.permissions?.canUploadDocs || false,
-            canVote: participantData.permissions?.canVote || false,
-            canInviteOthers: participantData.permissions?.canInviteOthers || false,
-            invitedBy: session.user.id,
-          },
+          data: createMeetingParticipant,
           include: {
             user: {
               select: {
@@ -302,7 +304,7 @@ export async function POST(
     logger.error("Error adding participants:", error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Validation failed", details: error.errors },
+        { error: "Validation failed", details: error.issues },
         { status: 400 }
       );
     }

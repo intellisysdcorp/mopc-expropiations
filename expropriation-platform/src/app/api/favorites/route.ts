@@ -11,8 +11,8 @@ const favoriteSchema = z.object({
   itemId: z.string(),
   title: z.string().min(1).max(200),
   description: z.string().max(500).optional(),
-  url: z.string().url(),
-  metadata: z.record(z.any()).optional(),
+  url: z.url(),
+  metadata: z.record(z.string(), z.any()).optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -26,7 +26,10 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const type = searchParams.get('type');
 
-    const where: any = {
+    const where: {
+      userId: string;
+      type?: string;
+    } = {
       userId: session.user.id,
     };
 
@@ -41,7 +44,6 @@ export async function GET(request: NextRequest) {
       include: {
         user: {
           select: {
-            name: true,
             firstName: true,
             lastName: true,
           }
@@ -59,7 +61,7 @@ export async function GET(request: NextRequest) {
         url: fav.url,
         metadata: fav.metadata,
         addedAt: fav.createdAt.toISOString(),
-        addedBy: fav.user.name || `${fav.user.firstName} ${fav.user.lastName}`.trim(),
+        addedBy: `${fav.user.firstName} ${fav.user.lastName}`.trim(),
       })),
       total: favorites.length,
     });
@@ -151,61 +153,74 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create favorite
-    const favorite = await prisma.favorite.create({
+    const favoriteCreateObject: any = {
       data: {
         userId: session.user.id,
         type,
         itemId,
         title,
-        description,
         url,
         metadata,
       },
       include: {
         user: {
           select: {
-            name: true,
             firstName: true,
             lastName: true,
           }
         }
       }
+    };
+
+    if (description) favoriteCreateObject.data.description = description;
+
+    // Create favorite
+    const favorite = await prisma.favorite.create({
+      data: favoriteCreateObject.data,
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+          }
+        }
+      },
     });
 
     // Log activity
     await prisma.activity.create({
       data: {
         userId: session.user.id,
-        type: 'CREATED',
+        action: 'CREATED',
         entityType: 'FAVORITE',
         entityId: favorite.id,
-        details: {
+        metadata: {
           itemType: type,
           itemTitle: title,
         },
       }
     });
 
-    return NextResponse.json({
-      favorite: {
-        id: favorite.id,
-        type: favorite.type,
-        itemId: favorite.itemId,
-        title: favorite.title,
-        description: favorite.description,
-        url: favorite.url,
-        metadata: favorite.metadata,
-        addedAt: favorite.createdAt.toISOString(),
-        addedBy: favorite.user.name || `${favorite.user.firstName} ${favorite.user.lastName}`.trim(),
-      },
-    });
+    const favoriteRes: any = {
+      id: favorite.id,
+      type: favorite.type,
+      itemId: favorite.itemId,
+      title: favorite.title,
+      description: favorite.description,
+      url: favorite.url,
+      metadata: favorite.metadata,
+      addedAt: favorite.createdAt.toISOString(),
+    };
+
+    if (favorite.user) favoriteRes.addedBy =  `${favorite.user.firstName} ${favorite.user.lastName}`.trim();
+
+    return NextResponse.json({ response: { favorite: favoriteRes }});
   } catch (error) {
     logger.error('Error creating favorite:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid favorite data', details: error.errors },
+        { error: 'Invalid favorite data', details: error.issues },
         { status: 400 }
       );
     }

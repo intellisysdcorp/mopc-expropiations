@@ -7,7 +7,7 @@ import { logger } from '@/lib/logger';
 
 // GET /api/meetings/[id]/agenda - Get meeting agenda items
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -22,7 +22,6 @@ export async function GET(
       include: {
         organizer: { select: { id: true } },
         chair: { select: { id: true } },
-        department: { select: { id: true } },
       },
     });
 
@@ -255,30 +254,32 @@ export async function POST(
           }
         }
 
+        const newAgendaItem: any = {
+          meetingId: (await params).id,
+          title: itemData.title,
+          type: itemData.type,
+          sequence: nextSequence + index,
+          plannedDuration: itemData.plannedDuration,
+          presenterId: itemData.presenterId,
+          ownerId: itemData.ownerId,
+          materials: itemData.materials || [],
+          requiresVote: itemData.requiresVote,
+          allowDiscussion: itemData.allowDiscussion,
+          priority: itemData.priority,
+          isRequired: itemData.isRequired,
+          isOptional: itemData.isOptional,
+          createdBy: session.user.id,
+        };
+
+        if (itemData.description) newAgendaItem.description = itemData.description;
+        if (itemData.content) newAgendaItem.content = itemData.content;
+        if (itemData.preparation) newAgendaItem.preparation = itemData.preparation;
+        if (itemData.discussionTime) newAgendaItem.discussionTime = itemData.discussionTime;
+        if (itemData.dependsOn) newAgendaItem.dependsOn = itemData.dependsOn;
+        if (itemData.blockedBy) newAgendaItem.blockedBy = itemData.blockedBy;
         // Create agenda item
         const agendaItem = await prisma.meetingAgendaItem.create({
-          data: {
-            meetingId: (await params).id,
-            title: itemData.title,
-            description: itemData.description,
-            type: itemData.type,
-            sequence: nextSequence + index,
-            plannedDuration: itemData.plannedDuration,
-            presenterId: itemData.presenterId,
-            ownerId: itemData.ownerId,
-            content: itemData.content,
-            materials: itemData.materials || [],
-            preparation: itemData.preparation,
-            requiresVote: itemData.requiresVote,
-            allowDiscussion: itemData.allowDiscussion,
-            discussionTime: itemData.discussionTime,
-            dependsOn: itemData.dependsOn,
-            blockedBy: itemData.blockedBy,
-            priority: itemData.priority,
-            isRequired: itemData.isRequired,
-            isOptional: itemData.isOptional,
-            createdBy: session.user.id,
-          },
+          data: newAgendaItem,
           include: {
             presenter: {
               select: {
@@ -370,7 +371,7 @@ export async function POST(
     logger.error("Error creating agenda:", error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Validation failed", details: error.errors },
+        { error: "Validation failed", details: error.issues },
         { status: 400 }
       );
     }

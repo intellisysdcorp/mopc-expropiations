@@ -23,7 +23,6 @@ export async function GET(
         include: {
           organizer: { select: { id: true } },
           chair: { select: { id: true } },
-          department: { select: { id: true } },
         },
       }),
       prisma.meetingAgendaItem.findUnique({
@@ -186,7 +185,6 @@ export async function PUT(
         include: {
           organizer: { select: { id: true } },
           chair: { select: { id: true } },
-          scheduledStart: true,
         },
       }),
       prisma.meetingAgendaItem.findUnique({
@@ -252,13 +250,21 @@ export async function PUT(
     }
 
     // Update agenda item
+    const updateData: any = {
+      ...validatedData,
+      updatedAt: new Date(),
+    };
+
+    // Handle materials field with proper type conversion
+    if (validatedData.materials) {
+      updateData.materials = validatedData.materials;
+    } else if (agendaItem.materials) {
+      updateData.materials = agendaItem.materials;
+    }
+
     const updatedItem = await prisma.meetingAgendaItem.update({
       where: { id: (await params).itemId },
-      data: {
-        ...validatedData,
-        materials: validatedData.materials || agendaItem.materials,
-        updatedAt: new Date(),
-      },
+      data: updateData,
       include: {
         presenter: {
           select: {
@@ -331,7 +337,7 @@ export async function PUT(
     logger.error("Error updating agenda item:", error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Validation failed", details: error.errors },
+        { error: "Validation failed", details: error.issues },
         { status: 400 }
       );
     }
@@ -360,7 +366,6 @@ export async function DELETE(
         include: {
           organizer: { select: { id: true } },
           chair: { select: { id: true } },
-          scheduledStart: true,
         },
       }),
       prisma.meetingAgendaItem.findUnique({
