@@ -20,7 +20,7 @@ const createVersionSchema = z.object({
 
 // GET /api/documents/[id]/versions - Get document versions
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -186,13 +186,13 @@ export async function POST(
         documentId: id,
         version: newVersionNumber,
         title: validatedData.title,
-        description: validatedData.description,
+        description: validatedData.description || null,
         fileName,
         filePath: path.relative(process.cwd(), filePath),
         fileSize: file.size,
         mimeType: file.type,
         fileHash,
-        changeSummary: validatedData.changeSummary,
+        changeSummary: validatedData.changeSummary || null,
         isMajorVersion: validatedData.isMajorVersion,
         isPublished: false,
         isActive: true,
@@ -271,22 +271,7 @@ export async function POST(
     });
 
     // Format response
-    const response = {
-      ...newVersion,
-      creator: {
-        ...newVersion.creator,
-        fullName: `${newVersion.creator.firstName} ${newVersion.creator.lastName}`,
-      },
-      previousVersion: newVersion.previousVersion ? {
-        ...newVersion.previousVersion,
-        creator: {
-          ...newVersion.previousVersion.creator,
-          fullName: `${newVersion.previousVersion.creator.firstName} ${newVersion.previousVersion.creator.lastName}`,
-        },
-      } : null,
-      fileSizeFormatted: formatFileSize(newVersion.fileSize),
-      createdAt: newVersion.createdAt.toISOString(),
-    };
+    const response = formatPostResponse(newVersion);
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
@@ -294,7 +279,7 @@ export async function POST(
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       );
     }
@@ -313,4 +298,52 @@ function formatFileSize(bytes: number): string {
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function formatPostResponse(newVersion: any) {
+  const formattedResponse: any = {
+    changeSummary: newVersion.changeSummary,
+    checksum: newVersion.checksum,
+    createdAt: newVersion.createdAt.toISOString(),
+    createdBy: newVersion.createdBy,
+    description: newVersion.description,
+    documentId: newVersion.documentId,
+    fileHash: newVersion.fileHash,
+    fileName: newVersion.fileName,
+    filePath: newVersion.filePath,
+    fileSize: newVersion.fileSize,
+    fileSizeFormatted: formatFileSize(newVersion.fileSize),
+    id: newVersion.id,
+    isActive: newVersion.isActive,
+    isMajorVersion: newVersion.isMajorVersion,
+    isPublished: newVersion.isPublished,
+    mimeType: newVersion.mimeType,
+    publishedAt: newVersion.publishedAt?.toISOString(),
+    title: newVersion.title,
+    version: newVersion.version,
+  };
+
+  if (newVersion.creator) {
+    formattedResponse.creator = {
+      ...newVersion.creator,
+      fullName: `${newVersion.creator.firstName} ${newVersion.creator.lastName}`,
+    }
+  }
+
+  if (newVersion.previousVersion) {
+    const previousVersion: any = {
+      id: newVersion.previousVersion.id,
+      version: newVersion.previousVersion.version,
+      title: newVersion.previousVersion.title,
+    };
+    if (newVersion.previousVersion.creator) {
+      previousVersion.creator = {
+        ...newVersion.previousVersion.creator,
+        fullName: `${newVersion.previousVersion.creator.firstName} ${newVersion.previousVersion.creator.lastName}`,
+      }
+    }
+    formattedResponse.previousVersion = previousVersion;
+  }
+
+  return formattedResponse;
 }

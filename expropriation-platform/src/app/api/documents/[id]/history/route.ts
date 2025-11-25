@@ -7,14 +7,16 @@ import { z } from 'zod';
 import { DocumentActionType } from '@prisma/client';
 import { logger } from '@/lib/logger';
 
+const documentActionEnum = Object.values(DocumentActionType) as [string, ...string[]];
+
 // Validation schema
 const queryHistorySchema = z.object({
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(50),
-  action: z.nativeEnum(DocumentActionType).optional(),
+  action: z.enum(documentActionEnum).optional(),
   userId: z.string().optional(),
-  dateFrom: z.string().datetime().optional(),
-  dateTo: z.string().datetime().optional(),
+  dateFrom: z.iso.datetime().optional(),
+  dateTo: z.iso.datetime().optional(),
   sortBy: z.enum(['createdAt', 'action', 'userId']).default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
   includeDetails: z.boolean().default(true),
@@ -44,6 +46,7 @@ export async function GET(
             id: true,
             firstName: true,
             lastName: true,
+            email: true,
           },
         },
       },
@@ -108,9 +111,9 @@ export async function GET(
       createdAt: entry.createdAt.toISOString(),
       // Parse JSON fields if includeDetails is true
       ...(query.includeDetails && {
-        previousValue: entry.previousValue ? JSON.parse(entry.previousValue) : null,
-        newValue: entry.newValue ? JSON.parse(entry.newValue) : null,
-        metadata: entry.metadata ? JSON.parse(entry.metadata) : null,
+        previousValue: entry.previousValue ? JSON.parse(entry.previousValue as string) : null,
+        newValue: entry.newValue ? JSON.parse(entry.newValue as string) : null,
+        metadata: entry.metadata ? JSON.parse(entry.metadata as string) : null,
       }),
     }));
 
@@ -146,7 +149,7 @@ export async function GET(
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       );
     }
@@ -182,6 +185,7 @@ export async function POST_EXPORT(
             id: true,
             firstName: true,
             lastName: true,
+            email: true,
           },
         },
       },
@@ -258,9 +262,9 @@ export async function POST_EXPORT(
         actionCategory: getActionCategory(entry.action),
         createdAt: entry.createdAt.toISOString(),
         ...(includeDetails && {
-          previousValue: entry.previousValue ? JSON.parse(entry.previousValue) : null,
-          newValue: entry.newValue ? JSON.parse(entry.newValue) : null,
-          metadata: entry.metadata ? JSON.parse(entry.metadata) : null,
+          previousValue: entry.previousValue ? JSON.parse(entry.previousValue as string) : null,
+          newValue: entry.newValue ? JSON.parse(entry.newValue as string) : null,
+          metadata: entry.metadata ? JSON.parse(entry.metadata as string) : null,
         }),
       })),
       statistics: await getHistoryStatistics(id),

@@ -7,6 +7,25 @@ import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 import { logger } from '@/lib/logger';
 
+// Type for transfer metadata
+type TransferMetadata = {
+  [key: string]: unknown;
+  lastUpdatedBy?: string;
+  lastUpdatedAt?: string;
+  cancelledBy?: string;
+  cancelledAt?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  rejectedBy?: string;
+  rejectedAt?: string;
+  transferId?: string;
+  userName?: string;
+  sourceDepartment?: string;
+  destinationDepartment?: string;
+  transferType?: string;
+  notes?: string;
+};
+
 // Schema for transfer approval/rejection
 const transferActionSchema = z.object({
   action: z.enum(['approve', 'reject']),
@@ -74,14 +93,15 @@ export async function POST(
 
     let updatedTransfer;
     let activityDescription;
-    const metadata: any = {
+    const metadata: TransferMetadata = {
       transferId: transfer.id,
       userName: `${transfer.user.firstName} ${transfer.user.lastName}`,
       sourceDepartment: transfer.sourceDepartment.name,
       destinationDepartment: transfer.destinationDepartment.name,
       transferType: transfer.transferType,
-      notes,
     };
+
+    if (notes) metadata.notes = notes;
 
     if (action === 'approve') {
       // Update user's department
@@ -187,7 +207,7 @@ export async function POST(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Datos inválidos', details: error.errors },
+        { error: 'Datos inválidos', details: error.issues },
         { status: 400 }
       );
     }
@@ -258,20 +278,25 @@ export async function PUT(
       );
     }
 
+    // Create update data object with required fields first
+    const updateData: Record<string, unknown> = {
+      metadata: {
+        ...(transfer.metadata as TransferMetadata || {}),
+        lastUpdatedBy: session.user.id,
+        lastUpdatedAt: new Date().toISOString(),
+      },
+    };
+
+    // Add nullable properties conditionally
+    if (scheduledFor !== undefined) updateData.scheduledFor = new Date(scheduledFor);
+    if (notes !== undefined) updateData.notes = notes;
+    if (transferType !== undefined) updateData.transferType = transferType;
+    if (reason !== undefined) updateData.reason = reason;
+
     // Update transfer
     const updatedTransfer = await prisma.departmentTransfer.update({
       where: { id: (await params).id },
-      data: {
-        ...(scheduledFor && { scheduledFor: new Date(scheduledFor) }),
-        ...(notes && { notes }),
-        ...(transferType && { transferType }),
-        ...(reason && { reason }),
-        metadata: {
-          ...transfer.metadata,
-          lastUpdatedBy: session.user.id,
-          lastUpdatedAt: new Date().toISOString(),
-        },
-      },
+      data: updateData,
       include: {
         user: {
           select: {
@@ -330,7 +355,7 @@ export async function PUT(
 
 // DELETE /api/departments/transfers/[id] - Cancel transfer
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -389,7 +414,7 @@ export async function DELETE(
       data: {
         status: 'CANCELLED',
         metadata: {
-          ...transfer.metadata,
+          ...(transfer.metadata as TransferMetadata || {}),
           cancelledBy: session.user.id,
           cancelledAt: new Date().toISOString(),
         },

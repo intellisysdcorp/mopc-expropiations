@@ -7,6 +7,45 @@ import { z } from 'zod';
 import { DocumentActionType } from '@prisma/client';
 import { logger } from '@/lib/logger';
 
+// Type for permission with includes
+type PermissionWithIncludes = {
+  id: string;
+  documentId: string;
+  userId: string | null;
+  roleId: string | null;
+  departmentId: string | null;
+  canView: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+  canDownload: boolean;
+  canShare: boolean;
+  canSign: boolean;
+  canApprove: boolean;
+  expiresAt: Date | null;
+  isActive: boolean;
+  grantedBy: string;
+  reason: string | null;
+  grantedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  user?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null;
+  role?: {
+    id: string;
+    name: string;
+    description: string | null;
+  } | null;
+  department?: {
+    id: string;
+    name: string;
+    code: string;
+  } | null;
+};
+
 // Validation schemas
 const createPermissionSchema = z.object({
   userId: z.string().optional(),
@@ -19,7 +58,7 @@ const createPermissionSchema = z.object({
   canShare: z.boolean().default(false),
   canSign: z.boolean().default(false),
   canApprove: z.boolean().default(false),
-  expiresAt: z.string().datetime().optional(),
+  expiresAt: z.iso.datetime().optional(),
   reason: z.string().optional(),
 });
 
@@ -31,13 +70,13 @@ const updatePermissionSchema = z.object({
   canShare: z.boolean().optional(),
   canSign: z.boolean().optional(),
   canApprove: z.boolean().optional(),
-  expiresAt: z.string().datetime().optional(),
+  expiresAt: z.iso.datetime().optional(),
   isActive: z.boolean().optional(),
 });
 
 // GET /api/documents/[id]/permissions - Get document permissions
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -165,14 +204,20 @@ export async function POST(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
+    const docPermissionWhereClause = {
+      documentId: id,
+      userId: validatedData.userId || null,
+      roleId: validatedData.roleId || null,
+      departmentId: validatedData.departmentId || null,
+    }
+
+    if (validatedData.userId) docPermissionWhereClause.userId = validatedData.userId;
+    if (validatedData.roleId) docPermissionWhereClause.roleId = validatedData.roleId;
+    if (validatedData.departmentId) docPermissionWhereClause.departmentId = validatedData.departmentId;
+
     // Check if permission already exists
     const existingPermission = await prisma.documentPermission.findFirst({
-      where: {
-        documentId: id,
-        userId: validatedData.userId,
-        roleId: validatedData.roleId,
-        departmentId: validatedData.departmentId,
-      },
+      where: docPermissionWhereClause,
     });
 
     if (existingPermission) {
@@ -210,13 +255,9 @@ export async function POST(
       }
     }
 
-    // Create permission
-    const permission = await prisma.documentPermission.create({
+    const docPermissionCreateObject: any = {
       data: {
         documentId: id,
-        userId: validatedData.userId,
-        roleId: validatedData.roleId,
-        departmentId: validatedData.departmentId,
         canView: validatedData.canView,
         canEdit: validatedData.canEdit,
         canDelete: validatedData.canDelete,
@@ -224,9 +265,7 @@ export async function POST(
         canShare: validatedData.canShare,
         canSign: validatedData.canSign,
         canApprove: validatedData.canApprove,
-        expiresAt: validatedData.expiresAt ? new Date(validatedData.expiresAt) : null,
         grantedBy: session.user.id,
-        reason: validatedData.reason,
       },
       include: {
         user: {
@@ -252,7 +291,16 @@ export async function POST(
           },
         },
       },
-    });
+    }
+
+    if (validatedData.userId) docPermissionCreateObject.data.userId = validatedData.userId
+    if (validatedData.roleId) docPermissionCreateObject.data.roleId = validatedData.roleId
+    if (validatedData.departmentId) docPermissionCreateObject.data.departmentId = validatedData.departmentId
+    if (validatedData.reason) docPermissionCreateObject.data.reason = validatedData.reason
+    if (validatedData.expiresAt) docPermissionCreateObject.data.userId = new Date(validatedData.expiresAt)
+
+    // Create permission
+    const permission = await prisma.documentPermission.create(docPermissionCreateObject);
 
     // Create permission action
     await prisma.documentAction.create({
@@ -301,16 +349,20 @@ export async function POST(
     });
 
     // Format response
-    const response = {
-      ...permission,
-      user: permission.user ? {
-        ...permission.user,
-        fullName: `${permission.user.firstName} ${permission.user.lastName}`,
-      } : null,
-      expiresAt: permission.expiresAt?.toISOString(),
-      createdAt: permission.createdAt.toISOString(),
-      updatedAt: permission.updatedAt.toISOString(),
+    const permissionWithIncludes = permission as PermissionWithIncludes;
+    const response: any = {
+      ...permissionWithIncludes,
+      expiresAt: permissionWithIncludes.expiresAt?.toISOString(),
+      createdAt: permissionWithIncludes.createdAt.toISOString(),
+      updatedAt: permissionWithIncludes.updatedAt.toISOString(),
     };
+
+    if (permissionWithIncludes.user) {
+      response.user = {
+        ...permissionWithIncludes.user,
+        fullName: `${permissionWithIncludes.user.firstName} ${permissionWithIncludes.user.lastName}`,
+      }
+    }
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
@@ -318,7 +370,7 @@ export async function POST(
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       );
     }
@@ -371,19 +423,20 @@ export async function PUT(
     }
 
     // Update permission
+    const updateData: any = {};
+    if (validatedData.canView !== undefined) updateData.canView = validatedData.canView;
+    if (validatedData.canEdit !== undefined) updateData.canEdit = validatedData.canEdit;
+    if (validatedData.canDelete !== undefined) updateData.canDelete = validatedData.canDelete;
+    if (validatedData.canDownload !== undefined) updateData.canDownload = validatedData.canDownload;
+    if (validatedData.canShare !== undefined) updateData.canShare = validatedData.canShare;
+    if (validatedData.canSign !== undefined) updateData.canSign = validatedData.canSign;
+    if (validatedData.canApprove !== undefined) updateData.canApprove = validatedData.canApprove;
+    if (validatedData.expiresAt !== undefined) updateData.expiresAt = validatedData.expiresAt ? new Date(validatedData.expiresAt) : null;
+    if (validatedData.isActive !== undefined) updateData.isActive = validatedData.isActive;
+
     const permission = await prisma.documentPermission.update({
       where: { id: permissionId },
-      data: {
-        canView: validatedData.canView,
-        canEdit: validatedData.canEdit,
-        canDelete: validatedData.canDelete,
-        canDownload: validatedData.canDownload,
-        canShare: validatedData.canShare,
-        canSign: validatedData.canSign,
-        canApprove: validatedData.canApprove,
-        expiresAt: validatedData.expiresAt ? new Date(validatedData.expiresAt) : null,
-        isActive: validatedData.isActive,
-      },
+      data: updateData,
       include: {
         user: {
           select: {
@@ -447,15 +500,16 @@ export async function PUT(
     });
 
     // Format response
+    const permissionWithIncludes = permission as PermissionWithIncludes;
     const response = {
-      ...permission,
-      user: permission.user ? {
-        ...permission.user,
-        fullName: `${permission.user.firstName} ${permission.user.lastName}`,
+      ...permissionWithIncludes,
+      user: permissionWithIncludes.user ? {
+        ...permissionWithIncludes.user,
+        fullName: `${permissionWithIncludes.user.firstName} ${permissionWithIncludes.user.lastName}`,
       } : null,
-      expiresAt: permission.expiresAt?.toISOString(),
-      createdAt: permission.createdAt.toISOString(),
-      updatedAt: permission.updatedAt.toISOString(),
+      expiresAt: permissionWithIncludes.expiresAt?.toISOString(),
+      createdAt: permissionWithIncludes.createdAt.toISOString(),
+      updatedAt: permissionWithIncludes.updatedAt.toISOString(),
     };
 
     return NextResponse.json(response);
@@ -464,7 +518,7 @@ export async function PUT(
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       );
     }
@@ -478,7 +532,7 @@ export async function PUT(
 
 // DELETE /api/documents/[id]/permissions/[permissionId] - Delete permission
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string; permissionId: string }> }
 ) {
   try {

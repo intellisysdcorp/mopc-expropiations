@@ -7,16 +7,29 @@ import { z } from 'zod';
 import { DocumentStatus, DocumentSecurityLevel, DocumentActionType } from '@prisma/client';
 import { logger } from '@/lib/logger';
 
+// Types
+interface DocumentTag {
+  id: string;
+  tag: string;
+  color: string | null;
+}
+
+interface FormattedDocumentTag {
+  id: string;
+  tag: string;
+  color: string;
+}
+
 // Validation schemas
 const updateDocumentSchema = z.object({
   title: z.string().min(1).optional(),
   description: z.string().optional(),
-  securityLevel: z.nativeEnum(DocumentSecurityLevel).optional(),
+  securityLevel: z.enum(DocumentSecurityLevel).optional(),
   tags: z.string().optional(),
-  metadata: z.record(z.any()).optional(),
-  customFields: z.record(z.any()).optional(),
+  metadata: z.record(z.string(), z.any()).optional(),
+  customFields: z.record(z.string(), z.any()).optional(),
   retentionPeriod: z.number().optional(),
-  expiresAt: z.string().datetime().optional(),
+  expiresAt: z.iso.datetime().optional(),
 });
 
 // GET /api/documents/[id] - Get a specific document
@@ -150,47 +163,7 @@ export async function GET(
     });
 
     // Format response
-    const response = {
-      ...document,
-      uploadedBy: {
-        ...document.uploadedBy,
-        fullName: `${document.uploadedBy.firstName} ${document.uploadedBy.lastName}`,
-      },
-      tags: document.tagsRelations.map(tag => ({
-        id: tag.id,
-        tag: tag.tag,
-        color: tag.color,
-      })),
-      versions: document.versions.map(version => ({
-        ...version,
-        creator: {
-          ...version.creator,
-          fullName: `${version.creator.firstName} ${version.creator.lastName}`,
-        },
-        fileSizeFormatted: formatFileSize(version.fileSize),
-        createdAt: version.createdAt.toISOString(),
-      })),
-      history: document.history.map(entry => ({
-        ...entry,
-        user: {
-          ...entry.user,
-          fullName: `${entry.user.firstName} ${entry.user.lastName}`,
-        },
-        createdAt: entry.createdAt.toISOString(),
-      })),
-      signatures: document.signatures.map(signature => ({
-        ...signature,
-        user: {
-          ...signature.user,
-          fullName: `${signature.user.firstName} ${signature.user.lastName}`,
-        },
-        createdAt: signature.createdAt.toISOString(),
-      })),
-      fileSizeFormatted: formatFileSize(document.fileSize),
-      createdAt: document.createdAt.toISOString(),
-      updatedAt: document.updatedAt.toISOString(),
-      expiresAt: document.expiresAt?.toISOString(),
-    };
+    const response = formatDocumentResponse(document);
 
     return NextResponse.json(response);
   } catch (error) {
@@ -230,32 +203,22 @@ export async function PUT(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    // Store old values for history
-    const changes: any = {};
-    if (validatedData.title && validatedData.title !== existingDocument.title) {
-      changes.title = { previous: existingDocument.title, new: validatedData.title };
-    }
-    if (validatedData.description !== undefined && validatedData.description !== existingDocument.description) {
-      changes.description = { previous: existingDocument.description, new: validatedData.description };
-    }
-    if (validatedData.securityLevel && validatedData.securityLevel !== existingDocument.securityLevel) {
-      changes.securityLevel = { previous: existingDocument.securityLevel, new: validatedData.securityLevel };
-    }
+    // Prepare update data with only defined values
+    const updateData: any = {};
+    if (validatedData.title !== undefined) updateData.title = validatedData.title;
+    if (validatedData.description !== undefined) updateData.description = validatedData.description;
+    if (validatedData.securityLevel !== undefined) updateData.securityLevel = validatedData.securityLevel;
+    if (validatedData.tags !== undefined) updateData.tags = validatedData.tags;
+    if (validatedData.metadata !== undefined) updateData.metadata = validatedData.metadata;
+    if (validatedData.customFields !== undefined) updateData.customFields = validatedData.customFields;
+    if (validatedData.retentionPeriod !== undefined) updateData.retentionPeriod = validatedData.retentionPeriod;
+    if (validatedData.expiresAt !== undefined) updateData.expiresAt = new Date(validatedData.expiresAt);
+    updateData.updatedAt = new Date();
 
     // Update document
     const document = await prisma.document.update({
       where: { id },
-      data: {
-        title: validatedData.title,
-        description: validatedData.description,
-        securityLevel: validatedData.securityLevel,
-        tags: validatedData.tags,
-        metadata: validatedData.metadata,
-        customFields: validatedData.customFields,
-        retentionPeriod: validatedData.retentionPeriod,
-        expiresAt: validatedData.expiresAt ? new Date(validatedData.expiresAt) : null,
-        updatedAt: new Date(),
-      },
+      data: updateData,
       include: {
         uploadedBy: {
           select: {
@@ -281,6 +244,18 @@ export async function PUT(
         },
       },
     });
+
+    // Store old values for history
+    const changes: any = {};
+    if (validatedData.title && validatedData.title !== existingDocument.title) {
+      changes.title = { previous: existingDocument.title, new: validatedData.title };
+    }
+    if (validatedData.description !== undefined && validatedData.description !== existingDocument.description) {
+      changes.description = { previous: existingDocument.description, new: validatedData.description };
+    }
+    if (validatedData.securityLevel && validatedData.securityLevel !== existingDocument.securityLevel) {
+      changes.securityLevel = { previous: existingDocument.securityLevel, new: validatedData.securityLevel };
+    }
 
     // Create history entries for changes
     if (Object.keys(changes).length > 0) {
@@ -333,22 +308,7 @@ export async function PUT(
     });
 
     // Format response
-    const response = {
-      ...document,
-      uploadedBy: {
-        ...document.uploadedBy,
-        fullName: `${document.uploadedBy.firstName} ${document.uploadedBy.lastName}`,
-      },
-      tags: document.tagsRelations.map(tag => ({
-        id: tag.id,
-        tag: tag.tag,
-        color: tag.color,
-      })),
-      fileSizeFormatted: formatFileSize(document.fileSize),
-      createdAt: document.createdAt.toISOString(),
-      updatedAt: document.updatedAt.toISOString(),
-      expiresAt: document.expiresAt?.toISOString(),
-    };
+    const response = formatDocumentResponseSimple(document);
 
     return NextResponse.json(response);
   } catch (error) {
@@ -356,7 +316,7 @@ export async function PUT(
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       );
     }
@@ -437,11 +397,66 @@ export async function DELETE(
   }
 }
 
-// Helper function to format file size
+// Helper functions
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function formatDocumentTags(tags: DocumentTag[]): FormattedDocumentTag[] {
+  return tags.map((tag: DocumentTag): FormattedDocumentTag => ({
+    id: tag.id,
+    tag: tag.tag,
+    color: tag.color || '#000000',
+  }));
+}
+
+function formatUserWithFullName(user: { firstName: string; lastName: string; [key: string]: any }) {
+  return {
+    ...user,
+    fullName: `${user.firstName} ${user.lastName}`,
+  };
+}
+
+function formatDocumentResponse(document: any) {
+  return {
+    ...document,
+    uploadedBy: formatUserWithFullName(document.uploadedBy),
+    tags: formatDocumentTags(document.tagsRelations),
+    versions: document.versions?.map((version: any) => ({
+      ...version,
+      creator: formatUserWithFullName(version.creator),
+      fileSizeFormatted: formatFileSize(version.fileSize),
+      createdAt: version.createdAt.toISOString(),
+    })),
+    history: document.history?.map((entry: any) => ({
+      ...entry,
+      user: formatUserWithFullName(entry.user),
+      createdAt: entry.createdAt.toISOString(),
+    })),
+    signatures: document.signatures?.map((signature: any) => ({
+      ...signature,
+      user: formatUserWithFullName(signature.user),
+      createdAt: signature.createdAt.toISOString(),
+    })),
+    fileSizeFormatted: formatFileSize(document.fileSize),
+    createdAt: document.createdAt.toISOString(),
+    updatedAt: document.updatedAt.toISOString(),
+    expiresAt: document.expiresAt?.toISOString(),
+  };
+}
+
+function formatDocumentResponseSimple(document: any) {
+  return {
+    ...document,
+    uploadedBy: formatUserWithFullName(document.uploadedBy),
+    tags: formatDocumentTags(document.tagsRelations),
+    fileSizeFormatted: formatFileSize(document.fileSize),
+    createdAt: document.createdAt.toISOString(),
+    updatedAt: document.updatedAt.toISOString(),
+    expiresAt: document.expiresAt?.toISOString(),
+  };
 }

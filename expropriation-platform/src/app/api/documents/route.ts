@@ -19,6 +19,7 @@ import {
 } from '@/lib/file-upload-security';
 import { edgeLogger } from '@/lib/edge-logger';
 import { logger } from '@/lib/logger';
+import { AtomicUploadOptions } from '@/lib/atomic-upload';
 
 // Validation schemas
 const createDocumentSchema = z.object({
@@ -34,7 +35,7 @@ const createDocumentSchema = z.object({
   metadata: z.record(z.string(), z.any()).optional(),
   customFields: z.record(z.string(), z.any()).optional(),
   retentionPeriod: z.number().optional(),
-  expiresAt: z.coerce.date().optional(),
+  expiresAt: z.iso.date().optional(),
 });
 
 const queryDocumentsSchema = z.object({

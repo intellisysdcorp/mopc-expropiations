@@ -114,11 +114,6 @@ export async function POST(request: NextRequest) {
       let aValue: any = a[sortBy as keyof typeof a];
       let bValue: any = b[sortBy as keyof typeof b];
 
-      if (sortBy === 'uploadedBy') {
-        aValue = `${a.uploadedBy.firstName} ${a.uploadedBy.lastName}`;
-        bValue = `${b.uploadedBy.firstName} ${b.uploadedBy.lastName}`;
-      }
-
       if (typeof aValue === 'string') {
         aValue = aValue.toLowerCase();
         bValue = bValue.toLowerCase();
@@ -137,7 +132,7 @@ export async function POST(request: NextRequest) {
     // Log bulk download action
     await prisma.documentAction.create({
       data: {
-        documentId: sortedDocuments[0].id, // Use first document as reference
+        documentId: sortedDocuments[0]!.id, // Use first document as reference
         action: DocumentActionType.DOWNLOADED,
         userId: session.user.id,
         metadata: {
@@ -183,7 +178,7 @@ export async function POST(request: NextRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       );
     }

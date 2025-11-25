@@ -1,9 +1,10 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { z } from 'zod';
+
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 import { updateDepartmentSchema } from '@/lib/validators/department-validator';
 import { logger } from '@/lib/logger';
@@ -181,16 +182,17 @@ export async function PUT(
       }
     }
 
-    // Create update data object
-    const updateData: any = {};
+    // Create update data object with required fields first
+    const updateData: Record<string, unknown> = {};
 
-    if (validatedData.name) updateData.name = validatedData.name;
-    if (validatedData.code) updateData.code = validatedData.code;
-    if (validatedData.parentId) updateData.parentId = validatedData.parentId;
-    if (validatedData.description) updateData.description = validatedData.description;
-    if (validatedData.headUserId) updateData.headUserId = validatedData.headUserId;
-    if (validatedData.isActive) updateData.isActive = validatedData.isActive;
-    if (validatedData.email) updateData.email = validatedData.email;
+    // Add nullable properties conditionally
+    if (validatedData.name !== undefined) updateData.name = validatedData.name;
+    if (validatedData.code !== undefined) updateData.code = validatedData.code;
+    if (validatedData.parentId !== undefined) updateData.parentId = validatedData.parentId;
+    if (validatedData.description !== undefined) updateData.description = validatedData.description;
+    if (validatedData.headUserId !== undefined) updateData.headUserId = validatedData.headUserId;
+    if (validatedData.isActive !== undefined) updateData.isActive = validatedData.isActive;
+    if (validatedData.email !== undefined) updateData.email = validatedData.email;
 
     // Update department
     const department = await prisma.department.update({

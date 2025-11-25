@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 import { departmentSchema } from '@/lib/validators/department-validator';
 import { logger } from '@/lib/logger';
+import type { Prisma } from '@prisma/client';
 
 // GET /api/departments - List departments with filtering and hierarchy
 export async function GET(request: NextRequest) {
@@ -25,12 +26,12 @@ export async function GET(request: NextRequest) {
     const sortOrder = searchParams.get('sortOrder') || 'asc';
 
     // Build where clause
-    const where: any = {};
+    const where: Prisma.DepartmentWhereInput = {};
 
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { code: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search } },
+        { code: { contains: search } },
       ];
     }
 
@@ -173,12 +174,32 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create department with simplified schema
+    // Create department with proper data handling
     let department;
     try {
-      // Create department directly with simplified data
+      // Start with required properties
+      const createData: Prisma.DepartmentCreateInput = {
+        name: validatedData.name,
+        code: validatedData.code,
+        email: validatedData.email,
+        isActive: validatedData.isActive,
+      };
+
+      // Add optional properties conditionally
+      if (validatedData.parentId) {
+        createData.parent = { connect: { id: validatedData.parentId } };
+      }
+
+      if (validatedData.headUserId) {
+        createData.headUser = { connect: { id: validatedData.headUserId } };
+      }
+
+      if (validatedData.description) {
+        createData.description = validatedData.description;
+      }
+
       department = await prisma.department.create({
-        data: validatedData,
+        data: createData,
         include: {
           parent: {
             select: { id: true, name: true, code: true },
@@ -238,7 +259,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Datos inválidos', details: error.errors },
+        { error: 'Datos inválidos', details: error.issues },
         { status: 400 }
       );
     }
