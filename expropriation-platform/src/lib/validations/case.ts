@@ -319,3 +319,6 @@ export type Priority = z.infer<typeof PriorityEnum>
 export type CaseStage = z.infer<typeof CaseStageEnum>
 export type ExpropriationReason = z.infer<typeof ExpropriationReasonEnum>
 export type UrgencyLevel = z.infer<typeof UrgencyLevelEnum>
+
+// Export enums for use in other files
+export { CaseStageEnum }

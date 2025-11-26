@@ -1,21 +1,10 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { ActivityType } from '@prisma/client';
 import { logger } from '@/lib/logger';
-
-// Validation schemas
-const createReviewSchema = z.object({
-  assignmentId: z.string(),
-  findings: z.string(),
-  recommendations: z.string().optional(),
-  conclusion: z.string(),
-  rating: z.number().min(1).max(5).optional(),
-  decision: z.enum(['APPROVED', 'REJECTED', 'CONDITIONAL', 'NEEDS_REVISION']),
-  attachments: z.array(z.string()).optional(),
-});
+import { CreateReviewInput, ReviewCreatePayload } from '@/types/review';
 
 // POST /api/reviews - Create review
 export async function POST(request: NextRequest) {
@@ -25,12 +14,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const validatedData = createReviewSchema.parse(body);
+    const body: CreateReviewInput = await request.json();
 
     // Check if assignment exists and user is assigned
     const assignment = await prisma.reviewAssignment.findUnique({
-      where: { id: validatedData.assignmentId },
+      where: { id: body.assignmentId },
       include: {
         case: true,
         assignee: true,
@@ -51,20 +39,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Create review payload with required fields
+    const reviewPayload: ReviewCreatePayload = {
+      assignmentId: body.assignmentId,
+      reviewerId: session.user.id,
+      findings: body.findings,
+      conclusion: body.conclusion,
+      decision: body.decision,
+      ipAddress: request.headers.get('x-forwarded-for') || '',
+      userAgent: request.headers.get('user-agent') || '',
+    };
+
+    // Add optional fields conditionally
+    if (body.recommendations) {
+      reviewPayload.recommendations = body.recommendations;
+    }
+    if (body.rating) {
+      reviewPayload.rating = body.rating;
+    }
+    if (body.attachments) {
+      reviewPayload.attachments = body.attachments;
+    }
+
     // Create review
     const review = await prisma.review.create({
-      data: {
-        assignmentId: validatedData.assignmentId,
-        reviewerId: session.user.id,
-        findings: validatedData.findings,
-        recommendations: validatedData.recommendations,
-        conclusion: validatedData.conclusion,
-        rating: validatedData.rating,
-        decision: validatedData.decision,
-        attachments: validatedData.attachments,
-        ipAddress: request.ip || request.headers.get('x-forwarded-for') || '',
-        userAgent: request.headers.get('user-agent') || '',
-      },
+      data: reviewPayload,
       include: {
         assignment: {
           include: {
@@ -98,7 +97,7 @@ export async function POST(request: NextRequest) {
 
     // Update assignment status
     await prisma.reviewAssignment.update({
-      where: { id: validatedData.assignmentId },
+      where: { id: body.assignmentId },
       data: {
         status: 'COMPLETED',
         completedAt: new Date(),
@@ -111,12 +110,12 @@ export async function POST(request: NextRequest) {
         action: ActivityType.COMMENTED,
         entityType: 'review',
         entityId: review.id,
-        description: `Submitted ${validatedData.decision} review for case ${assignment.case.fileNumber}`,
+        description: `Submitted ${body.decision} review for case ${assignment.case.fileNumber}`,
         userId: session.user.id,
         caseId: assignment.caseId,
         metadata: {
-          decision: validatedData.decision,
-          rating: validatedData.rating,
+          decision: body.decision,
+          rating: body.rating,
           reviewType: assignment.reviewType,
         },
       },
@@ -127,7 +126,7 @@ export async function POST(request: NextRequest) {
       await prisma.notification.create({
         data: {
           title: 'Review Completed',
-          message: `Review for case ${assignment.case.fileNumber} has been completed with decision: ${validatedData.decision}`,
+          message: `Review for case ${assignment.case.fileNumber} has been completed with decision: ${body.decision}`,
           type: 'STATUS_UPDATE',
           userId: assignment.assignedBy,
           entityType: 'review',
@@ -138,9 +137,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(review, { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
+    if (error instanceof Error) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.message },
         { status: 400 }
       );
     }

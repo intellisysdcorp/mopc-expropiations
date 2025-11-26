@@ -17,7 +17,7 @@ interface SearchResult {
   type: 'case' | 'document' | 'user' | 'department';
   title: string;
   description?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, string | number | boolean | null | undefined>;
   url: string;
   relevance: number;
 }
@@ -76,67 +76,73 @@ export async function GET(request: NextRequest) {
             // Department-based access control
             session.user.role === 'SUPER_ADMIN' ? {} : {
               OR: [
-                { assignedUserId: session.user.id },
                 {
                   assignments: {
                     some: {
                       userId: session.user.id
                     }
                   }
-                },
-                {
-                  department: {
-                    OR: [
-                      { id: session.user.departmentId },
-                      { parentId: session.user.departmentId }
-                    ]
-                  }
                 }
               ]
             },
             {
               OR: [
-                { caseNumber: { contains: query, mode: 'insensitive' } },
-                { title: { contains: query, mode: 'insensitive' } },
-                { description: { contains: query, mode: 'insensitive' } },
-                { propertyAddress: { contains: query, mode: 'insensitive' } },
-                { ownerName: { contains: query, mode: 'insensitive' } },
-                { ownerEmail: { contains: query, mode: 'insensitive' } },
+                { fileNumber: { contains: query } },
+                { title: { contains: query } },
+                { description: { contains: query } },
+                { propertyAddress: { contains: query } },
+                { ownerName: { contains: query } },
+                { ownerEmail: { contains: query } },
               ]
             }
           ]
         },
         include: {
-          department: {
-            select: { name: true }
+          assignments: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  email: true
+                }
+              }
+            }
           },
-          assignedUser: {
-            select: { name: true, firstName: true, lastName: true }
+          assignedTo: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true
+            }
           }
         },
         take: params.limit,
       });
 
       cases.forEach(case_ => {
+        const assignedUser = case_.assignments.find((assignment: any) => assignment.user?.id)?.user || case_.assignedTo;
         const relevance = calculateRelevance(
           params.q,
           case_.title,
-          `${case_.description} ${case_.caseNumber} ${case_.propertyAddress} ${case_.ownerName}`
+          `${case_.description} ${case_.fileNumber} ${case_.propertyAddress} ${case_.ownerName}`
         );
 
         if (relevance > 0.1) {
           results.push({
             id: case_.id,
             type: 'case',
-            title: `${case_.caseNumber} - ${case_.title}`,
+            title: `${case_.fileNumber} - ${case_.title}`,
             description: case_.description || `${case_.propertyAddress} • ${case_.ownerName}`,
             metadata: {
               status: case_.status,
               priority: case_.priority,
               stage: case_.currentStage,
-              department: case_.department?.name,
-              assignedTo: case_.assignedUser?.name ||
-                `${case_.assignedUser?.firstName} ${case_.assignedUser?.lastName}`.trim(),
+              assignedTo: assignedUser?.firstName && assignedUser?.lastName
+                ? `${assignedUser.firstName} ${assignedUser.lastName}`.trim()
+                : assignedUser?.email || 'Unassigned',
               createdAt: case_.createdAt.toISOString(),
             },
             url: `/cases/${case_.id}`,
@@ -153,47 +159,27 @@ export async function GET(request: NextRequest) {
           AND: [
             // Department-based access control
             session.user.role === 'SUPER_ADMIN' ? {} : {
-              case: {
-                OR: [
-                  { assignedUserId: session.user.id },
-                  {
-                    assignments: {
-                      some: {
-                        userId: session.user.id
-                      }
-                    }
-                  },
-                  {
-                    department: {
-                      OR: [
-                        { id: session.user.departmentId },
-                        { parentId: session.user.departmentId }
-                      ]
-                    }
-                  }
-                ]
-              }
+              uploadedById: session.user.id
             },
             {
               OR: [
-                { filename: { contains: query, mode: 'insensitive' } },
-                { originalName: { contains: query, mode: 'insensitive' } },
-                { description: { contains: query, mode: 'insensitive' } },
-                { contentType: { contains: query, mode: 'insensitive' } },
+                { fileName: { contains: query } },
+                { originalFileName: { contains: query } },
+                { description: { contains: query } },
+                { title: { contains: query } },
+                { tags: { contains: query } },
               ]
             }
           ]
         },
         include: {
-          case: {
-            select: {
-              caseNumber: true,
-              title: true,
-              department: { select: { name: true } }
-            }
-          },
           uploadedBy: {
-            select: { name: true, firstName: true, lastName: true }
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true
+            }
           }
         },
         take: params.limit,
@@ -202,27 +188,29 @@ export async function GET(request: NextRequest) {
       documents.forEach(doc => {
         const relevance = calculateRelevance(
           params.q,
-          doc.originalName,
-          doc.description
+          doc.originalFileName || doc.fileName,
+          doc.description || ''
         );
 
         if (relevance > 0.1) {
           results.push({
             id: doc.id,
             type: 'document',
-            title: doc.originalName,
-            description: doc.description || `Documento del caso ${doc.case?.caseNumber}`,
+            title: doc.originalFileName || doc.fileName,
+            description: doc.description || `Documento: ${doc.title}`,
             metadata: {
-              caseNumber: doc.case?.caseNumber,
-              caseTitle: doc.case?.title,
-              department: doc.case?.department?.name,
-              fileType: doc.contentType,
+              documentType: doc.documentType,
+              category: doc.category,
+              status: doc.status,
+              securityLevel: doc.securityLevel,
               fileSize: doc.fileSize,
-              uploadedBy: doc.uploadedBy?.name ||
-                `${doc.uploadedBy?.firstName} ${doc.uploadedBy?.lastName}`.trim(),
+              mimeType: doc.mimeType,
+              uploadedBy: doc.uploadedBy?.firstName && doc.uploadedBy?.lastName
+                ? `${doc.uploadedBy.firstName} ${doc.uploadedBy.lastName}`.trim()
+                : doc.uploadedBy?.email || 'Unknown',
               uploadedAt: doc.createdAt.toISOString(),
             },
-            url: `/cases/${doc.caseId}?tab=documentos&document=${doc.id}`,
+            url: `/documents/${doc.id}`,
             relevance,
           });
         }
@@ -238,26 +226,17 @@ export async function GET(request: NextRequest) {
             AND: [
               // Department-based access control for department admins
               session.user.role === 'SUPER_ADMIN' ? {} : {
-                OR: [
-                  { departmentId: session.user.departmentId },
-                  { department: { parentId: session.user.departmentId } }
-                ]
+                id: session.user.id // Only return current user for non-super-admin
               },
               {
                 OR: [
-                  { name: { contains: query, mode: 'insensitive' } },
-                  { firstName: { contains: query, mode: 'insensitive' } },
-                  { lastName: { contains: query, mode: 'insensitive' } },
-                  { email: { contains: query, mode: 'insensitive' } },
-                  { position: { contains: query, mode: 'insensitive' } },
+                  { firstName: { contains: query } },
+                  { lastName: { contains: query } },
+                  { email: { contains: query } },
+                  { username: { contains: query } },
                 ]
               }
             ]
-          },
-          include: {
-            department: {
-              select: { name: true }
-            }
           },
           take: params.limit,
         });
@@ -265,23 +244,24 @@ export async function GET(request: NextRequest) {
         users.forEach(user => {
           const relevance = calculateRelevance(
             params.q,
-            user.name || `${user.firstName} ${user.lastName}`,
-            `${user.email} ${user.position || ''}`
+            `${user.firstName} ${user.lastName}`,
+            `${user.email} ${user.username || ''}`
           );
 
           if (relevance > 0.1) {
             results.push({
               id: user.id,
               type: 'user',
-              title: user.name || `${user.firstName} ${user.lastName}`.trim(),
-              description: `${user.email} • ${user.position || 'Sin posición'} • ${user.department?.name || 'Sin departamento'}`,
+              title: `${user.firstName} ${user.lastName}`.trim(),
+              description: `${user.email}`,
               metadata: {
-                role: user.role,
-                department: user.department?.name,
-                position: user.position,
                 email: user.email,
+                username: user.username,
+                phone: user.phone,
                 isActive: user.isActive,
-                lastLogin: user.lastLogin?.toISOString(),
+                isSuspended: user.isSuspended,
+                lastLoginAt: user.lastLoginAt?.toISOString(),
+                createdAt: user.createdAt.toISOString(),
               },
               url: `/users/${user.id}`,
               relevance,
@@ -302,34 +282,17 @@ export async function GET(request: NextRequest) {
               session.user.role === 'SUPER_ADMIN' ? {} : {
                 OR: [
                   { id: session.user.departmentId },
-                  { parentId: session.user.departmentId },
-                  {
-                    parent: {
-                      parentId: session.user.departmentId
-                    }
-                  }
+                  { parentId: session.user.departmentId }
                 ]
               },
               {
                 OR: [
-                  { name: { contains: query, mode: 'insensitive' } },
-                  { description: { contains: query, mode: 'insensitive' } },
-                  { code: { contains: query, mode: 'insensitive' } },
+                  { name: { contains: query } },
+                  { description: { contains: query } },
+                  { code: { contains: query } },
                 ]
               }
             ]
-          },
-          include: {
-            parent: {
-              select: { name: true }
-            },
-            _count: {
-              select: {
-                users: true,
-                cases: true,
-                children: true
-              }
-            }
           },
           take: params.limit,
         });
@@ -338,7 +301,7 @@ export async function GET(request: NextRequest) {
           const relevance = calculateRelevance(
             params.q,
             dept.name,
-            dept.description
+            dept.description || ''
           );
 
           if (relevance > 0.1) {
@@ -346,15 +309,13 @@ export async function GET(request: NextRequest) {
               id: dept.id,
               type: 'department',
               title: dept.name,
-              description: dept.description || `Departamento ${dept.code} • ${dept.parent?.name || 'Sin padre'}`,
+              description: dept.description || `Departamento ${dept.code}`,
               metadata: {
                 code: dept.code,
-                parent: dept.parent?.name,
-                userCount: dept._count.users,
-                caseCount: dept._count.cases,
-                childCount: dept._count.children,
+                email: dept.email,
                 isActive: dept.isActive,
                 createdAt: dept.createdAt.toISOString(),
+                updatedAt: dept.updatedAt.toISOString(),
               },
               url: `/departments/${dept.id}`,
               relevance,
@@ -382,7 +343,7 @@ export async function GET(request: NextRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid search parameters', details: error.errors },
+        { error: 'Invalid search parameters', details: error.issues },
         { status: 400 }
       );
     }

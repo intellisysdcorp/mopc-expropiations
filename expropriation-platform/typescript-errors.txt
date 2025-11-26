@@ -1,16 +1,3 @@
-src/app/api/meetings/analytics/route.ts
-src/app/api/meetings/route.ts
-src/app/api/notifications/bulk/route.ts
-src/app/api/notifications/enhanced/route.ts
-src/app/api/notifications/preferences/route.ts
-src/app/api/notifications/route.ts
-src/app/api/notifications/templates/route.ts
-src/app/api/observations/route.ts
-src/app/api/reports/export/route.ts
-src/app/api/reports/template/route.ts
-src/app/api/reviews/assignments/route.ts
-src/app/api/reviews/route.ts
-src/app/api/search/route.ts
 src/app/api/signatures/[id]/revoke/route.ts
 src/app/api/signatures/route.ts
 src/app/api/stages/route.ts
@@ -76,3 +63,4 @@ src/lib/security.ts
 src/lib/user-utils.ts
 src/lib/websocket-server.ts
 src/types/client.ts
+prisma/schema.prisma

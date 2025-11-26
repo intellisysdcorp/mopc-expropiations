@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     if (exportFormat === 'pdf') {
       const pdfBuffer = await generatePDFReport(data, options);
-      return new NextResponse(pdfBuffer, {
+      return new NextResponse(new Uint8Array(pdfBuffer), {
         headers: {
           'Content-Type': 'application/pdf',
           'Content-Disposition': `attachment; filename="report-${format(new Date(), 'yyyy-MM-dd-HHmmss')}.pdf"`
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       });
     } else if (exportFormat === 'excel') {
       const excelBuffer = await generateExcelReport(data, options);
-      return new NextResponse(excelBuffer, {
+      return new NextResponse(new Uint8Array(excelBuffer), {
         headers: {
           'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           'Content-Disposition': `attachment; filename="report-${format(new Date(), 'yyyy-MM-dd-HHmmss')}.xlsx"`
