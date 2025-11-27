@@ -1,33 +1,28 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { ActivityType, SignatureType } from '@prisma/client';
 import crypto from 'crypto';
 import { logger } from '@/lib/logger';
-
-// Validation schemas
-const createSignatureSchema = z.object({
-  signatureType: z.nativeEnum(SignatureType),
-  entityType: z.string(),
-  entityId: z.string(),
-  signatureData: z.string(), // Base64 encoded signature data
-  delegatedBy: z.string().optional(),
-  delegationReason: z.string().optional(),
-});
-
-const verifySignatureSchema = z.object({
-  signatureId: z.string(),
-  verificationData: z.string(), // Additional verification data
-});
+import type {
+  DigitalSignatureWithUser,
+  DigitalSignatureResponse,
+  VerifySignatureRequest,
+  SignatureVerificationResult,
+  CreateActivityData,
+  ActivityMetadata,
+  CreateSignatureRequest,
+  SignatureCreateResponse,
+  SignatureFilters
+} from '@/lib/types/signatures';
 
 // Encryption helper functions
 const encryptSignatureData = (data: string): string => {
   const algorithm = 'aes-256-gcm';
   const key = crypto.scryptSync(process.env.SIGNATURE_SECRET || 'default-secret', 'salt', 32);
   const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipher(algorithm, key, iv);
+  const cipher = crypto.createCipheriv(algorithm, key, iv);
 
   let encrypted = cipher.update(data, 'utf8', 'hex');
   encrypted += cipher.final('hex');
@@ -50,7 +45,7 @@ export async function GET(request: NextRequest) {
     const signatureType = searchParams.get('signatureType');
     const userId = searchParams.get('userId') || session.user.id;
 
-    const where: any = {
+    const where: SignatureFilters = {
       isActive: true,
     };
 
@@ -68,6 +63,10 @@ export async function GET(request: NextRequest) {
             firstName: true,
             lastName: true,
             email: true,
+            username: true,
+            isActive: true,
+            isSuspended: true,
+            createdAt: true,
           },
         },
       },
@@ -75,7 +74,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Remove encrypted signature data from response for security
-    const sanitizedSignatures = signatures.map(sig => ({
+    const sanitizedSignatures: DigitalSignatureResponse[] = signatures.map(sig => ({
       ...sig,
       signatureData: '***ENCRYPTED***',
     }));
@@ -98,16 +97,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const validatedData = createSignatureSchema.parse(body);
+    const body: CreateSignatureRequest = await request.json();
 
     // Check if user already signed this entity
     const existingSignature = await prisma.digitalSignature.findFirst({
       where: {
         userId: session.user.id,
-        entityType: validatedData.entityType,
-        entityId: validatedData.entityId,
-        signatureType: validatedData.signatureType,
+        entityType: body.entityType,
+        entityId: body.entityId,
+        signatureType: body.signatureType,
         isActive: true,
       },
     });
@@ -120,21 +118,21 @@ export async function POST(request: NextRequest) {
     }
 
     // Encrypt signature data
-    const encryptedSignatureData = encryptSignatureData(validatedData.signatureData);
+    const encryptedSignatureData = encryptSignatureData(body.signatureData);
 
     // Get request metadata
     const userAgent = request.headers.get('user-agent') || '';
-    const ipAddress = request.ip || request.headers.get('x-forwarded-for') || '';
+    const ipAddress = request.headers.get('x-forwarded-for') || '';
 
-    const signature = await prisma.digitalSignature.create({
+    const signature: DigitalSignatureWithUser = await prisma.digitalSignature.create({
       data: {
         userId: session.user.id,
-        signatureType: validatedData.signatureType,
-        entityType: validatedData.entityType,
-        entityId: validatedData.entityId,
+        signatureType: body.signatureType,
+        entityType: body.entityType,
+        entityId: body.entityId,
         signatureData: encryptedSignatureData,
-        delegatedBy: validatedData.delegatedBy,
-        delegationReason: validatedData.delegationReason,
+        delegatedBy: body.delegatedBy || null,
+        delegationReason: body.delegationReason || null,
         ipAddress,
         userAgent,
         deviceInfo: {
@@ -149,38 +147,61 @@ export async function POST(request: NextRequest) {
             firstName: true,
             lastName: true,
             email: true,
+            username: true,
+            isActive: true,
+            isSuspended: true,
+            createdAt: true,
           },
         },
       },
     });
 
     // Log activity
+    const activityData: CreateActivityData = {
+      action: ActivityType.APPROVED,
+      entityType: body.entityType,
+      entityId: body.entityId,
+      description: `Digital signature created for ${body.entityType} (${body.signatureType})`,
+      userId: session.user.id,
+      metadata: {
+        signatureId: signature.id,
+        signatureType: body.signatureType,
+      } as ActivityMetadata,
+    };
+
     await prisma.activity.create({
-      data: {
-        action: ActivityType.APPROVED,
-        entityType: validatedData.entityType,
-        entityId: validatedData.entityId,
-        description: `Digital signature created for ${validatedData.entityType} (${validatedData.signatureType})`,
-        userId: session.user.id,
-        metadata: {
-          signatureId: signature.id,
-          signatureType: validatedData.signatureType,
-        },
-      },
+      data: activityData,
     });
 
-    // Return signature without encrypted data
-    const { signatureData: _, ...sanitizedSignature } = signature;
+    // Create base response object
+    const signatureResponse: SignatureCreateResponse = {
+      id: signature.id,
+      userId: signature.userId,
+      signatureType: signature.signatureType,
+      entityType: signature.entityType,
+      entityId: signature.entityId,
+      deviceInfo: signature.deviceInfo as any,
+      isActive: signature.isActive,
+      createdAt: signature.createdAt,
+      user: signature.user,
+    };
 
-    return NextResponse.json(sanitizedSignature, { status: 201 });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: 400 }
-      );
+    // Add optional fields conditionally
+    if (signature.ipAddress) {
+      signatureResponse.ipAddress = signature.ipAddress;
+    }
+    if (signature.userAgent) {
+      signatureResponse.userAgent = signature.userAgent;
+    }
+    if (signature.delegatedBy) {
+      signatureResponse.delegatedBy = signature.delegatedBy;
+    }
+    if (signature.delegationReason) {
+      signatureResponse.delegationReason = signature.delegationReason;
     }
 
+    return NextResponse.json(signatureResponse, { status: 201 });
+  } catch (error) {
     logger.error('Error creating digital signature:', error);
     return NextResponse.json(
       { error: 'Failed to create digital signature' },
@@ -197,11 +218,10 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const validatedData = verifySignatureSchema.parse(body);
+    const body: VerifySignatureRequest = await request.json();
 
-    const signature = await prisma.digitalSignature.findUnique({
-      where: { id: validatedData.signatureId },
+    const signature: DigitalSignatureWithUser | null = await prisma.digitalSignature.findUnique({
+      where: { id: body.signatureId },
       include: {
         user: {
           select: {
@@ -209,6 +229,10 @@ export async function PUT(request: NextRequest) {
             firstName: true,
             lastName: true,
             email: true,
+            username: true,
+            isActive: true,
+            isSuspended: true,
+            createdAt: true,
           },
         },
       },
@@ -230,7 +254,7 @@ export async function PUT(request: NextRequest) {
 
     // Verify signature logic would go here
     // For now, we'll just return the signature info
-    const verificationResult = {
+    const verificationResult: SignatureVerificationResult = {
       isValid: true,
       verifiedAt: new Date(),
       verifiedBy: session.user.id,
@@ -245,26 +269,21 @@ export async function PUT(request: NextRequest) {
     };
 
     // Log verification activity
+    const verificationActivityData: CreateActivityData = {
+      action: ActivityType.VIEWED,
+      entityType: 'digital_signature',
+      entityId: signature.id,
+      description: `Digital signature verified`,
+      userId: session.user.id,
+      metadata: verificationResult as ActivityMetadata,
+    };
+
     await prisma.activity.create({
-      data: {
-        action: ActivityType.VIEWED,
-        entityType: 'digital_signature',
-        entityId: signature.id,
-        description: `Digital signature verified`,
-        userId: session.user.id,
-        metadata: verificationResult,
-      },
+      data: verificationActivityData,
     });
 
     return NextResponse.json(verificationResult);
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: 400 }
-      );
-    }
-
     logger.error('Error verifying digital signature:', error);
     return NextResponse.json(
       { error: 'Failed to verify digital signature' },

@@ -5,6 +5,14 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { ActivityType } from '@prisma/client';
 import { logger } from '@/lib/logger';
+import type {
+  DigitalSignature,
+  UserWithRole,
+  RevokeSignatureData,
+  CreateActivityData,
+  ActivityMetadata,
+  SignatureRevokeResponse
+} from '@/lib/types/signatures';
 
 const revokeSignatureSchema = z.object({
   reason: z.string().min(1, 'Revocation reason is required'),
@@ -25,7 +33,7 @@ export async function POST(
     const validatedData = revokeSignatureSchema.parse(body);
 
     // Check if signature exists and user has permission
-    const signature = await prisma.digitalSignature.findUnique({
+    const signature: DigitalSignature | null = await prisma.digitalSignature.findUnique({
       where: { id: (await params).id },
     });
 
@@ -37,7 +45,7 @@ export async function POST(
     }
 
     // Users can only revoke their own signatures, admins can revoke any
-    const user = await prisma.user.findUnique({
+    const user: UserWithRole | null = await prisma.user.findUnique({
       where: { id: session.user.id },
       include: { role: true },
     });
@@ -62,46 +70,52 @@ export async function POST(
     }
 
     // Revoke the signature
-    const revokedSignature = await prisma.digitalSignature.update({
+    const revokeData: RevokeSignatureData = {
+      isActive: false,
+      revokedAt: new Date(),
+      revokedBy: session.user.id,
+      revokedReason: validatedData.reason,
+    };
+
+    const revokedSignature: DigitalSignature = await prisma.digitalSignature.update({
       where: { id: (await params).id },
-      data: {
-        isActive: false,
-        revokedAt: new Date(),
-        revokedBy: session.user.id,
-        revokedReason: validatedData.reason,
-      },
+      data: revokeData,
     });
 
     // Log activity
+    const activityData: CreateActivityData = {
+      action: ActivityType.DELETED,
+      entityType: 'digital_signature',
+      entityId: signature.id,
+      description: `Digital signature revoked: ${validatedData.reason}`,
+      userId: session.user.id,
+      metadata: {
+        signatureId: signature.id,
+        signatureType: signature.signatureType,
+        entityType: signature.entityType,
+        entityId: signature.entityId,
+        revocationReason: validatedData.reason,
+      } as ActivityMetadata,
+    };
+
     await prisma.activity.create({
-      data: {
-        action: ActivityType.DELETED,
-        entityType: 'digital_signature',
-        entityId: signature.id,
-        description: `Digital signature revoked: ${validatedData.reason}`,
-        userId: session.user.id,
-        metadata: {
-          signatureId: signature.id,
-          signatureType: signature.signatureType,
-          entityType: signature.entityType,
-          entityId: signature.entityId,
-          revocationReason: validatedData.reason,
-        },
-      },
+      data: activityData,
     });
 
-    return NextResponse.json({
+    const response: SignatureRevokeResponse = {
       message: 'Signature revoked successfully',
       signature: {
         id: revokedSignature.id,
         revokedAt: revokedSignature.revokedAt,
         revokedReason: revokedSignature.revokedReason,
       },
-    });
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       );
     }
