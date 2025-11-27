@@ -1,8 +1,7 @@
-import { PrismaClient, CaseStage } from '@prisma/client';
+import { CaseStage } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { logger } from '@/lib/logger';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 async function main() {
   logger.info('🌱 Starting database seeding...');
@@ -104,7 +103,7 @@ await prisma.role.upsert({
   });
 
   // Create departments
-await prisma.role.upsert({
+  const _mainDepartment = await prisma.department.upsert({
     where: { code: 'MOPC' },
     update: {},
     create: {
@@ -114,7 +113,7 @@ await prisma.role.upsert({
     },
   });
 
-await prisma.role.upsert({
+  const _legalDept = await prisma.department.upsert({
     where: { code: 'LEGAL' },
     update: {},
     create: {
@@ -125,7 +124,7 @@ await prisma.role.upsert({
     },
   });
 
-await prisma.role.upsert({
+  const _technicalDept = await prisma.department.upsert({
     where: { code: 'TECHNICAL' },
     update: {},
     create: {
@@ -139,7 +138,17 @@ await prisma.role.upsert({
   // Create users
   const hashedPassword = await bcrypt.hash('admin123', 12);
 
-await prisma.role.upsert({
+// Get role references
+  const _superAdminRole = await prisma.role.findUnique({ where: { name: 'super_admin' } });
+  const _deptAdminRole = await prisma.role.findUnique({ where: { name: 'department_admin' } });
+  const _analystRole = await prisma.role.findUnique({ where: { name: 'analyst' } });
+
+  if (!_superAdminRole || !_deptAdminRole || !_analystRole) {
+    throw new Error('Required roles not found after creation');
+  }
+
+  // Create users
+  await prisma.user.upsert({
     where: { email: 'admin@mopc.gob.do' },
     update: {},
     create: {
@@ -155,7 +164,7 @@ await prisma.role.upsert({
     },
   });
 
-await prisma.role.upsert({
+  await prisma.user.upsert({
     where: { email: 'dept.admin@mopc.gob.do' },
     update: {},
     create: {
@@ -171,7 +180,7 @@ await prisma.role.upsert({
     },
   });
 
-await prisma.role.upsert({
+  await prisma.user.upsert({
     where: { email: 'analyst@mopc.gob.do' },
     update: {},
     create: {
