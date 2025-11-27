@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import { PrismaLibSql } from '@prisma/adapter-libsql'
 import { logger } from './logger'
 
 const globalForPrisma = globalThis as unknown as {
@@ -6,16 +7,12 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 function createPrismaClient() {
-  const databaseUrl = process.env.DATABASE_URL || 'file:./dev.db'
-
   const client = new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-    // Connection pooling configuration for SQLite (via better-sqlite3)
-    datasources: {
-      db: {
-        url: databaseUrl,
-      },
-    },
+    // Prisma 7: Use adapter for SQLite connection
+    adapter: new PrismaLibSql({
+      url: process.env.DATABASE_URL || 'file:./dev.db',
+    }),
   })
 
   // Enhanced connection health check (server-side only)
