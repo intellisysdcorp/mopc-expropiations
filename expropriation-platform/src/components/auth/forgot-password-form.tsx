@@ -52,6 +52,7 @@ export function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProps) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
       return () => clearTimeout(timer);
     }
+    return
   }, [countdown]);
 
   const onSubmit = async (data: ForgotPasswordFormData) => {
@@ -76,9 +77,13 @@ export function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProps) {
       setIsSubmitted(true);
       setCountdown(60); // 60 seconds countdown
       onSuccess?.();
-    } catch (err) {
-      clientLogger.error('Forgot password error:', err);
-      setError(err instanceof Error ? err.message : 'Error al enviar el correo de recuperación');
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Forgot password error:', error);
+        setError(error.message)
+      } else {
+        setError('Error al enviar el correo de recuperación');
+      }
     } finally {
       setIsLoading(false);
     }

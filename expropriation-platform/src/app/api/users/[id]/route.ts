@@ -3,41 +3,13 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { logActivity } from '@/lib/activity-logger';
-
-// Schema for user updates
-const updateUserSchema = z.object({
-  email: z.string().email('Correo electrónico inválido').optional(),
-  username: z.string().min(3, 'El nombre de usuario debe tener al menos 3 caracteres').optional(),
-  firstName: z.string().min(1, 'El nombre es requerido').optional(),
-  lastName: z.string().min(1, 'El apellido es requerido').optional(),
-  phone: z.string().optional(),
-  departmentId: z.string().min(1, 'El departamento es requerido').optional(),
-  roleId: z.string().min(1, 'El rol es requerido').optional(),
-  jobTitle: z.string().optional(),
-  bio: z.string().optional(),
-  officeLocation: z.string().optional(),
-  workingHours: z.string().optional(),
-  preferredLanguage: z.string().optional(),
-  timezone: z.string().optional(),
-  emailNotifications: z.boolean().optional(),
-  emailMarketing: z.boolean().optional(),
-  emailDigest: z.boolean().optional(),
-  theme: z.string().optional(),
-  dateRange: z.string().optional(),
-  dashboardConfig: z.string().optional(),
-  isActive: z.boolean().optional(),
-  isSuspended: z.boolean().optional(),
-  suspensionReason: z.string().optional(),
-  twoFactorEnabled: z.boolean().optional(),
-  mustChangePassword: z.boolean().optional(),
-});
+import type { Prisma } from '@prisma/client';
 
 // GET /api/users/[id] - Get a specific user
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
@@ -114,7 +86,6 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const validatedData = updateUserSchema.parse(body);
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
@@ -133,15 +104,15 @@ export async function PUT(
     }
 
     // Check if email or username already exists (for other users)
-    if (validatedData.email || validatedData.username) {
+    if (body.email || body.username) {
       const duplicateUser = await prisma.user.findFirst({
         where: {
           AND: [
             { id: { not: id } },
             {
               OR: [
-                validatedData.email ? { email: validatedData.email } : {},
-                validatedData.username ? { username: validatedData.username } : {},
+                body.email ? { email: body.email } : {},
+                body.username ? { username: body.username } : {},
               ].filter((condition) => Object.keys(condition).length > 0),
             },
           ],
@@ -157,28 +128,28 @@ export async function PUT(
     }
 
     // Validate department and role if they're being updated
-    if (validatedData.departmentId || validatedData.roleId) {
+    if (body.departmentId || body.roleId) {
       const [department, role] = await Promise.all([
-        validatedData.departmentId
+        body.departmentId
           ? prisma.department.findUnique({
-              where: { id: validatedData.departmentId },
+              where: { id: body.departmentId },
             })
           : Promise.resolve(existingUser.department),
-        validatedData.roleId
+        body.roleId
           ? prisma.role.findUnique({
-              where: { id: validatedData.roleId },
+              where: { id: body.roleId },
             })
           : Promise.resolve(existingUser.role),
       ]);
 
-      if (validatedData.departmentId && !department) {
+      if (body.departmentId && !department) {
         return NextResponse.json(
           { error: 'Departamento no encontrado' },
           { status: 400 }
         );
       }
 
-      if (validatedData.roleId && !role) {
+      if (body.roleId && !role) {
         return NextResponse.json(
           { error: 'Rol no encontrado' },
           { status: 400 }
@@ -187,24 +158,12 @@ export async function PUT(
     }
 
     // Handle suspension logic
-    const updateData: {
-      firstName?: string;
-      lastName?: string;
-      email?: string;
-      roleId?: string;
-      departmentId?: string;
-      isActive?: boolean;
-      isSuspended?: boolean;
-      suspensionReason?: string | null;
-      suspendedAt?: Date | null;
-      suspendedBy?: string | null;
-      lockedUntil?: Date | null;
-    } = { ...validatedData };
+    const updateData: Prisma.UserUpdateInput = { ...body };
 
-    if (validatedData.isSuspended && !existingUser.isSuspended) {
+    if (body.isSuspended && !existingUser.isSuspended) {
       updateData.suspendedAt = new Date();
       updateData.suspendedBy = session.user.id;
-    } else if (!validatedData.isSuspended && existingUser.isSuspended) {
+    } else if (!body.isSuspended && existingUser.isSuspended) {
       updateData.suspendedAt = null;
       updateData.suspendedBy = null;
       updateData.suspensionReason = null;
@@ -226,7 +185,7 @@ export async function PUT(
     });
 
     // Update primary department assignment if department changed
-    if (validatedData.departmentId && validatedData.departmentId !== existingUser.departmentId) {
+    if (body.departmentId && body.departmentId !== existingUser.departmentId) {
       await prisma.userDepartmentAssignment.updateMany({
         where: {
           userId: id,
@@ -240,7 +199,7 @@ export async function PUT(
       await prisma.userDepartmentAssignment.create({
         data: {
           userId: id,
-          departmentId: validatedData.departmentId,
+          departmentId: body.departmentId,
           isPrimary: true,
           assignedBy: session.user.id,
         },
@@ -256,7 +215,7 @@ export async function PUT(
       description: `Usuario actualizado: ${updatedUser.firstName} ${updatedUser.lastName}`,
       metadata: {
         userName: `${updatedUser.firstName} ${updatedUser.lastName}`,
-        changes: validatedData,
+        changes: body,
       },
     });
 
@@ -265,12 +224,6 @@ export async function PUT(
 
     return NextResponse.json(sanitizedUser);
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Datos inválidos', details: error.errors },
-        { status: 400 }
-      );
-    }
 
     logger.error('Error updating user:', error);
     return NextResponse.json(
@@ -282,7 +235,7 @@ export async function PUT(
 
 // DELETE /api/users/[id] - Soft delete a user
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {

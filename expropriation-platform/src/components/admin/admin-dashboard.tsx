@@ -75,8 +75,10 @@ export function AdminDashboard() {
         const data = await response.json()
         setStats(data)
       }
-    } catch (error) {
-      clientLogger.error('Error fetching system stats:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching system stats:', error)
+      }
     } finally {
       setLoading(false)
     }
@@ -89,8 +91,10 @@ export function AdminDashboard() {
         const data = await response.json()
         setAlerts(data.slice(0, 5)) // Show only latest 5 alerts
       }
-    } catch (error) {
-      clientLogger.error('Error fetching system alerts:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching system alerts:', error)
+      }
     }
   }
 

@@ -1,20 +1,10 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { ActivityType } from '@prisma/client';
 import { logger } from '@/lib/logger';
-
-// Validation schemas
-const executeValidationSchema = z.object({
-  caseId: z.string(),
-  stage: z.string().optional(),
-  entityType: z.string().default('case'),
-  entityId: z.string().optional(),
-  ruleIds: z.array(z.string()),
-  context: z.object({}).optional(),
-});
+import { Prisma } from '@prisma/client';
 
 // POST /api/validation/execute - Execute validation rules
 export async function POST(request: NextRequest) {
@@ -25,19 +15,31 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const validatedData = executeValidationSchema.parse(body);
 
     // Get validation rules
     const rules = await prisma.validationRule.findMany({
       where: {
-        id: { in: validatedData.ruleIds },
+        id: { in: body.ruleIds },
         isActive: true,
       },
     });
-
+    
     if (rules.length === 0) {
       return NextResponse.json(
         { error: 'No active validation rules found' },
+        { status: 404 }
+      );
+    }
+
+    const case_ = await prisma.case.findFirst({
+      where: {
+        id: body.caseId
+      },
+    });
+
+    if (!case_) {
+      return NextResponse.json(
+        { error: 'A case with the provided ID was NOT found.' },
         { status: 404 }
       );
     }
@@ -51,21 +53,22 @@ export async function POST(request: NextRequest) {
     for (const rule of rules) {
       try {
         // Evaluate the rule expression (simplified implementation)
-        const evaluationResult = evaluateRule(rule, validatedData.context);
+        const evaluationResult = evaluateRule(rule, body.context);
+        const payloadData: Prisma.ValidationExecutionCreateInput = {
+          stage: body.stage,
+          entityType: body.entityType,
+          entityId: body.entityId || body.caseId,
+          context: body.context,
+          passed: evaluationResult.passed,
+          errors: evaluationResult.errors,
+          warnings: evaluationResult.warnings,
+          executedBy: session.user.id,
+          rule: { connect: { id: rule.id } },
+          case: { connect: { id: case_.id } }
+        }
 
         const execution = await prisma.validationExecution.create({
-          data: {
-            ruleId: rule.id,
-            caseId: validatedData.caseId,
-            stage: validatedData.stage,
-            entityType: validatedData.entityType,
-            entityId: validatedData.entityId || validatedData.caseId,
-            context: validatedData.context,
-            passed: evaluationResult.passed,
-            errors: evaluationResult.errors,
-            warnings: evaluationResult.warnings,
-            executedBy: session.user.id,
-          },
+          data: payloadData,
           include: {
             rule: true,
           },
@@ -85,11 +88,11 @@ export async function POST(request: NextRequest) {
         const execution = await prisma.validationExecution.create({
           data: {
             ruleId: rule.id,
-            caseId: validatedData.caseId,
-            stage: validatedData.stage,
-            entityType: validatedData.entityType,
-            entityId: validatedData.entityId || validatedData.caseId,
-            context: validatedData.context,
+            caseId: body.caseId,
+            stage: body.stage,
+            entityType: body.entityType,
+            entityId: body.entityId || body.caseId,
+            context: body.context,
             passed: false,
             errors: { message: 'Rule execution failed', error: error instanceof Error ? error.message : 'Unknown error' },
             executedBy: session.user.id,
@@ -122,12 +125,12 @@ export async function POST(request: NextRequest) {
         action: ActivityType.UPDATED,
         entityType: 'validation_execution',
         entityId: executions[0]?.id || '',
-        description: `Executed ${executions.length} validation rules for case ${validatedData.caseId}`,
+        description: `Executed ${executions.length} validation rules for case ${body.caseId}`,
         userId: session.user.id,
-        caseId: validatedData.caseId,
+        caseId: body.caseId,
         metadata: {
           summary,
-          ruleIds: validatedData.ruleIds,
+          ruleIds: body.ruleIds,
         },
       },
     });
@@ -138,12 +141,6 @@ export async function POST(request: NextRequest) {
       executionTime,
     });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: 400 }
-      );
-    }
 
     logger.error('Error executing validation:', error);
     return NextResponse.json(

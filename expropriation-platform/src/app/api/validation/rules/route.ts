@@ -1,22 +1,10 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { ActivityType, ValidationRuleType } from '@prisma/client';
 import { logger } from '@/lib/logger';
-
-// Validation schemas
-const createRuleSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().optional(),
-  type: z.nativeEnum(ValidationRuleType),
-  stage: z.string().optional(),
-  expression: z.string(),
-  errorMessage: z.string(),
-  severity: z.enum(['ERROR', 'WARNING', 'INFO']).default('ERROR'),
-  dependsOn: z.array(z.string()).optional(),
-});
+import type { Prisma } from '@prisma/client';
 
 // GET /api/validation/rules - Get validation rules
 export async function GET(request: NextRequest) {
@@ -77,19 +65,20 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const validatedData = createRuleSchema.parse(body);
+
+    const validationCreatePayload: Prisma.ValidationRuleCreateInput = {
+      name: body.name,
+      description: body.description,
+      type: body.type,
+      stage: body.stage,
+      expression: body.expression,
+      errorMessage: body.errorMessage,
+      severity: body.severity,
+      dependsOn: body.dependsOn,
+    }
 
     const rule = await prisma.validationRule.create({
-      data: {
-        name: validatedData.name,
-        description: validatedData.description,
-        type: validatedData.type,
-        stage: validatedData.stage,
-        expression: validatedData.expression,
-        errorMessage: validatedData.errorMessage,
-        severity: validatedData.severity,
-        dependsOn: validatedData.dependsOn,
-      },
+      data: validationCreatePayload,
     });
 
     // Log activity
@@ -101,21 +90,14 @@ export async function POST(request: NextRequest) {
         description: `Created validation rule: ${rule.name}`,
         userId: session.user.id,
         metadata: {
-          ruleType: validatedData.type,
-          severity: validatedData.severity,
+          ruleType: body.type,
+          severity: body.severity,
         },
       },
     });
 
     return NextResponse.json(rule, { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: 400 }
-      );
-    }
-
     logger.error('Error creating validation rule:', error);
     return NextResponse.json(
       { error: 'Failed to create validation rule' },

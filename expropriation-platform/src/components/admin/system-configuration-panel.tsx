@@ -102,8 +102,10 @@ export function SystemConfigurationPanel() {
         const data = await response.json()
         setConfigs(data)
       }
-    } catch (error) {
-      clientLogger.error('Error fetching configs:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching configs:', error)
+      }
     } finally {
       setLoading(false)
     }
@@ -116,8 +118,10 @@ export function SystemConfigurationPanel() {
         const data = await response.json()
         setConfigHistory(data)
       }
-    } catch (error) {
-      clientLogger.error('Error fetching config history:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching config history:', error)
+      }
     }
   }
 
@@ -165,8 +169,10 @@ export function SystemConfigurationPanel() {
         const error = await response.json()
         alert(`Error: ${error.error}`)
       }
-    } catch (error) {
-      clientLogger.error('Error saving config:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error saving config:', error)
+      }
       alert('Error al guardar la configuración')
     }
   }

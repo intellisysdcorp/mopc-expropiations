@@ -128,9 +128,13 @@ export function ResetPasswordForm() {
       }
 
       setIsSuccess(true);
-    } catch (err) {
-      clientLogger.error('Reset password error:', err);
-      setError(err instanceof Error ? err.message : 'Error al restablecer la contraseña');
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Reset password error:', error);
+        setError(error.message)
+      } else {
+        setError('Error al restablecer la contraseña');
+      }
     } finally {
       setIsLoading(false);
     }

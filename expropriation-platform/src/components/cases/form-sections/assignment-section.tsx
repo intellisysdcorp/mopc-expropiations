@@ -1,13 +1,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { FormField, SelectInput } from '@/components/forms/form-fields'
-import { Department, User } from '@/types/client'
+import { Department, DepartmentUser } from '@/types/client'
 import { CreateCaseInput, UpdateCaseInput } from '@/lib/validations/case'
 
 interface AssignmentSectionProps {
   formData: CreateCaseInput | UpdateCaseInput
   onInputChange: (field: keyof (CreateCaseInput | UpdateCaseInput), value: any) => void
   departments: Department[]
-  users: User[]
+  users: DepartmentUser[]
   hasFieldError?: (field: string) => boolean
 }
 
@@ -31,14 +31,14 @@ export function AssignmentSection({
           id="departmentId"
           label="Departamento"
           required
-          error={hasFieldError?.('departmentId')}
+          error={hasFieldError?.('departmentId') || false}
         >
           <SelectInput
             id="departmentId"
             value={formData.departmentId}
             onChange={(value) => onInputChange('departmentId', value)}
             placeholder="Seleccionar departamento"
-            error={hasFieldError?.('departmentId')}
+            error={hasFieldError?.('departmentId') || false}
             required
             options={departments.map(dept => ({
               value: dept.id,

@@ -3,31 +3,40 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { logActivity } from '@/lib/activity-logger';
 import { logger } from '@/lib/logger';
 
-// Schema for user creation
-const createUserSchema = z.object({
-  email: z.string().email('Correo electrónico inválido'),
-  username: z.string().min(3, 'El nombre de usuario debe tener al menos 3 caracteres'),
-  password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres'),
-  firstName: z.string().min(1, 'El nombre es requerido'),
-  lastName: z.string().min(1, 'El apellido es requerido'),
-  phone: z.string().optional(),
-  departmentId: z.string().min(1, 'El departamento es requerido'),
-  roleId: z.string().min(1, 'El rol es requerido'),
-  jobTitle: z.string().optional(),
-  officeLocation: z.string().optional(),
-  workingHours: z.string().optional(),
-  preferredLanguage: z.string().default('es'),
-  timezone: z.string().default('America/Santo_Domingo'),
-  emailNotifications: z.boolean().default(true),
-  emailMarketing: z.boolean().default(false),
-  emailDigest: z.boolean().default(true),
-  theme: z.string().default('light'),
-});
+// Type definition for user creation request body
+interface CreateUserRequest {
+  email: string;
+  username: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  avatar?: string;
+  isActive?: boolean;
+  isSuspended?: boolean;
+  suspensionReason?: string;
+  suspendedAt?: string;
+  suspendedBy?: string;
+  jobTitle?: string;
+  bio?: string;
+  officeLocation?: string;
+  workingHours?: string;
+  preferredLanguage?: string;
+  timezone?: string;
+  twoFactorEnabled?: boolean;
+  emailNotifications?: boolean;
+  emailMarketing?: boolean;
+  emailDigest?: boolean;
+  theme?: string;
+  dateRange?: string;
+  dashboardConfig?: string;
+  departmentId: string;
+  roleId: string;
+}
 
 // GET /api/users - List users with filtering, sorting, and pagination
 export async function GET(request: NextRequest) {
@@ -144,15 +153,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const validatedData = createUserSchema.parse(body);
+    const body: CreateUserRequest = await request.json();
 
     // Check if email or username already exists
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
-          { email: validatedData.email },
-          { username: validatedData.username },
+          { email: body.email },
+          { username: body.username },
         ],
       },
     });
@@ -167,10 +175,10 @@ export async function POST(request: NextRequest) {
     // Validate department and role exist
     const [department, role] = await Promise.all([
       prisma.department.findUnique({
-        where: { id: validatedData.departmentId },
+        where: { id: body.departmentId },
       }),
       prisma.role.findUnique({
-        where: { id: validatedData.roleId },
+        where: { id: body.roleId },
       }),
     ]);
 
@@ -189,10 +197,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Hash password
-    const passwordHash = await bcrypt.hash(validatedData.password, 12);
+    const passwordHash = await bcrypt.hash(body.password, 12);
 
     // Create user
-    const { password: _1, ...userData } = validatedData;
+    const { password: _1, ...userData } = body;
     const user = await prisma.user.create({
       data: {
         ...userData,
@@ -212,7 +220,7 @@ export async function POST(request: NextRequest) {
     await prisma.userDepartmentAssignment.create({
       data: {
         userId: user.id,
-        departmentId: validatedData.departmentId,
+        departmentId: body.departmentId,
         isPrimary: true,
         assignedBy: session.user.id,
       },
@@ -238,13 +246,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(sanitizedUser, { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Datos inválidos', details: error.errors },
-        { status: 400 }
-      );
-    }
-
     logger.error('Error creating user:', error);
     return NextResponse.json(
       { error: 'Error al crear usuario' },
