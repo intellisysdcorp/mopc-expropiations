@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { format, addDays, addMonths, addYears, startOfDay, endOfDay, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 import { es } from 'date-fns/locale';
+import type { DateRange as DayPickerDateRange } from 'react-day-picker';
 
 interface DateRange {
   from: Date;
@@ -101,7 +102,7 @@ export function DateFilter({ onDateRangeChange, onPeriodChange, className }: Dat
     }
   };
 
-  const handleDateRangeSelect = (range: { from?: Date; to?: Date } | undefined) => {
+  const handleDateRangeSelect = (range: DayPickerDateRange | undefined) => {
     if (range?.from && range?.to) {
       const newRange = { from: startOfDay(range.from), to: endOfDay(range.to) };
       setDateRange(newRange);

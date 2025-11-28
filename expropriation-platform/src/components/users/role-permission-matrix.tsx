@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import * as React from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,8 +56,8 @@ import clientLogger from '@/lib/client-logger';
 interface Role {
   id: string;
   name: string;
-  description: string;
-  permissions: any;
+  description?: string;
+  permissions: Partial<RolePermissions>;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -89,7 +90,7 @@ export function RolePermissionMatrix({ roles, onRolesUpdate }: RolePermissionMat
   // Form states
   const [roleName, setRoleName] = useState('');
   const [roleDescription, setRoleDescription] = useState('');
-  const [rolePermissions, setRolePermissions] = useState<Record<string, boolean>>({});
+  const [rolePermissions, setRolePermissions] = useState<RolePermissions>(DEFAULT_PERMISSIONS);
 
   // Initialize role permissions state
   React.useEffect(() => {
@@ -107,7 +108,7 @@ export function RolePermissionMatrix({ roles, onRolesUpdate }: RolePermissionMat
   };
 
   // Handle permission toggle
-  const handlePermissionToggle = (permissionKey: string, checked: boolean) => {
+  const handlePermissionToggle = (permissionKey: keyof RolePermissions, checked: boolean) => {
     setRolePermissions(prev => ({
       ...prev,
       [permissionKey]: checked,
@@ -140,7 +141,7 @@ export function RolePermissionMatrix({ roles, onRolesUpdate }: RolePermissionMat
       const cleanedPermissions: Record<string, boolean> = {};
 
       // Let's manually set all permissions to false for testing
-      Object.keys(rolePermissions).forEach(key => {
+      (Object.keys(rolePermissions) as (keyof RolePermissions)[]).forEach(key => {
         const value = rolePermissions[key];
 
         // Handle string representations of booleans and actual booleans
@@ -155,7 +156,7 @@ export function RolePermissionMatrix({ roles, onRolesUpdate }: RolePermissionMat
 
       clientLogger.info('Final cleaned permissions:', cleanedPermissions);
 
-      const requestData = {
+      const requestData: any = {
         name: roleName.trim(),
         permissions: cleanedPermissions,
       };
@@ -201,7 +202,7 @@ export function RolePermissionMatrix({ roles, onRolesUpdate }: RolePermissionMat
       // Use the shared utility to normalize permissions
       const normalizedPermissions = normalizePermissions(rolePermissions);
 
-      const requestData = {
+      const requestData: any = {
         id: selectedRole.id,
         name: roleName.trim(),
         permissions: normalizedPermissions,
@@ -264,10 +265,10 @@ export function RolePermissionMatrix({ roles, onRolesUpdate }: RolePermissionMat
   // Duplicate role
   const handleDuplicateRole = (role: Role) => {
     setRoleName(`${role.name} (Copia)`);
-    setRoleDescription(role.description);
+    setRoleDescription(role.description || '');
 
-    const currentPermissions = role.permissions as Record<string, any>;
-    const updatedPermissions: Record<string, boolean> = {};
+    const currentPermissions = role.permissions;
+    const updatedPermissions = { ...DEFAULT_PERMISSIONS };
 
     PERMISSION_CATEGORIES.forEach(category => {
       category.permissions.forEach(permission => {
@@ -299,8 +300,8 @@ export function RolePermissionMatrix({ roles, onRolesUpdate }: RolePermissionMat
     setRoleName(role.name);
     setRoleDescription(role.description || '');
 
-    const currentPermissions = role.permissions as Record<string, any>;
-    const updatedPermissions: Record<string, boolean> = {};
+    const currentPermissions = role.permissions;
+    const updatedPermissions = { ...DEFAULT_PERMISSIONS };
 
     PERMISSION_CATEGORIES.forEach(category => {
       category.permissions.forEach(permission => {
@@ -526,7 +527,7 @@ export function RolePermissionMatrix({ roles, onRolesUpdate }: RolePermissionMat
                                 setShowDeleteDialog(true);
                               }}
                               className="text-destructive"
-                              disabled={(role.userCount ?? 0) > 0}
+                              disabled={Boolean((role.userCount ?? 0) > 0)}
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
                               Eliminar
@@ -750,7 +751,7 @@ export function RolePermissionMatrix({ roles, onRolesUpdate }: RolePermissionMat
             <Button
               variant="destructive"
               onClick={handleDeleteRole}
-              disabled={loading || (selectedRole && (selectedRole.userCount ?? 0) > 0)}
+              disabled={loading || Boolean(selectedRole && (selectedRole.userCount ?? 0) > 0)}
             >
               {loading ? (
                 <div className="flex items-center gap-2">

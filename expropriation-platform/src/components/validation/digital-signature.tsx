@@ -230,8 +230,10 @@ export function DigitalSignature({
         const error = await response.json();
         throw new Error(error.error || 'Failed to create signature');
       }
-    } catch (error) {
-      clientLogger.error('Error creating signature:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error creating signature:', error);
+      }
       toast({
         title: 'Error',
         description:

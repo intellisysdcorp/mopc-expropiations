@@ -13,7 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DocumentType, DocumentCategory, DocumentSecurityLevel } from '@prisma/client';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
+import { neutralToast } from '@/lib/toast-utils';
 import {
   getDocumentTypeTranslation,
   getDocumentCategoryTranslation,
@@ -160,7 +161,7 @@ export function DocumentUpload({ onUploadComplete, maxFiles = 10, caseId }: Docu
 
     try {
       for (let i = 0; i < files.length; i++) {
-        const fileUpload = files[i];
+        const fileUpload = files[i]!;
 
         // Check if upload was aborted
         if (abortControllerRef.current?.signal.aborted) {
@@ -254,7 +255,7 @@ export function DocumentUpload({ onUploadComplete, maxFiles = 10, caseId }: Docu
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       setIsUploading(false);
-      toast.info('Carga cancelada');
+      neutralToast('Carga cancelada');
     }
   };
 

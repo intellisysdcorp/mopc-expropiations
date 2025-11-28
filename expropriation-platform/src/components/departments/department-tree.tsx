@@ -45,17 +45,17 @@ interface DepartmentTreeProps {
 interface TreeNodeProps {
   department: Department;
   level: number;
-  onSelectDepartment?: (department: Department) => void;
-  onCreateDepartment?: (parentId?: string) => void;
-  onEditDepartment?: (department: Department) => void;
-  onDeleteDepartment?: (department: Department) => void;
-  onMoveDepartment?: (department: Department, newParentId: string | null) => void;
-  selectedDepartmentId?: string;
+  onSelectDepartment: ((department: Department) => void) | undefined;
+  onCreateDepartment: ((parentId?: string) => void) | undefined;
+  onEditDepartment: ((department: Department) => void) | undefined;
+  onDeleteDepartment: ((department: Department) => void) | undefined;
+  onMoveDepartment: ((department: Department, newParentId: string | null) => void) | undefined;
+  selectedDepartmentId: string | undefined;
   showStats?: boolean;
   actions?: boolean;
   expandedNodes: Set<string>;
   onToggleExpand: (id: string) => void;
-  searchTerm?: string;
+  searchTerm: string | undefined;
 }
 
 const TreeNode: React.FC<TreeNodeProps> = ({

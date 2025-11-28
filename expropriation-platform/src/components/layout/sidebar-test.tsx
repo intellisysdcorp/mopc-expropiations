@@ -71,10 +71,10 @@ const moduleInfo = [
     description: 'Configuración avanzada del sistema.',
     features: ['Configuración del sistema', 'Backup y restore', 'Monitoreo']
   }
-]
+] as const;
 
 export function SidebarTest() {
-  const { user, isSuperAdmin } = useAuth()
+  const { user } = useAuth()
 
   return (
     <SidebarProvider>
@@ -100,15 +100,6 @@ export function SidebarTest() {
             {/* Module Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {moduleInfo.map((module) => {
-                const hasPermission = !module.roles || module.roles.some(role => {
-                  switch (role) {
-                    case 'super_admin': return isSuperAdmin
-                    default: return true
-                  }
-                })
-
-                if (!hasPermission) return null
-
                 const Icon = module.icon
 
                 return (

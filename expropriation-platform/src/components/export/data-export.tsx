@@ -74,6 +74,12 @@ interface ExportJob {
   completedAt?: Date;
 }
 
+interface FieldOption {
+  id: string;
+  label: string;
+  default: boolean;
+}
+
 export function DataExport() {
   const [isOpen, setIsOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -97,7 +103,7 @@ export function DataExport() {
   });
   const { toast } = useToast();
 
-  const dataTypeFields = {
+  const dataTypeFields: Record<string, FieldOption[]> = {
     cases: [
       { id: 'caseNumber', label: 'Número de Caso', default: true },
       { id: 'title', label: 'Título', default: true },
@@ -139,6 +145,7 @@ export function DataExport() {
       { id: 'generatedAt', label: 'Fecha de Generación', default: true },
       { id: 'parameters', label: 'Parámetros', default: false },
     ],
+    all: [],
   };
 
   const formatIcons = {
@@ -410,7 +417,7 @@ export function DataExport() {
                         <div key={status} className="flex items-center space-x-2">
                           <Checkbox
                             id={`status-${status}`}
-                            checked={exportOptions.filters.status?.includes(status)}
+                            checked={exportOptions.filters.status?.includes(status) || false}
                             onCheckedChange={(checked) => {
                               const currentStatuses = exportOptions.filters.status || [];
                               setExportOptions(prev => ({
@@ -467,7 +474,7 @@ export function DataExport() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-4">
-                    {currentFields.map((field) => (
+                    {currentFields.map((field: FieldOption) => (
                       <div key={field.id} className="flex items-center space-x-2">
                         <Checkbox
                           id={`field-${field.id}`}

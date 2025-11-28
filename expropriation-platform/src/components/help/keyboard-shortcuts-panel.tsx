@@ -17,6 +17,28 @@ interface KeyboardShortcutsPanelProps {
   children?: React.ReactNode;
 }
 
+/**
+ * Groups keyboard shortcuts by their category.
+ *
+ * This function takes an array of keyboard shortcuts and organizes them into
+ * a Record where each key is a category name and each value is an array of
+ * shortcuts belonging to that category. Shortcuts without a category are
+ * automatically grouped under 'General'.
+ *
+ * @param shortcuts - Array of keyboard shortcuts with optional category property
+ * @returns Record mapping category names to arrays of KeyboardShortcut objects
+ */
+function groupShortcutsByCategory(shortcuts: (KeyboardShortcut & { category?: string })[]): Record<string, KeyboardShortcut[]> {
+  return shortcuts.reduce((acc, shortcut) => {
+    const category = shortcut.category || 'General';
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(shortcut);
+    return acc;
+  }, {} as Record<string, KeyboardShortcut[]>);
+}
+
 export function KeyboardShortcutsPanel({ shortcuts, children }: KeyboardShortcutsPanelProps) {
   const formatKeybinding = (shortcut: KeyboardShortcut) => {
     const keys = [];
@@ -63,14 +85,7 @@ export function KeyboardShortcutsPanel({ shortcuts, children }: KeyboardShortcut
     ));
   };
 
-  const groupedShortcuts = shortcuts.reduce((acc, shortcut) => {
-    const category = shortcut.category || 'General';
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(shortcut);
-    return acc;
-  }, {} as Record<string, KeyboardShortcut[]>);
+  const groupedShortcuts = groupShortcutsByCategory(shortcuts);
 
   return (
     <Dialog>
@@ -99,7 +114,7 @@ export function KeyboardShortcutsPanel({ shortcuts, children }: KeyboardShortcut
               <div className="grid gap-2">
                 {categoryShortcuts.map((shortcut, index) => (
                   <div
-                    key={index}
+                    key={`${shortcut}-${index}`}
                     className="flex items-center justify-between p-2 rounded-md hover:bg-muted/50"
                   >
                     <span className="text-sm">{shortcut.description}</span>

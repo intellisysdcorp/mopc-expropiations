@@ -126,8 +126,10 @@ export function NotificationPreferences({ className, onSave }: NotificationPrefe
       const data = await response.json();
       setPreferences(data.preferences);
       setOriginalPreferences(data.preferences);
-    } catch (error) {
-      clientLogger.error('Error fetching preferences:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching preferences:', error);
+      }
       toast.error('Error al cargar preferencias');
     } finally {
       setLoading(false);
@@ -158,8 +160,10 @@ export function NotificationPreferences({ className, onSave }: NotificationPrefe
       toast.success('Preferencias guardadas exitosamente');
       onSave?.(data.preferences);
 
-    } catch (error) {
-      clientLogger.error('Error saving preferences:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error saving preferences:', error);
+      }
       toast.error('Error al guardar preferencias');
     } finally {
       setSaving(false);
@@ -186,8 +190,10 @@ export function NotificationPreferences({ className, onSave }: NotificationPrefe
       toast.success('Preferencias restablecidas exitosamente');
       onSave?.(data.preferences);
 
-    } catch (error) {
-      clientLogger.error('Error resetting preferences:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error resetting preferences:', error);
+      }
       toast.error('Error al restablecer preferencias');
     } finally {
       setSaving(false);
