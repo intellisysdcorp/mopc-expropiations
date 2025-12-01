@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { logger } from '@/lib/logger';
 
@@ -99,7 +99,7 @@ async function getTimelineData(departmentFilter: any, startDate: Date, endDate: 
   return NextResponse.json({ timeline: dailyData });
 }
 
-async function getOverviewData(departmentFilter: any, startDate: Date, endDate: Date, days: number) {
+async function getOverviewData(departmentFilter: any, startDate: Date, endDate: Date, _days: number) {
   // Get priority distribution
   const priorityData = await prisma.case.groupBy({
     by: ['priority'],

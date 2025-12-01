@@ -549,7 +549,6 @@ class NotificationReminderSystem {
         to: recipient.email,
         subject: notification.title,
         textContent: notification.message,
-        htmlContent: this.generateHtmlEmail(notification),
         priority: notification.priority,
         templateId: notification.templateId,
         metadata: {
@@ -559,47 +558,6 @@ class NotificationReminderSystem {
         }
       }
     });
-  }
-
-  private generateHtmlEmail(notification: any): string {
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>${notification.title}</title>
-        <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: #f8f9fa; padding: 20px; border-radius: 8px 8px 0 0; }
-          .content { background: #ffffff; padding: 20px; border: 1px solid #e9ecef; }
-          .footer { background: #f8f9fa; padding: 20px; border-radius: 0 0 8px 8px; font-size: 12px; color: #6c757d; }
-          .reminder { border-left: 4px solid #ffc107; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header reminder">
-            <h1>📅 Recordatorio Automático</h1>
-            <h2>${notification.title}</h2>
-          </div>
-          <div class="content">
-            <p>${notification.message}</p>
-            ${notification.metadata?.reminderType ? `
-              <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 4px; border: 1px solid #ffeaa7;">
-                <strong>Tipo de Recordatorio:</strong> ${notification.metadata.reminderType}
-              </div>
-            ` : ''}
-          </div>
-          <div class="footer">
-            <p>Este es un recordatorio automático del Sistema de Expropiación del MOPC.</p>
-            <p>Si no deseas recibir estos recordatorios, por favor ajusta tus preferencias de notificación.</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
   }
 
   private async updateJobStatus(

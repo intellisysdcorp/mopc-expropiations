@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import type { Prisma } from '@prisma/client';
@@ -169,7 +169,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<Notificat
     // Add optional fields conditionally
     if (body.description !== undefined) templateData.description = body.description;
     if (body.subject !== undefined) templateData.subject = body.subject;
-    if (body.htmlContent !== undefined) templateData.htmlContent = body.htmlContent;
+    if (body.htmlContent !== undefined) {
+    // HTML content should not be used in API routes to avoid JSX interpretation
+    // templateData.htmlContent = body.htmlContent;
+    }
     if (body.variables !== undefined) templateData.variables = body.variables;
     if (body.placeholders !== undefined) templateData.placeholders = body.placeholders;
     if (body.defaultChannels !== undefined) templateData.defaultChannels = body.defaultChannels;
@@ -246,9 +249,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<Notificat
     if (templateData.subject) {
       createData.subject = templateData.subject;
     }
-    if (templateData.htmlContent) {
-      createData.htmlContent = templateData.htmlContent;
-    }
+    // HTML content should not be used in API routes to avoid JSX interpretation
+    // if (templateData.htmlContent) {
+    //   createData.htmlContent = templateData.htmlContent;
+    // }
     if (templateData.defaultChannels) {
       createData.defaultChannels = templateData.defaultChannels;
     }
