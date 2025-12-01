@@ -5,9 +5,18 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { logger } from '@/lib/logger';
 
+interface MeetingConflict {
+  type: "PARTICIPANT_UNAVAILABLE" | "ROOM_UNAVAILABLE";
+  meetingId: string;
+  title: string;
+  startTime: Date;
+  endTime: Date;
+  description: string;
+}
+
 // GET /api/meetings/[id] - Get a specific meeting
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -24,9 +33,6 @@ export async function GET(
         },
         chair: {
           select: { id: true, firstName: true, lastName: true, email: true },
-        },
-        department: {
-          select: { id: true, name: true, code: true },
         },
         participants: {
           include: {
@@ -110,7 +116,7 @@ export async function GET(
               select: { id: true, firstName: true, lastName: true },
             },
             decision: {
-              select: { id: true, title },
+              select: { id: true, title: true },
             },
             progressUpdates: {
               orderBy: { updatedAt: "desc" },
@@ -123,7 +129,7 @@ export async function GET(
               select: { id: true, firstName: true, lastName: true },
             },
             agendaItem: {
-              select: { id: true, title },
+              select: { id: true, title: true },
             },
           },
         },
@@ -162,10 +168,10 @@ export async function GET(
           },
         },
         case: {
-          select: { id: true, fileNumber: true, title },
+          select: { id: true, fileNumber: true, title: true },
         },
         agendaTemplate: {
-          select: { id: true, name, content },
+          select: { id: true, name: true, content: true },
         },
       },
     });
@@ -304,7 +310,7 @@ export async function PUT(
         newStartTime,
         newEndTime,
         session.user.id,
-        validatedData.room || existingMeeting.room,
+        validatedData.room || existingMeeting.room || undefined,
         existingMeeting.id
       );
 
@@ -318,7 +324,6 @@ export async function PUT(
         );
       }
     }
-
     // Calculate duration if dates are changed
     let duration = existingMeeting.plannedDuration;
     if (validatedData.scheduledStart && validatedData.scheduledEnd) {
@@ -328,23 +333,17 @@ export async function PUT(
     }
 
     // Update meeting
+    const updateData = meetingUpdateData(validatedData, duration);
+
     const meeting = await prisma.meeting.update({
       where: { id: (await params).id },
-      data: {
-        ...validatedData,
-        plannedDuration: duration,
-        equipment: validatedData.equipment || existingMeeting.equipment,
-        metadata: validatedData.metadata || existingMeeting.metadata,
-      },
+      data: updateData,
       include: {
         organizer: {
           select: { id: true, firstName: true, lastName: true, email: true },
         },
         chair: {
           select: { id: true, firstName: true, lastName: true, email: true },
-        },
-        department: {
-          select: { id: true, name: true, code: true },
         },
         _count: {
           select: {
@@ -376,7 +375,7 @@ export async function PUT(
     logger.error("Error updating meeting:", error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Validation failed", details: error.errors },
+        { error: "Validation failed", details: error.issues },
         { status: 400 }
       );
     }
@@ -513,8 +512,8 @@ async function checkMeetingConflicts(
   userId: string,
   room?: string,
   excludeMeetingId?: string
-): Promise<any[]> {
-  const conflicts = [];
+): Promise<MeetingConflict[]> {
+  const conflicts: MeetingConflict[] = [];
   const whereClause: any = {
     NOT: { id: excludeMeetingId },
     status: { not: "CANCELLED" },
@@ -588,4 +587,39 @@ async function checkMeetingConflicts(
   }
 
   return conflicts;
+}
+
+function meetingUpdateData(validatedData: any, duration: number): any {
+  // Update meeting
+  const updateData: any = {
+    plannedDuration: duration,
+  };
+
+  // Only include fields that are provided in validatedData
+  if (validatedData.title !== undefined) updateData.title = validatedData.title;
+  if (validatedData.description !== undefined) updateData.description = validatedData.description;
+  if (validatedData.meetingType !== undefined) updateData.meetingType = validatedData.meetingType;
+  if (validatedData.priority !== undefined) updateData.priority = validatedData.priority;
+  if (validatedData.location !== undefined) updateData.location = validatedData.location;
+  if (validatedData.virtual !== undefined) updateData.virtual = validatedData.virtual;
+  if (validatedData.meetingUrl !== undefined) updateData.meetingUrl = validatedData.meetingUrl;
+  if (validatedData.dialInInfo !== undefined) updateData.dialInInfo = validatedData.dialInInfo;
+  if (validatedData.room !== undefined) updateData.room = validatedData.room;
+  if (validatedData.equipment !== undefined) updateData.equipment = validatedData.equipment;
+  if (validatedData.scheduledStart !== undefined) updateData.scheduledStart = validatedData.scheduledStart;
+  if (validatedData.scheduledEnd !== undefined) updateData.scheduledEnd = validatedData.scheduledEnd;
+  if (validatedData.timezone !== undefined) updateData.timezone = validatedData.timezone;
+  if (validatedData.maxParticipants !== undefined) updateData.maxParticipants = validatedData.maxParticipants;
+  if (validatedData.allowGuests !== undefined) updateData.allowGuests = validatedData.allowGuests;
+  if (validatedData.requireApproval !== undefined) updateData.requireApproval = validatedData.requireApproval;
+  if (validatedData.isPrivate !== undefined) updateData.isPrivate = validatedData.isPrivate;
+  if (validatedData.recordMeeting !== undefined) updateData.recordMeeting = validatedData.recordMeeting;
+  if (validatedData.enableChat !== undefined) updateData.enableChat = validatedData.enableChat;
+  if (validatedData.enableScreenShare !== undefined) updateData.enableScreenShare = validatedData.enableScreenShare;
+  if (validatedData.chairId !== undefined) updateData.chairId = validatedData.chairId;
+  if (validatedData.tags !== undefined) updateData.tags = validatedData.tags;
+  if (validatedData.metadata !== undefined) updateData.metadata = validatedData.metadata;
+  if (validatedData.status !== undefined) updateData.status = validatedData.status;
+
+  return validatedData;
 }

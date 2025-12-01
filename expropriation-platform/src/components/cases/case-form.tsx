@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Separator } from '@/components/ui/separator'
 
 import { CreateCaseInput, UpdateCaseInput } from '@/lib/validations/case'
-import { Case } from '@/types/client'
+import { Case, DepartmentUser } from '@/types/client'
 import clientLogger from '@/lib/client-logger';
 
 // Refactored components
@@ -47,6 +47,44 @@ interface CaseFormProps {
 export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
   const router = useRouter()
   const { success, error: showError } = useEnhancedToast()
+
+  // Helper function to create extended form data for BasicInfoSection with proper typing
+  const createExtendedFormData = (data: CreateCaseInput | UpdateCaseInput) => {
+    const baseData = { ...data }
+    return {
+      ...baseData,
+      status: mode === 'create' ? 'PENDIENTE' : (data as any).status,
+      progressPercentage: 0
+    } as any // Use assertion for this specific case due to exactOptionalPropertyTypes
+  }
+
+  // Helper function to convert User[] to DepartmentUser[] with required properties
+  const convertToDepartmentUsers = (users: any[]): DepartmentUser[] => {
+    return users.map(user => ({
+      id: user.id,
+      firstName: user.firstName || user.name?.split(' ')[0] || '',
+      lastName: user.lastName || user.name?.split(' ').slice(1).join(' ') || '',
+      email: user.email,
+      username: user.username || user.email,
+      phone: user.phone,
+      isActive: user.isActive !== false,
+      isSuspended: user.isSuspended || false,
+      createdAt: user.createdAt || new Date(),
+      lastLoginAt: user.lastLoginAt,
+      role: user.role || {
+        id: 'default',
+        name: 'Default',
+        description: 'Default role'
+      },
+      _count: user._count || {
+        createdCases: 0,
+        assignedCases: 0,
+        supervisedCases: 0,
+        activities: 0,
+        documents: 0
+      }
+    }))
+  }
 
   // Custom hooks
   const {
@@ -93,7 +131,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
   }, [formState.documents, formState.selectedExistingDocuments, setDocuments, setSelectedExistingDocuments])
 
   // Form handlers
-  const handleInputChange = (field: keyof (CreateCaseInput | UpdateCaseInput), value: any) => {
+  const handleInputChange = (field: string, value: any) => {
     // Convert "UNASSIGNED" to undefined for user assignment fields
     if ((field === 'assignedToId' || field === 'supervisedById') && value === 'UNASSIGNED') {
       value = undefined
@@ -408,7 +446,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
           {/* Form Sections */}
           <TabsContent value="basic">
             <BasicInfoSection
-              formData={formData}
+              formData={createExtendedFormData(formData)}
               onInputChange={handleInputChange}
               mode={mode}
               generateCaseNumber={generateCaseNumber}
@@ -498,9 +536,9 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
           <TabsContent value="assignment">
             <AssignmentSection
               formData={formData}
-              onInputChange={handleInputChange}
+              onInputChange={handleInputChange as (field: keyof (CreateCaseInput | UpdateCaseInput), value: any) => void}
               departments={formState.departments}
-              users={formState.users}
+              users={convertToDepartmentUsers(formState.users)}
               hasFieldError={hasFieldError}
             />
           </TabsContent>

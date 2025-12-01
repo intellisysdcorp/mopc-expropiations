@@ -7,7 +7,7 @@ async function main() {
   logger.info('🌱 Starting database seeding...');
 
   // Create roles
-await prisma.role.upsert({
+const superAdminRole = await prisma.role.upsert({
     where: { name: 'super_admin' },
     update: {},
     create: {
@@ -26,7 +26,7 @@ await prisma.role.upsert({
     },
   });
 
-await prisma.role.upsert({
+const deptAdminRole = await prisma.role.upsert({
     where: { name: 'department_admin' },
     update: {},
     create: {
@@ -45,7 +45,7 @@ await prisma.role.upsert({
     },
   });
 
-await prisma.role.upsert({
+const analystRole = await prisma.role.upsert({
     where: { name: 'analyst' },
     update: {},
     create: {
@@ -103,7 +103,7 @@ await prisma.role.upsert({
   });
 
   // Create departments
-  const _mainDepartment = await prisma.department.upsert({
+const mainDepartment = await prisma.department.upsert({
     where: { code: 'MOPC' },
     update: {},
     create: {
@@ -113,42 +113,31 @@ await prisma.role.upsert({
     },
   });
 
-  const _legalDept = await prisma.department.upsert({
+const legalDepartment = await prisma.department.upsert({
     where: { code: 'LEGAL' },
     update: {},
     create: {
       name: 'Departamento Jurídico',
       code: 'LEGAL',
-      parentId: _mainDepartment.id,
+      parentId: mainDepartment.id,
       isActive: true,
     },
   });
 
-  const _technicalDept = await prisma.department.upsert({
+await prisma.department.upsert({
     where: { code: 'TECHNICAL' },
     update: {},
     create: {
       name: 'Departamento Técnico',
       code: 'TECHNICAL',
-      parentId: _mainDepartment.id,
+      parentId: mainDepartment.id,
       isActive: true,
     },
   });
 
-  // Create users
-  const hashedPassword = await bcrypt.hash('admin123', 12);
-
-// Get role references
-  const _superAdminRole = await prisma.role.findUnique({ where: { name: 'super_admin' } });
-  const _deptAdminRole = await prisma.role.findUnique({ where: { name: 'department_admin' } });
-  const _analystRole = await prisma.role.findUnique({ where: { name: 'analyst' } });
-
-  if (!_superAdminRole || !_deptAdminRole || !_analystRole) {
-    throw new Error('Required roles not found after creation');
-  }
-
-  // Create users
-  await prisma.user.upsert({
+// Create users
+const hashedPassword = await bcrypt.hash('admin123', 12);
+await prisma.user.upsert({
     where: { email: 'admin@mopc.gob.do' },
     update: {},
     create: {
@@ -158,13 +147,13 @@ await prisma.role.upsert({
       firstName: 'Super',
       lastName: 'Admin',
       phone: '809-555-0100',
-      departmentId: _mainDepartment.id,
-      roleId: _superAdminRole.id,
+      departmentId: mainDepartment.id,
+      roleId: superAdminRole.id,
       isActive: true,
     },
   });
 
-  await prisma.user.upsert({
+await prisma.user.upsert({
     where: { email: 'dept.admin@mopc.gob.do' },
     update: {},
     create: {
@@ -174,13 +163,13 @@ await prisma.role.upsert({
       firstName: 'Dept',
       lastName: 'Admin',
       phone: '809-555-0101',
-      departmentId: _legalDept.id,
-      roleId: _deptAdminRole.id,
+      departmentId: legalDepartment.id,
+      roleId: deptAdminRole.id,
       isActive: true,
     },
   });
 
-  await prisma.user.upsert({
+await prisma.user.upsert({
     where: { email: 'analyst@mopc.gob.do' },
     update: {},
     create: {
@@ -190,8 +179,8 @@ await prisma.role.upsert({
       firstName: 'Juan',
       lastName: 'Analista',
       phone: '809-555-0102',
-      departmentId: _legalDept.id,
-      roleId: _analystRole.id,
+      departmentId: legalDepartment.id,
+      roleId: analystRole.id,
       isActive: true,
     },
   });

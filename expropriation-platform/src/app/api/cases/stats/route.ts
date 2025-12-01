@@ -28,7 +28,12 @@ export async function GET(_request: NextRequest) {
     const role = user.role.name as string
 
     // Build where clause based on user permissions
-    const where: any = {
+    const where: {
+      deletedAt: null;
+      AND?: Array<{
+        OR: Array<{ departmentId?: string; assignedToId?: string; supervisedById?: string; createdById?: string; }>;
+      }>;
+    } = {
       deletedAt: null
     }
 
@@ -84,9 +89,14 @@ export async function GET(_request: NextRequest) {
     })
 
     // Get cases by department (only for super admins)
-    let departmentStats = []
+    let departmentStats: Array<{
+      departmentId: string;
+      departmentName: string;
+      departmentCode: string;
+      count: number;
+    }> = []
     if (role === 'super_admin') {
-      departmentStats = await prisma.case.groupBy({
+      const rawDepartmentStats = await prisma.case.groupBy({
         by: ['departmentId'],
         where,
         _count: {
@@ -97,7 +107,7 @@ export async function GET(_request: NextRequest) {
       // Get department names
       const departments = await prisma.department.findMany({
         where: {
-          id: { in: departmentStats.map(stat => stat.departmentId) }
+          id: { in: rawDepartmentStats.map(stat => stat.departmentId) }
         },
         select: {
           id: true,
@@ -106,7 +116,7 @@ export async function GET(_request: NextRequest) {
         }
       })
 
-      departmentStats = departmentStats.map(stat => {
+      departmentStats = rawDepartmentStats.map(stat => {
         const dept = departments.find(d => d.id === stat.departmentId)
         return {
           departmentId: stat.departmentId,

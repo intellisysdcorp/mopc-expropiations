@@ -66,7 +66,7 @@ const DOCUMENT_TYPES = [
   { value: 'FINANCIAL', label: 'Financiero', icon: FileText, color: 'bg-emerald-100 text-emerald-800' },
   { value: 'TECHNICAL', label: 'Técnico', icon: FileText, color: 'bg-slate-100 text-slate-800' },
   { value: 'OTHER', label: 'Otro', icon: FileText, color: 'bg-gray-100 text-gray-800' },
-]
+] as const;
 
 const CATEGORIES = [
   { value: 'ADMINISTRATIVE', label: 'Administrativo' },

@@ -16,7 +16,7 @@ export interface ReminderConfig {
     timeBefore?: number; // Minutes/hours/days before
     timeAfter?: number; // Minutes/hours/days after
   };
-  templateId?: string;
+  templateId: string | null;
   recipients: {
     type: 'entity_owner' | 'department_head' | 'role_based' | 'custom';
     value?: string;
@@ -32,8 +32,8 @@ export interface ReminderJob {
   scheduledAt: Date;
   executedAt?: Date;
   status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
-  entityId?: string;
-  entityType?: string;
+  entityId: string | null;
+  entityType: 'case' | 'task' | 'meeting' | 'document' | 'user' | null;
   error?: string;
   result?: any;
 }
@@ -213,7 +213,7 @@ class NotificationReminderSystem {
         schedule: config.schedule,
         isActive: config.isActive,
         conditions: config.conditions as any,
-        templateId: config.templateId || undefined,
+        templateId: config.templateId || null,
         recipients: config.recipients as any,
         channels: config.channels as string[],
         metadata: config.metadata as any
@@ -319,13 +319,13 @@ class NotificationReminderSystem {
     });
   }
 
-  private async getMatchingTasks(): Promise<any[]> {
+  private async getMatchingTasks(_filters: Record<string, any>, _timeBefore?: number, _timeAfter?: number): Promise<any[]> {
     // Similar implementation for tasks
     // This would depend on your task management system
     return [];
   }
 
-  private async getMatchingMeetings(filters: Record<string, any>, timeBefore?: number): Promise<any[]> {
+  private async getMatchingMeetings(filters: Record<string, any>, timeBefore?: number, _timeAfter?: number): Promise<any[]> {
     const where: any = {};
 
     if (filters.status) {
@@ -372,12 +372,12 @@ class NotificationReminderSystem {
     });
   }
 
-  private async getMatchingDocuments(): Promise<any[]> {
+  private async getMatchingDocuments(_filters: Record<string, any>, _timeBefore?: number, _timeAfter?: number): Promise<any[]> {
     // Similar implementation for documents
     return [];
   }
 
-  private async getMatchingUsers(): Promise<any[]> {
+  private async getMatchingUsers(_filters: Record<string, any>, _timeBefore?: number, _timeAfter?: number): Promise<any[]> {
     // Similar implementation for users
     return [];
   }
@@ -437,10 +437,10 @@ class NotificationReminderSystem {
             id: notification.id,
             title: notification.title,
             message: notification.message,
-            type: notification.type,
-            priority: notification.priority,
+            type: (notification.type as any).toLowerCase(),
+            priority: notification.priority as 'low' | 'medium' | 'high' | 'urgent',
             userId: notification.userId,
-            metadata: notification.metadata,
+            metadata: (notification.metadata as any) || {},
             createdAt: notification.createdAt
           });
         }
@@ -646,8 +646,8 @@ class NotificationReminderSystem {
       configId: config.id,
       scheduledAt,
       status: 'pending',
-      entityId,
-      entityType: config.conditions.entityType
+      entityId: entityId || null,
+      entityType: config.conditions.entityType || null
     };
 
     // Save to database
@@ -657,8 +657,8 @@ class NotificationReminderSystem {
         configId: config.id,
         scheduledAt,
         status: 'pending',
-        entityId,
-        entityType: config.conditions.entityType
+        entityId: entityId || null,
+        entityType: config.conditions.entityType || null
       }
     });
 

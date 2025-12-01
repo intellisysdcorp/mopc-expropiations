@@ -10,13 +10,36 @@ const updateChecklistTemplateSchema = z.object({
   name: z.string().min(1).optional(),
   description: z.string().optional(),
   isActive: z.boolean().optional(),
-  defaultItems: z.array(z.any()).optional(),
+  defaultItems: z.array(z.object({
+    text: z.string(),
+    type: z.enum(['checkbox', 'text', 'date', 'number']),
+    required: z.boolean().default(false),
+    sequence: z.number().positive(),
+  })).optional(),
   autoGenerate: z.boolean().optional(),
 });
 
+type UpdateChecklistTemplateData = z.infer<typeof updateChecklistTemplateSchema>;
+
+/**
+ * Creates an update data object by filtering out undefined values from validated data.
+ * This handles exactOptionalPropertyTypes by only including defined fields.
+ */
+function createUpdateData(validatedData: UpdateChecklistTemplateData): Record<string, unknown> {
+  const updateData: Record<string, unknown> = {};
+
+  if (validatedData.name !== undefined) updateData.name = validatedData.name;
+  if (validatedData.description !== undefined) updateData.description = validatedData.description;
+  if (validatedData.isActive !== undefined) updateData.isActive = validatedData.isActive;
+  if (validatedData.defaultItems !== undefined) updateData.defaultItems = validatedData.defaultItems;
+  if (validatedData.autoGenerate !== undefined) updateData.autoGenerate = validatedData.autoGenerate;
+
+  return updateData;
+}
+
 // GET /api/checklist/templates/[id] - Get specific template
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -77,9 +100,12 @@ export async function PUT(
       );
     }
 
+    // Filter out undefined values to handle exactOptionalPropertyTypes
+    const updateData = createUpdateData(validatedData);
+
     const template = await prisma.checklistTemplate.update({
       where: { id: (await params).id },
-      data: validatedData,
+      data: updateData,
       include: {
         checklistItems: {
           orderBy: { sequence: 'asc' },
@@ -102,7 +128,7 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       );
     }
@@ -117,7 +143,7 @@ export async function PUT(
 
 // DELETE /api/checklist/templates/[id] - Delete template
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {

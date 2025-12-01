@@ -222,8 +222,10 @@ export function DocumentUpload({
       toast.success(`Documento ${file.name} subido exitosamente`)
       onUploadComplete?.(document)
 
-    } catch (error) {
-      clientLogger.error('Upload error:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Upload error:', error)
+      }
       setUploads(prev => prev.map((u, i) =>
         i === uploadIndex ? {
           ...u,

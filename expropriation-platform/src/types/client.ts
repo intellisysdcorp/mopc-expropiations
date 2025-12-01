@@ -295,30 +295,6 @@ export interface FormUser extends DepartmentUser {
   name: string; // Computed from firstName + lastName
 }
 
-export interface CaseWithDetails extends Case {
-  department: Department;
-  createdBy?: {
-    id: string;
-    name: string;
-    email: string;
-  };
-  assignedTo?: {
-    id: string;
-    name: string;
-    email: string;
-  };
-  supervisedBy?: {
-    id: string;
-    name: string;
-    email: string;
-  };
-  documents: Document[];
-  _count: {
-    documents: number;
-    activities: number;
-  };
-}
-
 export interface DepartmentWithUsers extends Department {
   _count: {
     users: number;

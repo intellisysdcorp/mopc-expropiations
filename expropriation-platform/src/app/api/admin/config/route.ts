@@ -3,20 +3,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { type Prisma } from '@prisma/client';
 
-const configSchema = z.object({
-  key: z.string().min(1),
-  value: z.any(),
-  type: z.enum(['string', 'number', 'boolean', 'json', 'array']),
-  category: z.string().min(1),
-  description: z.string().optional(),
-  environment: z.string().optional(),
-  isRequired: z.boolean().default(false),
-  isPublic: z.boolean().default(false),
-  validation: z.any().optional()
-})
-
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const session = await auth()
 
@@ -32,7 +21,10 @@ export async function GET(_request: NextRequest) {
     const category = searchParams.get('category')
     const environment = searchParams.get('environment')
 
-    const where: any = {}
+    const where: {
+      category?: string;
+      environment?: string;
+    } = {}
     if (category && category !== 'all') {
       where.category = category
     }
@@ -87,13 +79,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const validatedData = configSchema.parse(body)
 
     // Check if configuration already exists for this key and environment
     const existingConfig = await prisma.systemConfiguration.findFirst({
       where: {
-        key: validatedData.key,
-        environment: validatedData.environment || 'production'
+        key: body.key,
+        environment: body.environment || 'production'
       }
     })
 
@@ -104,13 +95,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const systemConfigCreatePayload: Prisma.SystemConfigurationUncheckedCreateInput = {
+      ...body,
+      environment: body.environment || 'production',
+      effectiveAt: new Date(),
+      createdBy: session.user.id
+    };
+
     const config = await prisma.systemConfiguration.create({
-      data: {
-        ...validatedData,
-        environment: validatedData.environment || 'production',
-        createdBy: session.user.id,
-        effectiveAt: new Date()
-      },
+      data: systemConfigCreatePayload,
       include: {
         creator: {
           select: {
@@ -127,8 +120,8 @@ export async function POST(request: NextRequest) {
       data: {
         configurationId: config.id,
         key: config.key,
-        oldValue: null,
-        newValue: config.value,
+        oldValue: 'null',
+        newValue: JSON.stringify(config.value),
         type: config.type,
         category: config.category,
         changeReason: 'Initial configuration created',
@@ -143,7 +136,7 @@ export async function POST(request: NextRequest) {
     logger.error('Error creating system configuration:', error)
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         { status: 400 }
       )
     }

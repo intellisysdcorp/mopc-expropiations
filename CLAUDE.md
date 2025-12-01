@@ -41,6 +41,7 @@ You will implement the complete Prisma schema including:
 **Key Implementation Guidelines:**
 - Use TypeScript throughout with proper type definitions
   - Confirm that the files you modify have no Typescript issues
+  - Avoid using `any` and `unknown` as types. 
 - Implement protected routes with middleware-based authentication
 - Create reusable UI components following shadcn/ui patterns
 - Build responsive layouts optimized for government workflows

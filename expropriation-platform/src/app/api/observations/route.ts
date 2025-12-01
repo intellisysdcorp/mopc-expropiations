@@ -1,33 +1,14 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
-import { ActivityType, ObservationPriority, ObservationStatus } from '@prisma/client';
+import { ActivityType, ObservationPriority, ObservationStatus, CaseStage, Prisma } from '@prisma/client';
 import { logger } from '@/lib/logger';
-
-// Validation schemas
-const createObservationSchema = z.object({
-  caseId: z.string(),
-  stage: z.string().optional(),
-  title: z.string().min(1, 'Title is required'),
-  description: z.string().min(1, 'Description is required'),
-  category: z.string(),
-  subcategory: z.string().optional(),
-  priority: z.nativeEnum(ObservationPriority),
-  assignedTo: z.string().optional(),
-  deadline: z.string().datetime().optional(),
-  parentObservationId: z.string().optional(),
-  responseTo: z.string().optional(),
-  tags: z.string().optional(),
-});
-
-const createResponseSchema = z.object({
-  observationId: z.string(),
-  response: z.string().min(1, 'Response is required'),
-  responseType: z.enum(['ACKNOWLEDGMENT', 'CLARIFICATION', 'ACTION', 'RESOLUTION']),
-  attachments: z.array(z.string()).optional(),
-});
+import type {
+  CreateObservationRequest,
+  CreateObservationResponseRequest,
+  ObservationFilters
+} from '@/types';
 
 // GET /api/observations - Get observations
 export async function GET(request: NextRequest) {
@@ -40,24 +21,24 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const caseId = searchParams.get('caseId');
     const stage = searchParams.get('stage');
-    const priority = searchParams.get('priority');
-    const status = searchParams.get('status');
+    const priority = searchParams.get('priority') as ObservationPriority | null;
+    const status = searchParams.get('status') as ObservationStatus | null;
     const assignedTo = searchParams.get('assignedTo');
     const observedBy = searchParams.get('observedBy') || session.user.id;
     const parentObservationId = searchParams.get('parentObservationId');
 
-    const where: any = {};
+    const where: ObservationFilters = {};
 
     if (caseId) where.caseId = caseId;
-    if (stage) where.stage = stage as any;
-    if (priority) where.priority = priority as ObservationPriority;
-    if (status) where.status = status as ObservationStatus;
+    if (stage) where.stage = stage;
+    if (priority) where.priority = priority;
+    if (status) where.status = status;
     if (assignedTo) where.assignedTo = assignedTo;
     if (observedBy) where.observedBy = observedBy;
     if (parentObservationId) where.parentObservationId = parentObservationId;
 
     const observations = await prisma.observation.findMany({
-      where,
+      where: where as Prisma.ObservationWhereInput,
       include: {
         case: {
           select: {
@@ -108,6 +89,20 @@ export async function GET(request: NextRequest) {
                 email: true,
               },
             },
+            observation: {
+              select: {
+                id: true,
+                title: true,
+                observer: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                  },
+                },
+              },
+            },
           },
           orderBy: { createdAt: 'asc' },
         },
@@ -139,12 +134,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const validatedData = createObservationSchema.parse(body);
+    const body: CreateObservationRequest = await request.json();
 
     // Check if case exists
     const caseExists = await prisma.case.findUnique({
-      where: { id: validatedData.caseId },
+      where: { id: body.caseId },
     });
 
     if (!caseExists) {
@@ -155,9 +149,9 @@ export async function POST(request: NextRequest) {
     }
 
     // If assignedTo is provided, check if user exists
-    if (validatedData.assignedTo) {
+    if (body.assignedTo) {
       const assigneeExists = await prisma.user.findUnique({
-        where: { id: validatedData.assignedTo },
+        where: { id: body.assignedTo },
       });
 
       if (!assigneeExists) {
@@ -169,9 +163,9 @@ export async function POST(request: NextRequest) {
     }
 
     // If parentObservationId is provided, check if it exists
-    if (validatedData.parentObservationId) {
+    if (body.parentObservationId) {
       const parentExists = await prisma.observation.findUnique({
-        where: { id: validatedData.parentObservationId },
+        where: { id: body.parentObservationId },
       });
 
       if (!parentExists) {
@@ -182,29 +176,35 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Create base observation data with required fields only
+    const observationData: Prisma.ObservationUncheckedCreateInput = {
+      caseId: body.caseId,
+      title: body.title,
+      description: body.description,
+      category: body.category,
+      priority: body.priority,
+      status: ObservationStatus.OPEN,
+      observedBy: session.user.id,
+    };
+
+    // Add nullable/optional fields conditionally
+    if (body.stage) observationData.stage = body.stage as CaseStage;
+    if (body.subcategory) observationData.subcategory = body.subcategory;
+    if (body.assignedTo) observationData.assignedTo = body.assignedTo;
+    if (body.deadline) observationData.deadline = new Date(body.deadline);
+    if (body.parentObservationId) observationData.parentObservationId = body.parentObservationId;
+    if (body.responseTo) observationData.responseTo = body.responseTo;
+    if (body.tags) observationData.tags = body.tags;
+
     const observation = await prisma.observation.create({
-      data: {
-        caseId: validatedData.caseId,
-        stage: validatedData.stage as any,
-        title: validatedData.title,
-        description: validatedData.description,
-        category: validatedData.category,
-        subcategory: validatedData.subcategory,
-        priority: validatedData.priority,
-        status: ObservationStatus.OPEN,
-        observedBy: session.user.id,
-        assignedTo: validatedData.assignedTo,
-        deadline: validatedData.deadline ? new Date(validatedData.deadline) : null,
-        parentObservationId: validatedData.parentObservationId,
-        responseTo: validatedData.responseTo,
-        tags: validatedData.tags,
-      },
+      data: observationData,
       include: {
         case: {
           select: {
             id: true,
             fileNumber: true,
             title: true,
+            currentStage: true,
           },
         },
         observer: {
@@ -223,6 +223,54 @@ export async function POST(request: NextRequest) {
             email: true,
           },
         },
+        parentObservation: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+        childObservations: {
+          select: {
+            id: true,
+            title: true,
+            status: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: 'asc' },
+        },
+        responses: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+              },
+            },
+            observation: {
+              select: {
+                id: true,
+                title: true,
+                observer: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: { createdAt: 'asc' },
+        },
+        _count: {
+          select: {
+            childObservations: true,
+            responses: true,
+          },
+        },
       },
     });
 
@@ -234,7 +282,7 @@ export async function POST(request: NextRequest) {
         entityId: observation.id,
         description: `Created observation: ${observation.title}`,
         userId: session.user.id,
-        caseId: validatedData.caseId,
+        caseId: body.caseId,
         metadata: {
           observationId: observation.id,
           priority: observation.priority,
@@ -244,13 +292,13 @@ export async function POST(request: NextRequest) {
     });
 
     // Create notification for assignee if specified
-    if (validatedData.assignedTo && validatedData.assignedTo !== session.user.id) {
+    if (body.assignedTo && body.assignedTo !== session.user.id) {
       await prisma.notification.create({
         data: {
           title: 'New Observation Assigned',
           message: `You have been assigned a new observation: ${observation.title}`,
           type: 'TASK_ASSIGNED',
-          userId: validatedData.assignedTo,
+          userId: body.assignedTo,
           entityType: 'observation',
           entityId: observation.id,
         },
@@ -259,13 +307,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(observation, { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: 400 }
-      );
-    }
-
     logger.error('Error creating observation:', error);
     return NextResponse.json(
       { error: 'Failed to create observation' },
@@ -282,12 +323,11 @@ export async function POST_RESPONSE(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const validatedData = createResponseSchema.parse(body);
+    const body: CreateObservationResponseRequest = await request.json();
 
     // Check if observation exists
     const observation = await prisma.observation.findUnique({
-      where: { id: validatedData.observationId },
+      where: { id: body.observationId },
     });
 
     if (!observation) {
@@ -302,15 +342,20 @@ export async function POST_RESPONSE(request: NextRequest) {
       (new Date().getTime() - new Date(observation.createdAt).getTime()) / (1000 * 60 * 60)
     );
 
+    // Create base response data with required fields only
+    const responseData: Prisma.ObservationResponseUncheckedCreateInput = {
+      observationId: body.observationId,
+      userId: session.user.id,
+      response: body.response,
+      responseType: body.responseType as string,
+      responseTime,
+    };
+
+    // Add nullable/optional fields conditionally
+    if (body.attachments) responseData.attachments = body.attachments as Prisma.InputJsonValue;
+
     const response = await prisma.observationResponse.create({
-      data: {
-        observationId: validatedData.observationId,
-        userId: session.user.id,
-        response: validatedData.response,
-        responseType: validatedData.responseType,
-        attachments: validatedData.attachments,
-        responseTime,
-      },
+      data: responseData,
       include: {
         user: {
           select: {
@@ -336,17 +381,17 @@ export async function POST_RESPONSE(request: NextRequest) {
     });
 
     // Update observation status if it's a resolution
-    if (validatedData.responseType === 'RESOLUTION') {
+    if (body.responseType === 'RESOLUTION') {
       await prisma.observation.update({
-        where: { id: validatedData.observationId },
+        where: { id: body.observationId },
         data: {
           status: ObservationStatus.RESOLVED,
           resolvedAt: new Date(),
         },
       });
-    } else if (validatedData.responseType === 'ACTION') {
+    } else if (body.responseType === 'ACTION') {
       await prisma.observation.update({
-        where: { id: validatedData.observationId },
+        where: { id: body.observationId },
         data: {
           status: ObservationStatus.IN_PROGRESS,
         },
@@ -363,8 +408,8 @@ export async function POST_RESPONSE(request: NextRequest) {
         userId: session.user.id,
         caseId: observation.caseId,
         metadata: {
-          observationId: validatedData.observationId,
-          responseType: validatedData.responseType,
+          observationId: body.observationId,
+          responseType: body.responseType,
         },
       },
     });
@@ -378,20 +423,13 @@ export async function POST_RESPONSE(request: NextRequest) {
           type: 'STATUS_UPDATE',
           userId: observation.observedBy,
           entityType: 'observation',
-          entityId: validatedData.observationId,
+          entityId: body.observationId,
         },
       });
     }
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: 400 }
-      );
-    }
-
     logger.error('Error creating observation response:', error);
     return NextResponse.json(
       { error: 'Failed to create observation response' },

@@ -1,16 +1,17 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { z } from 'zod';
+
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 import { updateDepartmentSchema } from '@/lib/validators/department-validator';
 import { logger } from '@/lib/logger';
 
 // GET /api/departments/[id] - Get specific department
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -106,20 +107,21 @@ export async function PUT(
       );
     }
 
-    const body = await request.json();
-    const validatedData = updateDepartmentSchema.parse(body);
-
+    
     // Check if department exists
     const existingDept = await prisma.department.findUnique({
       where: { id: (await params).id },
     });
-
+    
     if (!existingDept) {
       return NextResponse.json(
         { error: 'Departamento no encontrado' },
         { status: 404 }
       );
     }
+
+    const body = await request.json();
+    const validatedData = updateDepartmentSchema.parse(body);
 
     // Check if department code already exists (if being updated)
     if (validatedData.code && validatedData.code !== existingDept.code) {
@@ -136,35 +138,33 @@ export async function PUT(
     }
 
     // Validate parentId if provided
-    if (validatedData.parentId !== undefined) {
-      if (validatedData.parentId) {
-        const parentDept = await prisma.department.findUnique({
-          where: { id: validatedData.parentId },
-        });
+    if (validatedData.parentId) {
+      const parentDept = await prisma.department.findUnique({
+        where: { id: validatedData.parentId },
+      });
 
-        if (!parentDept) {
-          return NextResponse.json(
-            { error: 'Departamento padre no encontrado' },
-            { status: 400 }
-          );
-        }
+      if (!parentDept) {
+        return NextResponse.json(
+          { error: 'Departamento padre no encontrado' },
+          { status: 400 }
+        );
+      }
 
-        // Prevent circular reference
-        if (validatedData.parentId === (await params).id) {
-          return NextResponse.json(
-            { error: 'Un departamento no puede ser su propio padre' },
-            { status: 400 }
-          );
-        }
+      // Prevent circular reference
+      if (validatedData.parentId === (await params).id) {
+        return NextResponse.json(
+          { error: 'Un departamento no puede ser su propio padre' },
+          { status: 400 }
+        );
+      }
 
-        // Prevent creating cycles in hierarchy
-        const isDescendant = await checkIsDescendant(validatedData.parentId, (await params).id);
-        if (isDescendant) {
-          return NextResponse.json(
-            { error: 'No se puede establecer un departamento hijo como padre' },
-            { status: 400 }
-          );
-        }
+      // Prevent creating cycles in hierarchy
+      const isDescendant = await checkIsDescendant(validatedData.parentId, (await params).id);
+      if (isDescendant) {
+        return NextResponse.json(
+          { error: 'No se puede establecer un departamento hijo como padre' },
+          { status: 400 }
+        );
       }
     }
 
@@ -182,10 +182,22 @@ export async function PUT(
       }
     }
 
+    // Create update data object with required fields first
+    const updateData: Record<string, unknown> = {};
+
+    // Add nullable properties conditionally
+    if (validatedData.name !== undefined) updateData.name = validatedData.name;
+    if (validatedData.code !== undefined) updateData.code = validatedData.code;
+    if (validatedData.parentId !== undefined) updateData.parentId = validatedData.parentId;
+    if (validatedData.description !== undefined) updateData.description = validatedData.description;
+    if (validatedData.headUserId !== undefined) updateData.headUserId = validatedData.headUserId;
+    if (validatedData.isActive !== undefined) updateData.isActive = validatedData.isActive;
+    if (validatedData.email !== undefined) updateData.email = validatedData.email;
+
     // Update department
     const department = await prisma.department.update({
       where: { id: (await params).id },
-      data: validatedData,
+      data: updateData,
       include: {
         parent: {
           select: { id: true, name: true, code: true },
@@ -224,9 +236,9 @@ export async function PUT(
     // Return formatted response
     const sanitizedDepartment = {
       ...department,
-      userCount: department._count.users,
-      caseCount: department._count.cases,
-      childCount: department._count.children,
+      userCount: department._count?.users || 0,
+      caseCount: department._count?.cases || 0,
+      childCount: department._count?.children || 0,
       _count: undefined,
     };
 
@@ -234,7 +246,7 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Datos inválidos', details: error.errors },
+        { error: 'Datos inválidos', details: error.issues },
         { status: 400 }
       );
     }
@@ -249,7 +261,7 @@ export async function PUT(
 
 // DELETE /api/departments/[id] - Delete department
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {

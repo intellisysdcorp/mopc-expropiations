@@ -25,6 +25,10 @@ export function TutorialOverlay() {
     if (!isActive || !activeTutorial) return;
 
     const step = activeTutorial.steps[currentStep];
+    if (!step) return;
+
+    let cleanupFn: (() => void) | undefined;
+
     if (step.target) {
       const element = document.querySelector(step.target);
       setTargetElement(element);
@@ -66,7 +70,7 @@ export function TutorialOverlay() {
         // Highlight target element
         if (element && step.position !== 'center') {
           element.setAttribute('data-tutorial-highlight', 'true');
-          return () => {
+          cleanupFn = () => {
             element.removeAttribute('data-tutorial-highlight');
           };
         }
@@ -81,11 +85,15 @@ export function TutorialOverlay() {
 
     // Execute action when step is shown
     step.action?.();
+
+    return cleanupFn;
   }, [isActive, activeTutorial, currentStep]);
 
   if (!isActive || !activeTutorial) return null;
 
   const step = activeTutorial.steps[currentStep];
+  if (!step) return null;
+
   const progress = ((currentStep + 1) / activeTutorial.steps.length) * 100;
 
   return (
@@ -95,7 +103,7 @@ export function TutorialOverlay() {
 
       {/* Highlight for target element */}
       {targetElement && (
-        <style jsx global>{`
+        <style>{`
           [data-tutorial-highlight="true"] {
             position: relative;
             z-index: 51;

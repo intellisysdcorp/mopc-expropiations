@@ -33,14 +33,14 @@ interface TimelineStage {
   responsibleDepartment: string;
   estimatedDuration: number;
   status: 'completed' | 'current' | 'future' | 'skipped';
-  startDate?: Date;
-  endDate?: Date;
-  duration?: number;
-  assignee?: {
+  startDate: Date | undefined;
+  endDate: Date | undefined;
+  duration: number | undefined;
+  assignee: {
     id: string;
     name: string;
     email: string;
-  };
+  } | undefined;
   checklistProgress: {
     total: number;
     completed: number;
@@ -73,7 +73,7 @@ interface TimelineResponse {
 }
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -136,14 +136,6 @@ export async function GET(
                 sequenceOrder: true,
                 responsibleDepartment: true
               }
-            },
-            approvedByUser: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true
-              }
             }
           },
           orderBy: {
@@ -163,20 +155,12 @@ export async function GET(
             },
             checklistCompletions: {
               include: {
-                checklist: {
+                item: {
                   select: {
                     id: true,
                     title: true,
-                    itemType: true,
+                    type: true,
                     isRequired: true
-                  }
-                },
-                completedByUser: {
-                  select: {
-                    id: true,
-                    firstName: true,
-                    lastName: true,
-                    email: true
                   }
                 }
               }
@@ -314,8 +298,8 @@ function buildTimeline(caseData: any, allStages: any[]): TimelineResponse {
       .find((a: any) => a.stage === stage.stage)
       ?.checklistCompletions || [];
 
-    const totalChecklistItems = checklistItems.filter((c: any) => c.checklist.isRequired).length;
-    const completedChecklistItems = checklistItems.filter((c: any) => c.isCompleted && c.checklist.isRequired).length;
+    const totalChecklistItems = checklistItems.filter((c: any) => c.item.isRequired).length;
+    const completedChecklistItems = checklistItems.filter((c: any) => c.isCompleted && c.item.isRequired).length;
     const checklistPercentage = totalChecklistItems > 0 ? (completedChecklistItems / totalChecklistItems) * 100 : 100;
 
     // Build events for this stage
@@ -354,21 +338,17 @@ function buildTimeline(caseData: any, allStages: any[]): TimelineResponse {
           type: 'note_added',
           stage: stage.stage,
           stageName: stage.name,
-          title: `Elemento completado: ${completion.checklist.title}`,
-          description: completion.notes || `Se completó el elemento requerido: ${completion.checklist.title}`,
+          title: `Elemento completado: ${completion.item.title}`,
+          description: completion.notes || `Se completó el elemento requerido: ${completion.item.title}`,
           timestamp: completion.completedAt || completion.createdAt,
-          user: completion.completedByUser ? {
-            id: completion.completedByUser.id,
-            name: `${completion.completedByUser.firstName} ${completion.completedByUser.lastName}`,
-            email: completion.completedByUser.email
-          } : {
-            id: 'system',
+          user: {
+            id: completion.completedBy || 'system',
             name: 'System',
             email: 'system@mopc.gob.do'
           },
           metadata: {
             checklistId: completion.checklistId,
-            itemType: completion.checklist.itemType,
+            itemType: completion.item.type,
             attachmentPath: completion.attachmentPath
           },
           isCompleted: true,
@@ -383,7 +363,7 @@ function buildTimeline(caseData: any, allStages: any[]): TimelineResponse {
         const docDate = new Date(doc.createdAt);
         const stageStart = assignment?.assignedAt;
         const stageEnd = status === 'completed' ? endDate : new Date();
-        return stageStart && docDate >= stageStart && docDate <= stageEnd;
+        return stageStart && stageEnd && docDate >= stageStart && docDate <= stageEnd;
       })
       .forEach((doc: any) => {
         events.push({
@@ -473,12 +453,8 @@ function buildTimeline(caseData: any, allStages: any[]): TimelineResponse {
         : `Completado: ${progression.fromStageConfig?.name || 'Inicio'}`,
       description: progression.observations || progression.reason || `Caso movido de ${progression.fromStage} a ${progression.toStage}`,
       timestamp: progression.createdAt,
-      user: progression.approvedByUser ? {
-        id: progression.approvedByUser.id,
-        name: `${progression.approvedByUser.firstName} ${progression.approvedByUser.lastName}`,
-        email: progression.approvedByUser.email
-      } : {
-        id: 'system',
+      user: {
+        id: progression.approvedBy || 'system',
         name: 'System',
         email: 'system@mopc.gob.do'
       },

@@ -7,27 +7,10 @@ import { z } from 'zod';
 import { sendRealtimeNotification } from '@/lib/websocket-server';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '@/lib/logger';
-
-const createNotificationSchema = z.object({
-  type: z.enum(['INFO', 'WARNING', 'ERROR', 'SUCCESS', 'TASK_ASSIGNED', 'DEADLINE_REMINDER', 'STATUS_UPDATE', 'SYSTEM_ANNOUNCEMENT']),
-  title: z.string().min(1, 'El título es requerido'),
-  message: z.string().min(1, 'El mensaje es requerido'),
-  recipientId: z.string().min(1, 'El ID del destinatario es requerido'),
-  priority: z.enum(['low', 'medium', 'high', 'urgent', 'critical']).default('medium'),
-  channels: z.array(z.string()).optional(),
-  sendEmail: z.boolean().default(false),
-  sendSms: z.boolean().default(false),
-  sendPush: z.boolean().default(false),
-  scheduledAt: z.string().datetime().optional(),
-  expiresAt: z.string().datetime().optional(),
-  templateId: z.string().optional(),
-  variables: z.record(z.any()).optional(),
-  metadata: z.record(z.any()).optional(),
-  entityType: z.string().optional(),
-  entityId: z.string().optional(),
-  correlationId: z.string().optional(),
-  batchId: z.string().optional()
-});
+import type {
+  CreateNotificationRequest,
+  NotificationCreateData
+} from '@/types/notification';
 
 // Get enhanced notifications for the current user
 export async function GET(request: NextRequest) {
@@ -157,7 +140,7 @@ export async function GET(request: NextRequest) {
       preferences: user.notificationPreference
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Error fetching notifications:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -177,7 +160,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Validate request body
-    const validatedData = createNotificationSchema.parse(body);
+    const validatedData = validateCreateNotificationRequest(body);
 
     // Get user and check permissions
     const user = await prisma.user.findUnique({
@@ -229,8 +212,8 @@ export async function POST(request: NextRequest) {
     // Check user preferences
     const shouldSend = await checkNotificationPreferences(
       recipient,
-      validatedData.type,
-      validatedData.priority,
+      validatedData.type || 'INFO',
+      validatedData.priority || 'medium',
       validatedData.channels
     );
 
@@ -243,29 +226,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Create notification
+    const notificationData = createNotificationData(validatedData);
     const notification = await prisma.notification.create({
       data: {
+        ...notificationData,
         title: processedContent.title,
         message: processedContent.message,
-        type: validatedData.type as any,
-        priority: validatedData.priority,
         userId: validatedData.recipientId,
         channels: shouldSend.channels,
         sendEmail: shouldSend.channels.includes('email'),
         sendSms: shouldSend.channels.includes('sms'),
         sendPush: shouldSend.channels.includes('push'),
-        scheduledAt: validatedData.scheduledAt ? new Date(validatedData.scheduledAt) : null,
-        expiresAt: validatedData.expiresAt ? new Date(validatedData.expiresAt) : null,
-        templateId: validatedData.templateId,
-        variables: validatedData.variables,
-        metadata: validatedData.metadata,
-        entityType: validatedData.entityType,
-        entityId: validatedData.entityId,
         correlationId: validatedData.correlationId || uuidv4(),
-        batchId: validatedData.batchId
+        metadata: validatedData.metadata || {}
       },
       include: {
-        recipient: {
+        user: {
           select: {
             id: true,
             firstName: true,
@@ -301,7 +277,7 @@ export async function POST(request: NextRequest) {
         action: 'CREATED',
         entityType: 'notification',
         entityId: notification.id,
-        description: `Created notification: ${notification.title} for ${notification.recipient.firstName} ${notification.recipient.lastName}`,
+        description: `Created notification: ${notification.title} for ${notification.user.firstName} ${notification.user.lastName}`,
         metadata: {
           notificationId: notification.id,
           recipientId: validatedData.recipientId,
@@ -318,10 +294,10 @@ export async function POST(request: NextRequest) {
         id: notification.id,
         title: notification.title,
         message: notification.message,
-        type: notification.type,
-        priority: notification.priority,
+        type: (notification.type as any).toLowerCase(),
+        priority: notification.priority as 'low' | 'medium' | 'high' | 'urgent',
         userId: notification.userId,
-        metadata: notification.metadata,
+        metadata: (notification.metadata as any) || {},
         createdAt: notification.createdAt
       });
     }
@@ -370,12 +346,12 @@ export async function POST(request: NextRequest) {
       }
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Error creating notification:', error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation error', details: error.errors },
+        { error: 'Validation error', details: error.issues },
         { status: 400 }
       );
     }
@@ -482,7 +458,7 @@ function processTemplate(template: any, variables: Record<string, any>) {
 
 async function checkNotificationPreferences(
   user: any,
-  type: string,
+  _type: string,
   priority: string,
   requestedChannels?: string[]
 ): Promise<{ shouldSend: boolean; channels: string[]; reason?: string }> {
@@ -517,7 +493,7 @@ async function checkNotificationPreferences(
   }
 
   // Check frequency limits
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split('T')[0]!;
   const todayNotifications = await prisma.notification.count({
     where: {
       userId: user.id,
@@ -650,4 +626,108 @@ function generateMetadataHtml(metadata: any): string {
 
   html += '</div>';
   return html;
+}
+
+/**
+ * Validates notification creation request and returns typed data
+ */
+function validateCreateNotificationRequest(body: any): CreateNotificationRequest {
+  // Basic validation (in a real implementation, you might want to use a more sophisticated validation library)
+  if (!body.type) {
+    throw new Error('Notification type is required');
+  }
+  if (!body.title || typeof body.title !== 'string' || body.title.trim().length === 0) {
+    throw new Error('Title is required and must be a non-empty string');
+  }
+  if (!body.message || typeof body.message !== 'string' || body.message.trim().length === 0) {
+    throw new Error('Message is required and must be a non-empty string');
+  }
+  if (!body.recipientId || typeof body.recipientId !== 'string') {
+    throw new Error('Recipient ID is required and must be a string');
+  }
+
+  // Validate notification type
+  const validTypes = ['INFO', 'WARNING', 'ERROR', 'SUCCESS', 'TASK_ASSIGNED', 'DEADLINE_REMINDER', 'STATUS_UPDATE', 'SYSTEM_ANNOUNCEMENT'];
+  if (!validTypes.includes(body.type)) {
+    throw new Error(`Invalid notification type. Must be one of: ${validTypes.join(', ')}`);
+  }
+
+  // Validate priority
+  const validPriorities = ['low', 'medium', 'high', 'urgent', 'critical'];
+  if (body.priority && !validPriorities.includes(body.priority)) {
+    throw new Error(`Invalid priority. Must be one of: ${validPriorities.join(', ')}`);
+  }
+
+  return {
+    type: body.type as any,
+    title: body.title,
+    message: body.message,
+    priority: body.priority || 'medium',
+    recipientId: body.recipientId,
+    channels: body.channels || [],
+    sendEmail: body.sendEmail || false,
+    sendSms: body.sendSms || false,
+    sendPush: body.sendPush || false,
+    scheduledAt: body.scheduledAt,
+    expiresAt: body.expiresAt,
+    templateId: body.templateId,
+    variables: body.variables || {},
+    entityType: body.entityType,
+    entityId: body.entityId,
+    correlationId: body.correlationId,
+    batchId: body.batchId,
+    metadata: body.metadata || {}
+  };
+}
+
+/**
+ * Creates notification data object for Prisma
+ */
+function createNotificationData(validatedData: CreateNotificationRequest): NotificationCreateData {
+  // Base notification data with required fields
+  const notificationData: NotificationCreateData = {
+    title: validatedData.title,
+    message: validatedData.message,
+    type: validatedData.type,
+    priority: validatedData.priority || 'medium',
+    isRead: false,
+    readAt: null,
+    sendEmail: validatedData.sendEmail || false,
+    emailSent: false,
+    sendSms: validatedData.sendSms || false,
+    smsSent: false,
+    sendPush: validatedData.sendPush || false,
+    pushSent: false
+  };
+
+  // Conditionally add optional fields
+  if (validatedData.channels && validatedData.channels.length > 0) {
+    notificationData.channels = validatedData.channels;
+  }
+
+  if (validatedData.scheduledAt) {
+    notificationData.scheduledAt = new Date(validatedData.scheduledAt);
+  }
+
+  if (validatedData.expiresAt) {
+    notificationData.expiresAt = new Date(validatedData.expiresAt);
+  }
+
+  if (validatedData.templateId) {
+    notificationData.templateId = validatedData.templateId;
+  }
+
+  if (validatedData.variables && Object.keys(validatedData.variables).length > 0) {
+    notificationData.metadata = validatedData.variables;
+  }
+
+  if (validatedData.entityType) {
+    notificationData.entityType = validatedData.entityType;
+  }
+
+  if (validatedData.entityId) {
+    notificationData.entityId = validatedData.entityId;
+  }
+
+  return notificationData;
 }

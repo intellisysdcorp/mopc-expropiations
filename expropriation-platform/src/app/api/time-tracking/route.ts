@@ -13,7 +13,7 @@ const createTimeEntrySchema = z.object({
   action: z.enum(['START', 'PAUSE', 'RESUME', 'COMPLETE', 'EXTEND']),
   reason: z.string().optional(),
   justification: z.string().optional(),
-  endTime: z.string().datetime().optional(),
+  endTime: z.iso.datetime().optional(),
   duration: z.number().optional(),
   pausedDuration: z.number().optional(),
   alertThreshold: z.number().optional(),
@@ -173,30 +173,58 @@ export async function POST(request: NextRequest) {
       }
 
       // Update the START entry with end time and duration
+      const updateData: any = {
+        endTime: validatedData.endTime ? new Date(validatedData.endTime) : new Date(),
+      };
+
+      if (duration !== undefined) {
+        updateData.duration = duration;
+      }
+
+      if (validatedData.pausedDuration !== undefined) {
+        updateData.pausedDuration = validatedData.pausedDuration;
+      }
+
       await prisma.timeTracking.update({
         where: { id: startEntry.id },
-        data: {
-          endTime: validatedData.endTime ? new Date(validatedData.endTime) : new Date(),
-          duration,
-          pausedDuration: validatedData.pausedDuration,
-        },
+        data: updateData,
       });
     }
 
     // Create the new time entry
+    const createData: any = {
+      caseId: validatedData.caseId,
+      stage: validatedData.stage as any,
+      action: validatedData.action,
+      userId: session.user.id,
+    };
+
+    if (validatedData.reason !== undefined) {
+      createData.reason = validatedData.reason;
+    }
+
+    if (validatedData.justification !== undefined) {
+      createData.justification = validatedData.justification;
+    }
+
+    if (validatedData.endTime) {
+      createData.endTime = new Date(validatedData.endTime);
+    }
+
+    if (validatedData.duration !== undefined) {
+      createData.duration = validatedData.duration;
+    }
+
+    if (validatedData.pausedDuration !== undefined) {
+      createData.pausedDuration = validatedData.pausedDuration;
+    }
+
+    if (validatedData.alertThreshold !== undefined) {
+      createData.alertThreshold = validatedData.alertThreshold;
+    }
+
     const timeEntry = await prisma.timeTracking.create({
-      data: {
-        caseId: validatedData.caseId,
-        stage: validatedData.stage as any,
-        action: validatedData.action,
-        reason: validatedData.reason,
-        justification: validatedData.justification,
-        endTime: validatedData.endTime ? new Date(validatedData.endTime) : null,
-        duration: validatedData.duration,
-        pausedDuration: validatedData.pausedDuration,
-        alertThreshold: validatedData.alertThreshold,
-        userId: session.user.id,
-      },
+      data: createData,
       include: {
         case: {
           select: {
@@ -238,7 +266,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       );
     }

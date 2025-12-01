@@ -1,5 +1,5 @@
-import bcrypt from 'bcryptjs';
-import crypto from 'crypto';
+import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
 import { prisma } from '@/lib/prisma';
 
 export interface PasswordResetRequest {
@@ -223,7 +223,7 @@ export function hasRole(userRole: string, allowedRoles: string[]): boolean {
  * Get session error message from URL parameters
  */
 export function getAuthErrorMessage(error?: string): string | null {
-  if (!error) {return null;}
+  if (!error) return null;
 
   const errorMessages: Record<string, string> = {
     CredentialsSignin: 'Credenciales inválidas',
@@ -240,7 +240,7 @@ export function getAuthErrorMessage(error?: string): string | null {
     SessionRequired: 'Sesión requerida',
   };
 
-  return errorMessages[error] || errorMessages.Default;
+  return (errorMessages[error] ?? errorMessages.Default) as string;
 }
 
 /**

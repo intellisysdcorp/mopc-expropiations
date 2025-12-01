@@ -110,7 +110,7 @@ export function useCaseFormNavigation(
           }))
 
           // Reset assignment step flags if leaving assignment step
-          if (prev.currentStep === 4 && stepIndex !== 4) {
+          if (navigationState.currentStep === 4 && stepIndex !== 4) {
             setNavigationState(prev => ({
               ...prev,
               assignmentStepAttempted: false,

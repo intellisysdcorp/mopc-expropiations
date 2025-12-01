@@ -27,15 +27,15 @@ export async function GET(request: NextRequest) {
 
     switch (chartType) {
       case 'timeline':
-        return await getTimelineData(departmentFilter, startDate, endDate);
+        return getTimelineData(departmentFilter, startDate, endDate, days);
       case 'department':
-        return await getDepartmentData(departmentFilter, startDate, endDate);
+        return getDepartmentData(departmentFilter, startDate, endDate);
       case 'stage':
-        return await getStageData(departmentFilter, startDate, endDate);
+        return getStageData(departmentFilter, startDate, endDate);
       case 'performance':
-        return await getPerformanceData(departmentFilter, startDate, endDate);
+        return getPerformanceData(departmentFilter, startDate, endDate);
       default:
-        return await getOverviewData(departmentFilter, startDate, endDate, days);
+        return getOverviewData(departmentFilter, startDate, endDate, days);
     }
   } catch (error) {
     logger.error('Error fetching chart data:', error);
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-async function getOverviewData(departmentFilter: any, startDate: Date, endDate: Date, days: number) {
+async function getTimelineData(departmentFilter: any, startDate: Date, endDate: Date, days: number) {
   // Generate daily data points
   const dailyData = [];
   for (let i = days - 1; i >= 0; i--) {
@@ -96,6 +96,10 @@ async function getOverviewData(departmentFilter: any, startDate: Date, endDate: 
     });
   }
 
+  return NextResponse.json({ timeline: dailyData });
+}
+
+async function getOverviewData(departmentFilter: any, startDate: Date, endDate: Date, days: number) {
   // Get priority distribution
   const priorityData = await prisma.case.groupBy({
     by: ['priority'],
@@ -125,7 +129,6 @@ async function getOverviewData(departmentFilter: any, startDate: Date, endDate: 
   });
 
   return NextResponse.json({
-    timeline: dailyData,
     priority: priorityData.map(item => ({
       name: item.priority,
       value: item._count,

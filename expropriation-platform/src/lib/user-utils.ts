@@ -15,32 +15,29 @@ export type User = {
 export function getUserInitials(user?: User): string {
   if (!user) return 'UU';
 
-  // Try firstName + lastName first
+  const getFirstChar = (str: string) => str.charAt(0).toUpperCase();
+
   if (user.firstName && user.lastName) {
-    return `${user.firstName[0]}${user.lastName[0]}`;
+    return `${getFirstChar(user.firstName)}${getFirstChar(user.lastName)}`;
   }
 
-  // Fallback to name if available
   if (user.name) {
-    const names = user.name.split(' ').filter(n => n.length > 0);
-    if (names.length >= 2 && names[0] && names[1]) {
-      return `${names[0][0]}${names[1][0]}`;
-    } else if (names.length === 1 && names[0]) {
-      return names[0][0];
+    const names: string[] = user.name.split(' ')
+      .filter(n => n.length > 0)
+      .filter(Boolean);
+
+    if (names.length === 2) {
+      return `${getFirstChar(names[0]!)}${getFirstChar(names[1]!)}`;
+    }
+
+    if (names.length === 1) {
+      return getFirstChar(names[0]!);
     }
   }
 
-  // If only firstName is available
-  if (user.firstName && user.firstName.length > 0) {
-    return user.firstName[0];
-  }
+  if (user.firstName) return getFirstChar(user.firstName);
+  if (user.lastName) return getFirstChar(user.lastName);
 
-  // If only lastName is available
-  if (user.lastName && user.lastName.length > 0) {
-    return user.lastName[0];
-  }
-
-  // Ultimate fallback
   return 'UU';
 }
 

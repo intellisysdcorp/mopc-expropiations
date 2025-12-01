@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
 import {
@@ -73,14 +73,16 @@ export function CaseCalendar({ className }: CaseCalendarProps) {
           date: new Date(event.date),
         })));
       }
-    } catch (error) {
-      clientLogger.error('Failed to load events:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Failed to load events:', error);
+      }
     } finally {
       setIsLoading(false);
     }
   }, [currentMonth, filters]);
 
-  useState(() => {
+  useEffect(() => {
     loadEvents();
   }, [loadEvents]);
 

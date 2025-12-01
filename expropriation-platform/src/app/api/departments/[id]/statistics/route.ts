@@ -4,10 +4,11 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { CaseStatus } from '@prisma/client';
 
 // GET /api/departments/[id]/statistics - Get department statistics
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -115,14 +116,14 @@ export async function GET(
       prisma.case.count({
         where: {
           departmentId,
-          status: 'ACTIVE'
+          status: CaseStatus.EN_PROGRESO
         },
       }),
       // Completed cases
       prisma.case.count({
         where: {
           departmentId,
-          status: 'COMPLETED'
+          status: CaseStatus.COMPLETADO
         },
       }),
       // Cases by stage
@@ -142,7 +143,7 @@ export async function GET(
         SELECT AVG(CAST(julianday(COALESCE(actualEndDate, datetime('now'))) - julianday(startDate) AS INTEGER)) as avgDuration
         FROM cases
         WHERE departmentId = ${departmentId}
-        AND status IN ('COMPLETED', 'ARCHIVED')
+        AND status IN ('COMPLETADO', 'ARCHIVED')
       `,
       // Recent case activity (last 30 days)
       prisma.activity.count({
@@ -227,7 +228,7 @@ export async function GET(
                 gte: date,
                 lt: nextMonth,
               },
-              status: 'COMPLETED',
+              status: CaseStatus.COMPLETADO,
             },
           }),
         ]);
@@ -244,7 +245,7 @@ export async function GET(
     // Performance metrics
     const performanceMetrics = {
       userSatisfaction: 4.2, // Placeholder - would need survey data
-      averageResolutionTime: typeof averageCaseDuration === 'object' && averageCaseDuration[0]?.avgDuration
+      averageResolutionTime: Array.isArray(averageCaseDuration) && averageCaseDuration.length > 0 && averageCaseDuration[0]?.avgDuration
         ? Math.round(Number(averageCaseDuration[0].avgDuration))
         : 0,
       caseCompletionRate: totalCases > 0 ? Math.round((completedCases / totalCases) * 100) : 0,

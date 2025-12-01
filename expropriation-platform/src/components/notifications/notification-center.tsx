@@ -44,7 +44,7 @@ interface Notification {
   priority: 'low' | 'medium' | 'high' | 'urgent';
   sendEmail: boolean;
   emailSent: boolean;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   case?: {
     id: string;
     fileNumber: string;
@@ -90,8 +90,10 @@ export function NotificationCenter({ className, onNotificationClick }: Notificat
         unread: data.statistics.unread,
         byType: data.statistics.byType
       });
-    } catch (error) {
-      clientLogger.error('Error fetching notifications:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching notifications:', error);
+      }
       toast.error('Error al cargar notificaciones');
     } finally {
       setLoading(false);
@@ -108,6 +110,7 @@ export function NotificationCenter({ className, onNotificationClick }: Notificat
       const interval = setInterval(fetchNotifications, 30000);
       return () => clearInterval(interval);
     }
+    return;
   }, [isOpen, fetchNotifications]);
 
   const markAsRead = async (notificationId: string, isRead: boolean) => {
@@ -126,11 +129,18 @@ export function NotificationCenter({ className, onNotificationClick }: Notificat
 
       // Update local state
       setNotifications(prev =>
-        prev.map(n =>
-          n.id === notificationId
-            ? { ...n, isRead, readAt: isRead ? new Date() : undefined }
-            : n
-        )
+        prev.map(n => {
+          if (n.id === notificationId) {
+            const updatedNotification = { ...n, isRead };
+            if (isRead) {
+              updatedNotification.readAt = new Date();
+            } else {
+              delete updatedNotification.readAt;
+            }
+            return updatedNotification;
+          }
+          return n;
+        })
       );
 
       // Update stats
@@ -262,11 +272,18 @@ export function NotificationCenter({ className, onNotificationClick }: Notificat
         }
       } else {
         setNotifications(prev =>
-          prev.map(n =>
-            selectedNotifications.has(n.id)
-              ? { ...n, isRead: action === 'mark_read', readAt: action === 'mark_read' ? new Date() : undefined }
-              : n
-          )
+          prev.map(n => {
+            if (selectedNotifications.has(n.id)) {
+              const updatedNotification = { ...n, isRead: action === 'mark_read' };
+              if (action === 'mark_read') {
+                updatedNotification.readAt = new Date();
+              } else {
+                delete updatedNotification.readAt;
+              }
+              return updatedNotification;
+            }
+            return n;
+          })
         );
 
         if (stats && action === 'mark_read') {
@@ -326,7 +343,7 @@ export function NotificationCenter({ className, onNotificationClick }: Notificat
     return new Intl.DateTimeFormat('es-DO', {
       day: '2-digit',
       month: '2-digit',
-      year: numeric
+      year: 'numeric'
     }).format(new Date(date));
   };
 
@@ -444,7 +461,7 @@ export function NotificationCenter({ className, onNotificationClick }: Notificat
                   <div
                     key={notification.id}
                     className={cn(
-                      'relative flex items-start gap-3 p-4 hover:bg-gray-50 cursor-pointer transition-colors',
+                      'group relative flex items-start gap-3 p-4 hover:bg-gray-50 cursor-pointer transition-colors',
                       !notification.isRead && 'bg-blue-50 border-l-4 border-blue-500'
                     )}
                     onClick={() => {

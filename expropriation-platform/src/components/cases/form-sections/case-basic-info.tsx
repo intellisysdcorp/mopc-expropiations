@@ -56,8 +56,10 @@ export function CaseBasicInfo({ register, errors, setValue, watch }: FormSection
 
       const data = await response.json()
       index = data.count + 1 // Next case number
-    } catch (error) {
-      clientLogger.error('Error getting number of cases:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error getting number of cases:', error)
+      }
     }
     const caseNumber = `EXP-${year}${month}${day}-${index.toString().padStart(3, '0')}`
     setValue('fileNumber', caseNumber)

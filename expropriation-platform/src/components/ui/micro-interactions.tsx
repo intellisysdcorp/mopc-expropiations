@@ -194,7 +194,7 @@ export function FadeIn({
   delay?: number;
   duration?: number;
   className?: string;
-  as?: keyof JSX.IntrinsicElements;
+  as?: React.ElementType;
 }) {
   return (
     <Component
@@ -231,7 +231,7 @@ export function SlideIn({
   delay?: number;
   duration?: number;
   className?: string;
-  as?: keyof JSX.IntrinsicElements;
+  as?: React.ElementType;
 }) {
   const directionClasses = {
     up: 'slide-in-from-bottom',

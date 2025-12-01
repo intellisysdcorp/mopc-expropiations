@@ -34,7 +34,7 @@ const userFormSchema = z.object({
   // Basic Information
   firstName: z.string().min(1, 'El nombre es requerido'),
   lastName: z.string().min(1, 'El apellido es requerido'),
-  email: z.string().email('Correo electrónico inválido'),
+  email: z.email('Correo electrónico inválido'),
   username: z.string()
     .min(3, 'El nombre de usuario debe tener al menos 3 caracteres')
     .regex(/^[a-zA-Z0-9_]+$/, 'Solo se permiten letras, números y guiones bajos'),
@@ -116,33 +116,32 @@ export function UserForm({
   const [checkingUsername, setCheckingUsername] = useState(false);
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
 
-  const form = useForm<UserFormValues>({
+  const form = useForm({
     resolver: zodResolver(userFormSchema),
     defaultValues: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      username: '',
-      phone: '',
-      password: '',
-      confirmPassword: '',
-      departmentId: '',
-      roleId: '',
-      jobTitle: '',
-      officeLocation: '',
-      bio: '',
-      preferredLanguage: 'es',
-      timezone: 'America/Santo_Domingo',
-      theme: 'light',
-      emailNotifications: true,
-      emailMarketing: false,
-      emailDigest: true,
-      isActive: true,
-      isSuspended: false,
-      suspensionReason: '',
-      twoFactorEnabled: false,
-      mustChangePassword: false,
-      ...initialData,
+      firstName: initialData?.firstName || '',
+      lastName: initialData?.lastName || '',
+      email: initialData?.email || '',
+      username: initialData?.username || '',
+      phone: initialData?.phone || '',
+      password: initialData?.password || '',
+      confirmPassword: initialData?.confirmPassword || '',
+      departmentId: initialData?.departmentId || '',
+      roleId: initialData?.roleId || '',
+      jobTitle: initialData?.jobTitle || '',
+      officeLocation: initialData?.officeLocation || '',
+      bio: initialData?.bio || '',
+      preferredLanguage: initialData?.preferredLanguage || 'es',
+      timezone: initialData?.timezone || 'America/Santo_Domingo',
+      theme: initialData?.theme || 'light',
+      emailNotifications: initialData?.emailNotifications ?? true,
+      emailMarketing: initialData?.emailMarketing ?? false,
+      emailDigest: initialData?.emailDigest ?? true,
+      isActive: initialData?.isActive ?? true,
+      isSuspended: initialData?.isSuspended ?? false,
+      suspensionReason: initialData?.suspensionReason || '',
+      twoFactorEnabled: initialData?.twoFactorEnabled ?? false,
+      mustChangePassword: initialData?.mustChangePassword ?? false,
     },
   });
 
@@ -221,11 +220,11 @@ export function UserForm({
   const handleSubmit = async (data: UserFormValues) => {
     // For edit mode, remove password fields if they're empty
     if (mode === 'edit' && !data.password) {
-      delete data.password;
-      delete data.confirmPassword;
+      const { password: _password, confirmPassword: _confirmPassword, ...submitData } = data;
+      await onSubmit(submitData);
+    } else {
+      await onSubmit(data);
     }
-
-    await onSubmit(data);
   };
 
   const getPasswordStrengthColor = () => {
@@ -487,7 +486,7 @@ export function UserForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Departamento *</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value ?? ''}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Seleccionar departamento" />
@@ -512,7 +511,7 @@ export function UserForm({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Rol *</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value ?? ''}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Seleccionar rol" />
@@ -617,7 +616,7 @@ export function UserForm({
                         </div>
                         <FormControl>
                           <Switch
-                            checked={field.value}
+                            checked={field.value ?? false}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
@@ -638,7 +637,7 @@ export function UserForm({
                         </div>
                         <FormControl>
                           <Switch
-                            checked={field.value}
+                            checked={field.value ?? false}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
@@ -688,7 +687,7 @@ export function UserForm({
                         </div>
                         <FormControl>
                           <Switch
-                            checked={field.value}
+                            checked={field.value ?? false}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
@@ -709,7 +708,7 @@ export function UserForm({
                         </div>
                         <FormControl>
                           <Switch
-                            checked={field.value}
+                            checked={field.value ?? false}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
@@ -734,7 +733,7 @@ export function UserForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Idioma Preferido</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value ?? ''}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue />
@@ -756,7 +755,7 @@ export function UserForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Zona Horaria</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value ?? ''}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue />
@@ -785,7 +784,7 @@ export function UserForm({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Tema</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value ?? ''}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue />
@@ -823,7 +822,7 @@ export function UserForm({
                         </div>
                         <FormControl>
                           <Switch
-                            checked={field.value}
+                            checked={field.value ?? false}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
@@ -844,7 +843,7 @@ export function UserForm({
                         </div>
                         <FormControl>
                           <Switch
-                            checked={field.value}
+                            checked={field.value ?? false}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
@@ -865,7 +864,7 @@ export function UserForm({
                         </div>
                         <FormControl>
                           <Switch
-                            checked={field.value}
+                            checked={field.value ?? false}
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>

@@ -127,7 +127,7 @@ export function ProtectedRoute({
  */
 export function withRoleProtection(
   roles: string | string[],
-  options: Omit<ProtectedRouteProps, 'roles'> = {}
+  options: Omit<ProtectedRouteProps, 'roles' | 'children'> = {}
 ) {
   return function ProtectedComponent({ children }: { children: ReactNode }) {
     return (
@@ -143,7 +143,7 @@ export function withRoleProtection(
  */
 export function withPermissionProtection(
   permissions: string | string[],
-  options: Omit<ProtectedRouteProps, 'permissions'> = {}
+  options: Omit<ProtectedRouteProps, 'permissions' | 'children'> = {}
 ) {
   return function ProtectedComponent({ children }: { children: ReactNode }) {
     return (

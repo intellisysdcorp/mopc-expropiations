@@ -12,6 +12,7 @@ import {
   DocumentCategory,
   DocumentStatus,
   DocumentSecurityLevel,
+  UserRole,
 } from '@prisma/client';
 import {
   secureFileUpload,
@@ -19,20 +20,21 @@ import {
 } from '@/lib/file-upload-security';
 import { edgeLogger } from '@/lib/edge-logger';
 import { logger } from '@/lib/logger';
+import { AtomicUploadOptions } from '@/lib/atomic-upload';
 
 // Validation schemas
 const createDocumentSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
-  documentType: z.enum(Object.values(DocumentType) as [string, ...string[]]),
-  category: z.enum(Object.values(DocumentCategory) as [string, ...string[]]),
+  documentType: z.enum(Object.values(DocumentType) as [DocumentType, ...DocumentType[]]),
+  category: z.enum(Object.values(DocumentCategory) as [DocumentCategory, ...DocumentCategory[]]),
   securityLevel: z
-    .enum(Object.values(DocumentSecurityLevel) as [string, ...string[]])
+    .enum(Object.values(DocumentSecurityLevel) as [DocumentSecurityLevel, ...DocumentSecurityLevel[]])
     .default(DocumentSecurityLevel.INTERNAL),
   caseId: z.string().optional(),
   tags: z.string().optional(),
-  metadata: z.record(z.string(), z.any()).optional(),
-  customFields: z.record(z.string(), z.any()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+  customFields: z.record(z.string(), z.unknown()).optional(),
   retentionPeriod: z.number().optional(),
   expiresAt: z.coerce.date().optional(),
 });
@@ -41,18 +43,10 @@ const queryDocumentsSchema = z.object({
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(20),
   search: z.string().optional(),
-  documentType: z
-    .enum(Object.values(DocumentType) as [string, ...string[]])
-    .optional(),
-  category: z
-    .enum(Object.values(DocumentCategory) as [string, ...string[]])
-    .optional(),
-  status: z
-    .enum(Object.values(DocumentStatus) as [string, ...string[]])
-    .optional(),
-  securityLevel: z
-    .enum(Object.values(DocumentSecurityLevel) as [string, ...string[]])
-    .optional(),
+  documentType: z.enum(Object.values(DocumentType) as [DocumentType, ...DocumentType[]]).optional(),
+  category: z.enum(Object.values(DocumentCategory) as [DocumentCategory, ...DocumentCategory[]]).optional(),
+  status: z.enum(Object.values(DocumentStatus) as [DocumentStatus, ...DocumentStatus[]]).optional(),
+  securityLevel: z.enum(Object.values(DocumentSecurityLevel) as [DocumentSecurityLevel, ...DocumentSecurityLevel[]]).optional(),
   caseId: z.string().optional(),
   uploadedById: z.string().optional(),
   tags: z.string().optional(),
@@ -183,7 +177,7 @@ export async function GET(request: NextRequest) {
         pages: Math.ceil(total / query.limit),
       },
     });
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Error fetching documents:', error);
     return NextResponse.json(
       { error: 'Failed to fetch documents' },
@@ -218,7 +212,17 @@ export async function POST(request: NextRequest) {
       select: { role: { select: { name: true } } },
     });
 
-    const userRole = user?.role?.name || 'default';
+    // Map role name to UserRole enum
+    const roleMap: Record<string, UserRole> = {
+      'super_admin': UserRole.SUPER_ADMIN,
+      'department_admin': UserRole.DEPARTMENT_ADMIN,
+      'analyst': UserRole.ANALYST,
+      'supervisor': UserRole.SUPERVISOR,
+      'technical_meeting_coordinator': UserRole.TECHNICAL_MEETING_COORDINATOR,
+      'observer': UserRole.OBSERVER,
+    };
+
+    const userRole = roleMap[user?.role?.name || 'observer'] || UserRole.OBSERVER;
 
     // Perform secure file upload with comprehensive validation
     const uploadOptions: Partial<AtomicUploadOptions> = {
@@ -234,9 +238,6 @@ export async function POST(request: NextRequest) {
       file,
       userRole,
       uploadOptions,
-      {
-        userRole,
-      }
     );
 
     // Handle upload validation failures
@@ -261,8 +262,8 @@ export async function POST(request: NextRequest) {
     // Extract text content for indexing (simplified version)
     let contentText = '';
     try {
-      if (file.type === 'text/plain') {
-        const fileBuffer = await fs.readFile(uploadResult.filePath!);
+      if (file.type === 'text/plain' && uploadResult.filePath) {
+        const fileBuffer = await fs.readFile(uploadResult.filePath);
         contentText = fileBuffer.toString('utf-8');
       }
       // TODO: Add text extraction for PDF, DOCX, etc.
@@ -298,16 +299,8 @@ export async function POST(request: NextRequest) {
         caseId: validatedData.caseId || null,
         uploadedById: session.user.id,
         tags: validatedData.tags || null,
-        metadata: {
-          ...(validatedData.metadata || {}),
-          securityValidation: JSON.parse(
-            JSON.stringify(uploadResult.validation)
-          ),
-          uploadWarnings: uploadResult.validation.warnings,
-          securityLevel: uploadResult.validation.securityLevel,
-          requiresManualReview: uploadResult.validation.requiresManualReview,
-        },
-        customFields: validatedData.customFields || {},
+        metadata: (validatedData.metadata || {}) as any,
+        customFields: (validatedData.customFields || {}) as any,
         retentionPeriod: validatedData.retentionPeriod || null,
         expiresAt: validatedData.expiresAt
           ? new Date(validatedData.expiresAt)
@@ -349,11 +342,9 @@ export async function POST(request: NextRequest) {
           originalFileName: file.name,
           mimeType: actualMimeType,
           uploadTimestamp: new Date().toISOString(),
-          securityValidation: JSON.parse(
-            JSON.stringify(uploadResult.validation)
-          ),
+          securityValidation: uploadResult.validation,
           securityLevel: uploadResult.validation.securityLevel,
-        },
+        } as any,
       },
     });
 
@@ -389,12 +380,39 @@ export async function POST(request: NextRequest) {
     }
 
     // Format response
+    const documentWithIncludes = document as any;
     const response = {
-      ...document,
-      uploadedBy: {
-        ...document.uploadedBy,
-        fullName: `${document.uploadedBy.firstName} ${document.uploadedBy.lastName}`,
-      },
+      id: document.id,
+      title: document.title,
+      description: document.description,
+      fileName: document.fileName,
+      originalFileName: document.originalFileName,
+      fileSize: document.fileSize,
+      mimeType: document.mimeType,
+      documentType: document.documentType,
+      category: document.category,
+      status: document.status,
+      securityLevel: document.securityLevel,
+      version: document.version,
+      isLatest: document.isLatest,
+      isDraft: document.isDraft,
+      caseId: document.caseId,
+      tags: document.tags,
+      metadata: document.metadata,
+      customFields: document.customFields,
+      retentionPeriod: document.retentionPeriod,
+      expiresAt: document.expiresAt,
+      contentText: document.contentText,
+      isIndexed: document.isIndexed,
+      indexedAt: document.indexedAt,
+      uploadedBy: documentWithIncludes.uploadedBy ? {
+        id: documentWithIncludes.uploadedBy.id,
+        firstName: documentWithIncludes.uploadedBy.firstName,
+        lastName: documentWithIncludes.uploadedBy.lastName,
+        email: documentWithIncludes.uploadedBy.email,
+        fullName: `${documentWithIncludes.uploadedBy.firstName} ${documentWithIncludes.uploadedBy.lastName}`,
+      } : null,
+      case: documentWithIncludes.case,
       fileSizeFormatted: formatFileSize(document.fileSize),
       createdAt: document.createdAt.toISOString(),
       updatedAt: document.updatedAt.toISOString(),
@@ -415,7 +433,7 @@ export async function POST(request: NextRequest) {
     });
 
     return jsonResponse;
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Error uploading document:', error);
 
     if (error instanceof z.ZodError) {

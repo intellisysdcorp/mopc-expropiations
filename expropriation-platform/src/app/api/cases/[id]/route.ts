@@ -195,7 +195,7 @@ export async function PUT(
 
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Invalid input', details: validationResult.error.errors },
+        { error: 'Invalid input', details: validationResult.error.issues },
         { status: 400 }
       )
     }
@@ -303,10 +303,14 @@ export async function PUT(
       }
     })
 
-    // Update the case
+    // Update the case - filter out undefined values to avoid type issues
+    const updatePayload = Object.fromEntries(
+      Object.entries(updateData).filter(([_, value]) => value !== undefined)
+    )
+
     const updatedCase = await prisma.case.update({
       where: { id: caseId },
-      data: updateData,
+      data: updatePayload,
       include: {
         department: {
           select: {

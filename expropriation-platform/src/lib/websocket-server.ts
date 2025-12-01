@@ -1,9 +1,11 @@
-import { Server as SocketIOServer } from 'socket.io';
+import { Server as SocketIOServer, Socket } from 'socket.io';
 import { Server as HttpServer } from 'http';
 import { verify } from 'jsonwebtoken';
 import { prisma } from './prisma';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from './logger';
+
+// Note: Socket authentication data is stored directly on the socket object
 
 export interface AuthenticatedSocket extends Socket {
   userId: string;
@@ -16,19 +18,64 @@ export interface NotificationData {
   id: string;
   title: string;
   message: string;
-  type: string;
-  priority: string;
+  type: 'info' | 'success' | 'warning' | 'error' | 'system';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
   userId: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   createdAt: Date;
+}
+
+export interface PresenceData {
+  userId: string;
+  status: 'online' | 'offline' | 'away' | 'busy';
+  timestamp: Date;
+}
+
+export interface TypingData {
+  userId: string;
+  userEmail?: string;
+  timestamp: Date;
 }
 
 export interface WebSocketMessage {
   type: 'notification' | 'system' | 'presence' | 'typing' | 'custom';
-  data: any;
+  data: NotificationData | PresenceData | TypingData | Record<string, unknown>;
   room?: string;
   timestamp: Date;
   id: string;
+}
+
+// Note: This interface is for internal type checking, not directly used with Prisma
+export interface ConnectionData {
+  userId: string;
+  socketId: string;
+  connectionId: string;
+  status: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  connectedAt?: Date;
+  disconnectedAt?: Date;
+  metadata: Record<string, string>;
+}
+
+export interface RoomAccessRequest {
+  room: string;
+}
+
+export interface CustomNotificationRequest {
+  type: 'notification';
+  data: NotificationData;
+  room?: string;
+  timestamp: Date;
+  id: string;
+}
+
+export interface PresenceUpdateRequest {
+  status: 'online' | 'offline' | 'away' | 'busy';
+}
+
+export interface TypingRequest {
+  room: string;
 }
 
 class WebSocketNotificationServer {
@@ -80,7 +127,7 @@ class WebSocketNotificationServer {
         }
 
         // Verify JWT token (you'll need to use your NextAuth secret)
-        const decoded = verify(token, process.env.NEXTAUTH_SECRET || 'fallback-secret') as any;
+        const decoded = verify(token, process.env.NEXTAUTH_SECRET || 'fallback-secret') as { email: string };
 
         // Get user from database
         const user = await prisma.user.findUnique({
@@ -99,7 +146,7 @@ class WebSocketNotificationServer {
         (socket as any).userId = user.id;
         (socket as any).userEmail = user.email;
         (socket as any).userRole = user.role.name;
-        (socket as any).departmentId = user.departmentId;
+        (socket as any).departmentId = user.departmentId || '';
 
         next();
       } catch (error) {
@@ -116,6 +163,7 @@ class WebSocketNotificationServer {
       const userId = (socket as any).userId;
       const userEmail = (socket as any).userEmail;
       const departmentId = (socket as any).departmentId;
+      const userRole = (socket as any).userRole;
 
       logger.info(`User ${userEmail} connected (${socket.id})`);
 
@@ -138,67 +186,70 @@ class WebSocketNotificationServer {
       this.userRooms.get(userId)!.add(`department:${departmentId}`);
 
       // Join role-based rooms
-      const role = (socket as any).userRole;
-      socket.join(`role:${role}`);
-      this.userRooms.get(userId)!.add(`role:${role}`);
+      socket.join(`role:${userRole}`);
+      this.userRooms.get(userId)!.add(`role:${userRole}`);
 
       // Track connection in database
       this.trackConnection(socket, 'connected');
 
       // Handle joining additional rooms
-      socket.on('join-room', (room: string) => {
-        if (this.validateRoomAccess(userId, room)) {
-          socket.join(room);
-          this.userRooms.get(userId)!.add(room);
-          socket.emit('room-joined', { room });
+      socket.on('join-room', (data: RoomAccessRequest) => {
+        if (this.validateRoomAccess(userId, data.room)) {
+          socket.join(data.room);
+          this.userRooms.get(userId)!.add(data.room);
+          (socket as any).emit('room-joined', { room: data.room });
         } else {
-          socket.emit('error', { message: 'Access denied to room' });
+          (socket as any).emit('error', { message: 'Access denied to room' });
         }
       });
 
       // Handle leaving rooms
-      socket.on('leave-room', (room: string) => {
-        socket.leave(room);
-        this.userRooms.get(userId)!.delete(room);
-        socket.emit('room-left', { room });
+      socket.on('leave-room', (data: RoomAccessRequest) => {
+        socket.leave(data.room);
+        this.userRooms.get(userId)!.delete(data.room);
+        (socket as any).emit('room-left', { room: data.room });
       });
 
       // Handle custom notifications
       socket.on('send-notification', async (data: NotificationData) => {
         try {
           await this.sendNotification(data);
-        } catch (_) {
-          socket.emit('error', { message: 'Failed to send notification' });
+        } catch (error) {
+          logger.error('Failed to send notification:', error);
+          (socket as any).emit('error', { message: 'Failed to send notification' });
         }
       });
 
       // Handle presence updates
-      socket.on('presence-update', (data: any) => {
-        socket.broadcast.to(`department:${departmentId}`).emit('presence-update', {
+      socket.on('presence-update', (data: PresenceUpdateRequest) => {
+        const presenceData: PresenceData = {
           userId,
           status: data.status,
           timestamp: new Date()
-        });
+        };
+        socket.broadcast.to(`department:${departmentId}`).emit('presence-update' as any, presenceData);
       });
 
       // Handle typing indicators
-      socket.on('typing-start', (data: { room: string }) => {
-        socket.to(data.room).emit('typing-start', {
+      socket.on('typing-start', (data: TypingRequest) => {
+        const typingData: TypingData = {
           userId,
           userEmail,
           timestamp: new Date()
-        });
+        };
+        socket.to(data.room).emit('typing-start' as any, typingData);
       });
 
-      socket.on('typing-stop', (data: { room: string }) => {
-        socket.to(data.room).emit('typing-stop', {
+      socket.on('typing-stop', (data: TypingRequest) => {
+        const typingData: TypingData = {
           userId,
           timestamp: new Date()
-        });
+        };
+        socket.to(data.room).emit('typing-stop' as any, typingData);
       });
 
       // Handle disconnection
-      socket.on('disconnect', (reason) => {
+      socket.on('disconnect', (reason: string) => {
         logger.info(`User ${userEmail} disconnected (${socket.id}): ${reason}`);
         this.handleDisconnection(socket);
       });
@@ -207,7 +258,7 @@ class WebSocketNotificationServer {
       this.sendUnreadCount(userId);
 
       // Send welcome message
-      socket.emit('connected', {
+      (socket as any).emit('connected', {
         message: 'Connected to notification server',
         userId,
         timestamp: new Date()
@@ -229,9 +280,10 @@ class WebSocketNotificationServer {
     return true;
   }
 
-  private handleDisconnection(socket: any): void {
-    const userId = socket.userId;
+  private handleDisconnection(socket: Socket): void {
+    const userId = (socket as any).userId;
     const socketId = socket.id;
+    const departmentId = (socket as any).departmentId;
 
     // Remove from tracking
     const userSockets = this.connectedUsers.get(userId);
@@ -248,39 +300,41 @@ class WebSocketNotificationServer {
     this.trackConnection(socket, 'disconnected');
 
     // Notify other users about presence change
-    socket.broadcast.to(`department:${socket.departmentId}`).emit('presence-update', {
+    const presenceData: PresenceData = {
       userId,
       status: 'offline',
       timestamp: new Date()
-    });
+    };
+    socket.broadcast.to(`department:${departmentId}`).emit('presence-update' as any, presenceData);
   }
 
-  private async trackConnection(socket: any, status: string): Promise<void> {
+  private async trackConnection(socket: Socket, status: string): Promise<void> {
     try {
-      const connectionData = {
-        userId: socket.userId,
-        socketId: socket.id,
-        connectionId: socket.id,
-        status,
-        ipAddress: socket.handshake.address,
-        userAgent: socket.handshake.headers['user-agent'],
-        connectedAt: status === 'connected' ? new Date() : undefined,
-        disconnectedAt: status === 'disconnected' ? new Date() : undefined,
-        metadata: {
-          serverId: process.env.SERVER_ID || 'default',
-          version: process.env.npm_package_version || '1.0.0'
-        }
-      };
+      const userId = (socket as any).userId;
+      const ipAddress = socket.handshake.address || null;
+      const userAgent = socket.handshake.headers['user-agent'] || null;
 
       if (status === 'connected') {
         await prisma.webSocketConnection.create({
-          data: connectionData
+          data: {
+            userId: String(userId),
+            socketId: socket.id,
+            connectionId: socket.id,
+            status: String(status),
+            ipAddress,
+            userAgent,
+            connectedAt: new Date(),
+            metadata: {
+              serverId: process.env.SERVER_ID || 'default',
+              version: process.env.npm_package_version || '1.0.0'
+            }
+          }
         });
       } else {
         await prisma.webSocketConnection.updateMany({
           where: {
             socketId: socket.id,
-            userId: socket.userId
+            userId: String(userId)
           },
           data: {
             status: 'disconnected',
@@ -306,12 +360,14 @@ class WebSocketNotificationServer {
 
     try {
       // Send to specific user
-      this.io.to(`user:${data.userId}`).emit('notification', {
+      const notificationMessage: WebSocketMessage = {
         type: 'notification',
         data,
         timestamp: new Date(),
         id: uuidv4()
-      });
+      };
+
+      this.io.to(`user:${data.userId}`).emit('notification', notificationMessage);
 
       // Update database with notification status
       await prisma.notificationHistory.create({
@@ -323,7 +379,8 @@ class WebSocketNotificationServer {
           eventAt: new Date(),
           metadata: {
             method: 'realtime',
-            timestamp: new Date()
+            timestamp: new Date(),
+            socketServer: 'realtime'
           }
         }
       });

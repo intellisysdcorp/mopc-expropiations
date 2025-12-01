@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { logActivity } from '@/lib/activity-logger'
 import { logger } from '@/lib/logger'
 import { CreateCaseSchema, CaseSearchSchema } from '@/lib/validations/case'
+import { type Prisma } from '@prisma/client';
 
 // GET /api/cases - List cases with filtering and pagination
 export async function GET(request: NextRequest) {
@@ -324,31 +325,38 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Create the case payload with required fields
+    const casePayload: Prisma.CaseUncheckedCreateInput = {
+      ...caseData,
+      createdById: user.id,
+      startDate: caseData.startDate || new Date(),
+      // Convert undefined to null for optional fields that Prisma expects as nullable
+      description: caseData.description ?? null,
+      propertyDescription: caseData.propertyDescription ?? null,
+      propertyCoordinates: caseData.propertyCoordinates ?? null,
+      propertyArea: caseData.propertyArea ?? null,
+      propertyType: caseData.propertyType ?? null,
+      ownerIdentification: caseData.ownerIdentification ?? null,
+      ownerContact: caseData.ownerContact ?? null,
+      ownerEmail: caseData.ownerEmail ?? null,
+      ownerAddress: caseData.ownerAddress ?? null,
+      ownerType: caseData.ownerType ?? null,
+      estimatedValue: caseData.estimatedValue ?? null,
+      actualValue: caseData.actualValue ?? null,
+      appraisalValue: caseData.appraisalValue ?? null,
+      compensationAmount: caseData.compensationAmount ?? null,
+      currency: caseData.currency ?? null,
+      expropriationDecree: caseData.expropriationDecree ?? null,
+      judicialCaseNumber: caseData.judicialCaseNumber ?? null,
+      legalStatus: caseData.legalStatus ?? null,
+      assignedToId: caseData.assignedToId ?? null,
+      supervisedById: caseData.supervisedById ?? null,
+      expectedEndDate: caseData.expectedEndDate ?? null
+    }
+
     // Create the case
     const newCase = await prisma.case.create({
-      data: {
-        ...caseData,
-        createdById: user.id,
-        startDate: caseData.startDate || new Date(),
-        // Convert undefined to null for optional fields that Prisma expects as nullable
-        description: caseData.description ?? null,
-        propertyDescription: caseData.propertyDescription ?? null,
-        propertyCoordinates: caseData.propertyCoordinates ?? null,
-        propertyArea: caseData.propertyArea ?? null,
-        propertyType: caseData.propertyType ?? null,
-        ownerIdentification: caseData.ownerIdentification ?? null,
-        ownerContact: caseData.ownerContact ?? null,
-        ownerEmail: caseData.ownerEmail ?? null,
-        ownerAddress: caseData.ownerAddress ?? null,
-        ownerType: caseData.ownerType ?? null,
-        estimatedValue: caseData.estimatedValue ?? null,
-        expropriationDecree: caseData.expropriationDecree ?? null,
-        judicialCaseNumber: caseData.judicialCaseNumber ?? null,
-        legalStatus: caseData.legalStatus ?? null,
-        assignedToId: caseData.assignedToId ?? null,
-        supervisedById: caseData.supervisedById ?? null,
-        expectedEndDate: caseData.expectedEndDate ?? null
-      },
+      data: casePayload,
       include: {
         department: {
           select: {
@@ -411,7 +419,7 @@ export async function POST(request: NextRequest) {
           title: newCase.title,
           status: newCase.status,
           stage: newCase.currentStage,
-          department: newCase.department.name
+          department: newCase.department?.name
         }),
         notes: 'Caso creado inicialmente'
       }

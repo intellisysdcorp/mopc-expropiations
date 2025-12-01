@@ -13,6 +13,8 @@ import type {
   MeetingCommitment,
   MeetingDocument,
   MeetingMinutes,
+  Observation,
+  ObservationResponse,
 } from '@prisma/client';
 
 // Export Prisma types as server-only types
@@ -31,7 +33,9 @@ export type {
   MeetingDocument as PrismaMeetingDocument,
   MeetingMinutes as PrismaMeetingMinutes,
   MeetingTemplate as PrismaMeetingTemplate,
-  MeetingNotification as PrismaMeetingNotification
+  MeetingNotification as PrismaMeetingNotification,
+  Observation as PrismaObservation,
+  ObservationResponse as PrismaObservationResponse
 } from '@prisma/client';
 
 // Server-only types that extend Prisma types
@@ -286,3 +290,46 @@ export interface MeetingStats {
   avgDuration: number;
   effectivenessScore: number;
 }
+
+// Re-export observation types
+export type {
+  ObservationWithRelations,
+  ObservationResponseWithUser,
+  CreateObservationRequest,
+  CreateObservationResponseRequest,
+  ObservationFilters,
+  ObservationStats,
+  ObservationActivity
+} from './observation';
+
+export type { ObservationPriority, ObservationStatus } from './observation';
+
+// Re-export meeting types
+export type {
+  MeetingCreateData,
+  MeetingUpdateData,
+  MeetingConflict,
+  MeetingValidationSchema
+} from './meeting';
+
+// Re-export notification types
+export type {
+  NotificationCreateData,
+  NotificationUpdateData,
+  CreateNotificationRequest,
+  NotificationFilters,
+  NotificationStats,
+  NotificationWithRelations,
+  NotificationDeliveryConfig,
+  NotificationTemplateVariables,
+  NotificationCreateResponse,
+  UserNotificationPreference,
+  UpdateUserNotificationPreference,
+  CreateUserNotificationPreference,
+  CreateNotificationTemplateRequest,
+  NotificationTemplateResponse,
+  NotificationTemplateStatistics,
+  UpdateNotificationTemplateRequest,
+  NotificationTemplateFilters,
+  TemplateExtraction
+} from './notification';

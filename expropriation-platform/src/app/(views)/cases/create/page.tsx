@@ -48,8 +48,10 @@ export default function CreateCasePage() {
       }
 
       router.push('/cases')
-    } catch (error) {
-      clientLogger.error('Error creating case:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error creating case:', error)
+      }
       // Re-throw to let the form component handle the error display
       throw error
     }

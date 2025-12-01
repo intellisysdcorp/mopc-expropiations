@@ -88,7 +88,7 @@ export async function GET(
         case: {
           select: {
             id: true,
-            caseNumber: true,
+            fileNumber: true,
             title: true,
           },
         },

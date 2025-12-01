@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 import bcrypt from 'bcryptjs';
 import { logger } from '@/lib/logger';
+import type { Prisma } from '@prisma/client';
 
 // Schema for bulk operations
 const bulkOperationSchema = z.object({
@@ -80,8 +81,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let result;
     const operationStartTime = new Date();
+    let result: Prisma.BatchPayload;
+    let tempPasswords: any[] | undefined;
 
     switch (operation) {
       case 'ACTIVATE':
@@ -259,10 +261,8 @@ export async function POST(request: NextRequest) {
         });
 
         const resetResults = await Promise.all(resetPromises);
-        result = {
-          count: resetResults.length,
-          tempPasswords: resetResults,
-        };
+        result = { count: resetResults.length } as Prisma.BatchPayload;
+        tempPasswords = resetResults;
         break;
 
       case 'FORCE_LOGOUT':
@@ -307,15 +307,15 @@ export async function POST(request: NextRequest) {
       operation,
     };
 
-    if (operation === 'RESET_PASSWORD') {
-      response.tempPasswords = result.tempPasswords;
+    if (operation === 'RESET_PASSWORD' && tempPasswords) {
+      response.tempPasswords = tempPasswords;
     }
 
     return NextResponse.json(response);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Datos inválidos', details: error.errors },
+        { error: 'Datos inválidos', details: error.issues },
         { status: 400 }
       );
     }

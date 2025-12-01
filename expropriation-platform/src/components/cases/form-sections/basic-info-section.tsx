@@ -1,13 +1,19 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { RefreshCw } from 'lucide-react'
-import { FormField, TextInput, SelectInput, DateInput } from '@/components/forms/form-fields'
+import { FormField, TextInput, SelectInput, DateInput, NumberInput } from '@/components/forms/form-fields'
 import { CASE_STATUSES, CASE_STAGES, PRIORITIES } from '@/constants/case-constants'
 import { CreateCaseInput, UpdateCaseInput } from '@/lib/validations/case'
 
+type CaseFormData = CreateCaseInput | UpdateCaseInput
+
 interface BasicInfoSectionProps {
-  formData: CreateCaseInput | UpdateCaseInput
-  onInputChange: (field: keyof (CreateCaseInput | UpdateCaseInput), value: any) => void
+  formData: CaseFormData & {
+    status?: string
+    progressPercentage?: number
+    actualEndDate?: Date
+  }
+  onInputChange: (field: string, value: any) => void
   mode: 'create' | 'edit'
   generateCaseNumber?: () => Promise<string>
   hasFieldError?: (field: string) => boolean
@@ -34,7 +40,7 @@ export function BasicInfoSection({
             id="fileNumber"
             label="Número de Expediente"
             required={mode === 'create'}
-            error={hasFieldError?.('fileNumber')}
+            error={hasFieldError?.('fileNumber') || false}
           >
             <div className="flex gap-2">
               <TextInput
@@ -42,7 +48,7 @@ export function BasicInfoSection({
                 value={formData.fileNumber}
                 onChange={(value) => onInputChange('fileNumber', value)}
                 placeholder={mode === 'create' ? "EXP-2024-10-23-1" : "EXP-2024-001"}
-                error={hasFieldError?.('fileNumber')}
+                error={hasFieldError?.('fileNumber') || false}
                 required={mode === 'create'}
               />
               {mode === 'create' && generateCaseNumber && (
@@ -84,14 +90,14 @@ export function BasicInfoSection({
           id="title"
           label="Título del Caso"
           required={mode === 'create'}
-          error={hasFieldError?.('title')}
+          error={hasFieldError?.('title') || false}
         >
           <TextInput
             id="title"
             value={formData.title}
             onChange={(value) => onInputChange('title', value)}
             placeholder="Breve descripción del caso"
-            error={hasFieldError?.('title')}
+            error={hasFieldError?.('title') || false}
             required={mode === 'create'}
           />
         </FormField>
@@ -143,14 +149,13 @@ export function BasicInfoSection({
               id="progressPercentage"
               label="Progreso (%)"
             >
-              <TextInput
+              <NumberInput
                 id="progressPercentage"
-                value={formData.progressPercentage?.toString()}
-                onChange={(value) => onInputChange('progressPercentage', parseInt(value) || 0)}
-                type="number"
+                value={formData.progressPercentage}
+                onChange={(value) => onInputChange('progressPercentage', value || 0)}
                 placeholder="0"
-                min="0"
-                max="100"
+                min={0}
+                max={100}
               />
             </FormField>
           )}

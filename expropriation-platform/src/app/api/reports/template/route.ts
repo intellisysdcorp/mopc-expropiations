@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     if (type === 'pdf') {
       const pdfBuffer = await generatePDFTemplate();
-      return new NextResponse(pdfBuffer, {
+      return new NextResponse(new Uint8Array(pdfBuffer), {
         headers: {
           'Content-Type': 'application/pdf',
           'Content-Disposition': 'attachment; filename="template-report.pdf"'
@@ -133,7 +133,7 @@ async function generatePDFTemplate(): Promise<Buffer> {
   yPosition = addText('3. | __________ | ________ | __________ | ______ | ________ | __________ | ________', 10);
   yPosition += 8;
 
-  yPosition = addText('... (continuar con el resto de casos)', 10, 10);
+  yPosition = addText('... (continuar con el resto de casos)', 10);
   yPosition += 15;
 
   // Alerts Template
@@ -157,7 +157,7 @@ async function generatePDFTemplate(): Promise<Buffer> {
   yPosition += 15;
 
   // Footer
-  const totalPages = doc.internal.getNumberOfPages();
+  const totalPages = doc.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
     doc.setFontSize(8);

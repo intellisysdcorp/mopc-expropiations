@@ -7,6 +7,20 @@ import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 import { logger } from '@/lib/logger';
 
+// Type for the user where clause
+type UserWhereClause = {
+  departmentId: string;
+  deletedAt: null;
+  OR?: Array<{
+    firstName?: { contains: string; mode: 'insensitive' };
+    lastName?: { contains: string; mode: 'insensitive' };
+    email?: { contains: string; mode: 'insensitive' };
+    username?: { contains: string; mode: 'insensitive' };
+  }>;
+  isActive?: boolean;
+  roleId?: string;
+};
+
 // GET /api/departments/[id]/users - Get users in a department
 export async function GET(
   request: NextRequest,
@@ -43,7 +57,7 @@ export async function GET(
     }
 
     // Build where clause
-    const where: any = {
+    const where: UserWhereClause = {
       departmentId: id,
       deletedAt: null,
     };
@@ -131,7 +145,7 @@ const transferUserSchema = z.object({
   destinationDepartmentId: z.string().min(1, 'El departamento de destino es requerido'),
   transferType: z.enum(['PROMOTION', 'DEMOTION', 'LATERAL', 'TEMPORARY']),
   reason: z.string().optional(),
-  scheduledFor: z.string().datetime().optional(),
+  scheduledFor: z.iso.date().optional(),
   notes: z.string().optional(),
 });
 
@@ -211,25 +225,36 @@ export async function POST(
 
     // Create transfer records
     const transfers = await Promise.all(
-      userIds.map(userId =>
-        prisma.departmentTransfer.create({
-          data: {
-            userId,
-            sourceDepartmentId,
-            destinationDepartmentId,
-            transferType,
-            reason,
-            effectiveDate: scheduledFor ? new Date(scheduledFor) : new Date(),
-            scheduledFor: scheduledFor ? new Date(scheduledFor) : undefined,
-            status: scheduledFor ? 'PENDING' : 'IN_PROGRESS',
-            notes,
-            metadata: {
-              initiatedBy: session.user.id,
-              initiatedAt: new Date().toISOString(),
-            },
+      userIds.map(userId => {
+        // Build transfer data object with conditional fields
+        const transferData: any = {
+          userId,
+          sourceDepartmentId,
+          destinationDepartmentId,
+          transferType,
+          effectiveDate: scheduledFor ? new Date(scheduledFor) : new Date(),
+          status: scheduledFor ? 'PENDING' : 'IN_PROGRESS',
+          metadata: {
+            initiatedBy: session.user.id,
+            initiatedAt: new Date().toISOString(),
           },
-        })
-      )
+        };
+
+        // Add optional fields only if they have values
+        if (reason) {
+          transferData.reason = reason;
+        }
+        if (scheduledFor) {
+          transferData.scheduledFor = new Date(scheduledFor);
+        }
+        if (notes) {
+          transferData.notes = notes;
+        }
+
+        return prisma.departmentTransfer.create({
+          data: transferData,
+        });
+      })
     );
 
     // If transfer is immediate (not scheduled), update users
@@ -308,7 +333,7 @@ export async function POST(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Datos inválidos', details: error.errors },
+        { error: 'Datos inválidos', details: error.issues },
         { status: 400 }
       );
     }

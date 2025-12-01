@@ -7,11 +7,27 @@ import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 import { logger } from '@/lib/logger';
 
+// Type definitions for department status updates
+interface DepartmentStatusUpdate {
+  isActive?: boolean;
+}
+
+interface ActivityMetadata {
+  departmentName?: string;
+  departmentCode?: string;
+  changes?: string[];
+  notes?: string;
+  previousStatus?: {
+    isActive: boolean;
+  };
+  newStatus?: {
+    isActive: boolean;
+  };
+}
+
 // Schema for status changes
 const statusChangeSchema = z.object({
   isActive: z.boolean().optional(),
-  isSuspended: z.boolean().optional(),
-  suspensionReason: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -60,7 +76,7 @@ export async function PATCH(
       );
     }
 
-    const updateData: any = {};
+    const updateData: DepartmentStatusUpdate = {};
     const activityChanges: string[] = [];
 
     // Handle active status change
@@ -81,30 +97,6 @@ export async function PATCH(
 
       updateData.isActive = validatedData.isActive;
       activityChanges.push(validatedData.isActive ? 'Activado' : 'Desactivado');
-    }
-
-    // Handle suspension status change
-    if (validatedData.isSuspended !== undefined && validatedData.isSuspended !== department.isSuspended) {
-      if (validatedData.isSuspended === true) {
-        if (!validatedData.suspensionReason) {
-          return NextResponse.json(
-            { error: 'Se requiere una razón para la suspensión' },
-            { status: 400 }
-          );
-        }
-
-        updateData.isSuspended = true;
-        updateData.suspensionReason = validatedData.suspensionReason;
-        updateData.suspendedAt = new Date();
-        updateData.suspendedBy = session.user.id;
-        activityChanges.push(`Suspendido: ${validatedData.suspensionReason}`);
-      } else {
-        updateData.isSuspended = false;
-        updateData.suspensionReason = null;
-        updateData.suspendedAt = null;
-        updateData.suspendedBy = null;
-        activityChanges.push('Reactivado');
-      }
     }
 
     // If no changes to make
@@ -147,80 +139,15 @@ export async function PATCH(
         departmentName: department.name,
         departmentCode: department.code,
         changes: activityChanges,
-        reason: validatedData.suspensionReason,
         notes: validatedData.notes,
         previousStatus: {
           isActive: department.isActive,
-          isSuspended: department.isSuspended,
         },
         newStatus: {
           isActive: updatedDepartment.isActive,
-          isSuspended: updatedDepartment.isSuspended,
         },
       },
     });
-
-    // If department is being suspended, suspend all active users
-    if (validatedData.isSuspended === true) {
-      await prisma.user.updateMany({
-        where: {
-          departmentId: (await params).id,
-          isActive: true,
-          isSuspended: false,
-        },
-        data: {
-          isSuspended: true,
-          suspensionReason: `Suspensión automática por suspensión del departamento: ${validatedData.suspensionReason}`,
-          suspendedAt: new Date(),
-          suspendedBy: session.user.id,
-        },
-      });
-
-      // Log suspension for affected users
-      const affectedUsers = await prisma.user.findMany({
-        where: {
-          departmentId: (await params).id,
-          isActive: true,
-        },
-        select: { id: true, firstName: true, lastName: true },
-      });
-
-      await Promise.all(
-        affectedUsers.map(user =>
-          logActivity({
-            userId: session.user.id,
-            action: 'SUSPENDED',
-            entityType: 'user',
-            entityId: user.id,
-            description: `Usuario suspendido automáticamente: ${user.firstName} ${user.lastName}`,
-            metadata: {
-              userName: `${user.firstName} ${user.lastName}`,
-              reason: `Suspensión automática por suspensión del departamento: ${validatedData.suspensionReason}`,
-              departmentSuspension: true,
-            },
-          })
-        )
-      );
-    }
-
-    // If department is being reactivated, reactivate suspended users (if they were suspended due to department suspension)
-    if (validatedData.isSuspended === false && department.isSuspended === true) {
-      await prisma.user.updateMany({
-        where: {
-          departmentId: (await params).id,
-          isSuspended: true,
-          suspensionReason: {
-            contains: 'Suspensión automática por suspensión del departamento',
-          },
-        },
-        data: {
-          isSuspended: false,
-          suspensionReason: null,
-          suspendedAt: null,
-          suspendedBy: null,
-        },
-      });
-    }
 
     // Return formatted response
     const sanitizedDepartment = {
@@ -239,7 +166,7 @@ export async function PATCH(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Datos inválidos', details: error.errors },
+        { error: 'Datos inválidos', details: error.issues },
         { status: 400 }
       );
     }
@@ -270,7 +197,7 @@ export async function GET(
     // Check if department exists
     const department = await prisma.department.findUnique({
       where: { id: (await params).id },
-      select: { id: true, name: true, code: true, isActive: true, isSuspended: true },
+      select: { id: true, name: true, code: true, isActive: true },
     });
 
     if (!department) {
@@ -298,10 +225,9 @@ export async function GET(
 
     // Filter activities related to status changes
     const statusActivities = activities.filter(activity => {
-      const metadata = activity.metadata as any;
+      const metadata = activity.metadata as ActivityMetadata;
       return metadata?.previousStatus || metadata?.changes?.some((change: string) =>
-        change.includes('Activado') || change.includes('Desactivado') ||
-        change.includes('Suspendido') || change.includes('Reactivado')
+        change.includes('Activado') || change.includes('Desactivado')
       );
     });
 

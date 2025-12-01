@@ -1,23 +1,10 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
-import { ActivityType, ReviewType } from '@prisma/client';
+import { ActivityType, Prisma } from '@prisma/client';
 import { logger } from '@/lib/logger';
-
-// Validation schemas
-const createAssignmentSchema = z.object({
-  caseId: z.string(),
-  reviewType: z.nativeEnum(ReviewType),
-  assignedTo: z.string(),
-  priority: z.string().default('medium'),
-  instructions: z.string().optional(),
-  dueDate: z.string().datetime().optional(),
-  estimatedTime: z.number().optional(),
-  parallelWith: z.array(z.string()).optional(),
-  dependsOn: z.array(z.string()).optional(),
-});
+import { CreateAssignmentInput, ReviewType } from '@/types/review';
 
 // GET /api/reviews/assignments - Get review assignments
 export async function GET(request: NextRequest) {
@@ -103,7 +90,19 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const validatedData = createAssignmentSchema.parse(body);
+    const validatedData: CreateAssignmentInput = {
+      caseId: body.caseId,
+      reviewType: body.reviewType,
+      assignedTo: body.assignedTo,
+      assignedBy: session.user.id,
+      priority: body.priority || 'medium',
+      parallelWith: body.parallelWith as Prisma.InputJsonValue,
+      dependsOn: body.dependsOn as Prisma.InputJsonValue,
+    };
+
+    if (body.instructions) validatedData.instructions = body.instructions;
+    if (body.dueDate) validatedData.dueDate = new Date(body.dueDate);
+    if (body.estimatedTime) validatedData.estimatedTime = body.estimatedTime;
 
     // Check if case exists
     const caseExists = await prisma.case.findUnique({
@@ -131,18 +130,7 @@ export async function POST(request: NextRequest) {
 
     // Create assignment
     const assignment = await prisma.reviewAssignment.create({
-      data: {
-        caseId: validatedData.caseId,
-        reviewType: validatedData.reviewType,
-        assignedTo: validatedData.assignedTo,
-        assignedBy: session.user.id,
-        priority: validatedData.priority,
-        instructions: validatedData.instructions,
-        dueDate: validatedData.dueDate ? new Date(validatedData.dueDate) : null,
-        estimatedTime: validatedData.estimatedTime,
-        parallelWith: validatedData.parallelWith,
-        dependsOn: validatedData.dependsOn,
-      },
+      data: validatedData,
       include: {
         case: {
           select: {
@@ -203,13 +191,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(assignment, { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: 400 }
-      );
-    }
-
     logger.error('Error creating review assignment:', error);
     return NextResponse.json(
       { error: 'Failed to create review assignment' },

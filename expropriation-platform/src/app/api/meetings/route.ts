@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { logger } from '@/lib/logger';
+import type { MeetingCreateData, MeetingConflict } from '@/types/meeting';
 
 // GET /api/meetings - List meetings with filtering and pagination
 export async function GET(request: NextRequest) {
@@ -237,18 +238,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create meeting
+    // Create meeting data object using helper function
+    const meetingData = createMeetingData(validatedData, session.user.id);
+
     const meeting = await prisma.meeting.create({
-      data: {
-        ...validatedData,
-        organizerId: session.user.id,
-                plannedDuration: Math.round(
-          (validatedData.scheduledEnd.getTime() - validatedData.scheduledStart.getTime()) / (1000 * 60)
-        ),
-        metadata: validatedData.metadata || {},
-        equipment: validatedData.equipment || [],
-        recurrenceRule: validatedData.recurrenceRule || null,
-      },
+      data: meetingData,
       include: {
         organizer: {
           select: { id: true, firstName: true, lastName: true, email: true },
@@ -285,7 +279,7 @@ export async function POST(request: NextRequest) {
     logger.error("Error creating meeting:", error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Validation failed", details: error.errors },
+        { error: "Validation failed", details: error.issues },
         { status: 400 }
       );
     }
@@ -302,35 +296,41 @@ async function checkMeetingConflicts(
   endTime: Date,
   userId: string,
   room?: string
-): Promise<any[]> {
-  const conflicts = [];
+): Promise<MeetingConflict[]> {
+  const conflicts: MeetingConflict[] = [];
 
   // Check participant conflicts
   const participantConflicts = await prisma.meeting.findMany({
     where: {
-      OR: [
-        { organizerId: userId },
-        { chairId: userId },
-        { participants: { some: { userId } } },
-      ],
-      status: { not: "CANCELLED" },
-      OR: [
+      AND: [
         {
-          AND: [
-            { scheduledStart: { lte: startTime } },
-            { scheduledEnd: { gt: startTime } },
+          OR: [
+            { organizerId: userId },
+            { chairId: userId },
+            { participants: { some: { userId } } },
           ],
         },
+        { status: { not: "CANCELLED" } },
         {
-          AND: [
-            { scheduledStart: { lt: endTime } },
-            { scheduledEnd: { gte: endTime } },
-          ],
-        },
-        {
-          AND: [
-            { scheduledStart: { gte: startTime } },
-            { scheduledEnd: { lte: endTime } },
+          OR: [
+            {
+              AND: [
+                { scheduledStart: { lte: startTime } },
+                { scheduledEnd: { gt: startTime } },
+              ],
+            },
+            {
+              AND: [
+                { scheduledStart: { lt: endTime } },
+                { scheduledEnd: { gte: endTime } },
+              ],
+            },
+            {
+              AND: [
+                { scheduledStart: { gte: startTime } },
+                { scheduledEnd: { lte: endTime } },
+              ],
+            },
           ],
         },
       ],
@@ -355,25 +355,29 @@ async function checkMeetingConflicts(
   if (room) {
     const roomConflicts = await prisma.meeting.findMany({
       where: {
-        room,
-        status: { not: "CANCELLED" },
-        OR: [
+        AND: [
+          { room },
+          { status: { not: "CANCELLED" } },
           {
-            AND: [
-              { scheduledStart: { lte: startTime } },
-              { scheduledEnd: { gt: startTime } },
-            ],
-          },
-          {
-            AND: [
-              { scheduledStart: { lt: endTime } },
-              { scheduledEnd: { gte: endTime } },
-            ],
-          },
-          {
-            AND: [
-              { scheduledStart: { gte: startTime } },
-              { scheduledEnd: { lte: endTime } },
+            OR: [
+              {
+                AND: [
+                  { scheduledStart: { lte: startTime } },
+                  { scheduledEnd: { gt: startTime } },
+                ],
+              },
+              {
+                AND: [
+                  { scheduledStart: { lt: endTime } },
+                  { scheduledEnd: { gte: endTime } },
+                ],
+              },
+              {
+                AND: [
+                  { scheduledStart: { gte: startTime } },
+                  { scheduledEnd: { lte: endTime } },
+                ],
+              },
             ],
           },
         ],
@@ -393,4 +397,75 @@ async function checkMeetingConflicts(
   }
 
   return conflicts;
+}
+
+// Helper function to create meeting data object
+function createMeetingData(validatedData: any, organizerId: string): MeetingCreateData {
+  // Calculate planned duration in minutes
+  const plannedDuration = Math.round(
+    (validatedData.scheduledEnd.getTime() - validatedData.scheduledStart.getTime()) / (1000 * 60)
+  );
+
+  // Base meeting data with required fields
+  const meetingData: MeetingCreateData = {
+    title: validatedData.title,
+    meetingType: validatedData.meetingType,
+    priority: validatedData.priority,
+    status: "SCHEDULED", // Default status for new meetings
+    virtual: validatedData.virtual,
+    equipment: validatedData.equipment || [],
+    scheduledStart: validatedData.scheduledStart,
+    scheduledEnd: validatedData.scheduledEnd,
+    timezone: validatedData.timezone,
+    allowGuests: validatedData.allowGuests,
+    requireApproval: validatedData.requireApproval,
+    isPrivate: validatedData.isPrivate,
+    recordMeeting: validatedData.recordMeeting,
+    enableChat: validatedData.enableChat,
+    enableScreenShare: validatedData.enableScreenShare,
+    isRecurring: validatedData.isRecurring,
+    organizerId,
+    plannedDuration,
+    metadata: validatedData.metadata || {},
+  };
+
+  // Add optional fields only if they exist
+  if (validatedData.description) {
+    meetingData.description = validatedData.description;
+  }
+  if (validatedData.location) {
+    meetingData.location = validatedData.location;
+  }
+  if (validatedData.meetingUrl) {
+    meetingData.meetingUrl = validatedData.meetingUrl;
+  }
+  if (validatedData.dialInInfo) {
+    meetingData.dialInInfo = validatedData.dialInInfo;
+  }
+  if (validatedData.room) {
+    meetingData.room = validatedData.room;
+  }
+  if (validatedData.maxParticipants) {
+    meetingData.maxParticipants = validatedData.maxParticipants;
+  }
+  if (validatedData.chairId) {
+    meetingData.chairId = validatedData.chairId;
+  }
+  if (validatedData.caseId) {
+    meetingData.caseId = validatedData.caseId;
+  }
+  if (validatedData.agendaTemplateId) {
+    meetingData.agendaTemplateId = validatedData.agendaTemplateId;
+  }
+  if (validatedData.tags) {
+    meetingData.tags = validatedData.tags;
+  }
+  if (validatedData.recurrenceRule) {
+    meetingData.recurrenceRule = validatedData.recurrenceRule;
+  } else {
+    // Initialize empty recurrence rule if not provided but meeting is recurring
+    meetingData.recurrenceRule = {};
+  }
+
+  return meetingData;
 }

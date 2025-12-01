@@ -3,43 +3,20 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
-import { DocumentSecurityLevel } from '@prisma/client';
 import { logger } from '@/lib/logger';
+import type { Prisma } from '@prisma/client';
 
-// Validation schemas
-const updateTemplateSchema = z.object({
-  name: z.string().min(1).optional(),
-  description: z.string().optional(),
-  content: z.string().min(1).optional(),
-  variables: z.record(z.any()).optional(),
-  placeholders: z.record(z.any()).optional(),
-  layout: z.record(z.any()).optional(),
-  securityLevel: z.nativeEnum(DocumentSecurityLevel).optional(),
-  allowedRoles: z.array(z.string()).optional(),
-  requiredFields: z.array(z.string()).optional(),
-  requiresApproval: z.boolean().optional(),
-  isActive: z.boolean().optional(),
-});
-
-const createVersionSchema = z.object({
-  content: z.string().min(1, 'Template content is required'),
-  changeLog: z.string().optional(),
-  isMajorVersion: z.boolean().default(false),
-});
-
-const useTemplateSchema = z.object({
-  title: z.string().min(1),
-  variables: z.record(z.any()).optional(),
-  caseId: z.string().optional(),
-  documentType: z.string().optional(),
-  category: z.string().optional(),
-  securityLevel: z.nativeEnum(DocumentSecurityLevel).optional(),
-});
+// Helper function to add fullName to objects with firstName and lastName
+function withFullName<T extends { firstName: string; lastName: string }>(obj: T): T & { fullName: string } {
+  return {
+    ...obj,
+    fullName: `${obj.firstName} ${obj.lastName}`,
+  };
+}
 
 // GET /api/templates/[id] - Get a specific template
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -101,36 +78,45 @@ export async function GET(
       template.isActive &&
       (template.createdBy === session.user.id ||
         template.isDefault ||
-        !template.allowedRoles.length);
+        (template.allowedRoles && Array.isArray(template.allowedRoles) && template.allowedRoles.length > 0) === false);
 
     if (!hasAccess) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
     // Format response
-    const response = {
+    const response: any = {
       ...template,
-      creator: {
-        ...template.creator,
-        fullName: `${template.creator.firstName} ${template.creator.lastName}`,
-      },
-      versions: template.versions.map(version => ({
-        ...version,
-        creator: {
-          ...version.creator,
-          fullName: `${version.creator.firstName} ${version.creator.lastName}`,
-        },
-        createdAt: version.createdAt.toISOString(),
-      })),
-      documents: template.documents.map(doc => ({
-        ...doc,
-        createdAt: doc.createdAt.toISOString(),
-      })),
       createdAt: template.createdAt.toISOString(),
       updatedAt: template.updatedAt.toISOString(),
-      lastUsedAt: template.lastUsedAt?.toISOString(),
-      approvedAt: template.approvedAt?.toISOString(),
     };
+
+    // Add nullable date fields conditionally
+    if (template.lastUsedAt) {
+      response.lastUsedAt = template.lastUsedAt.toISOString();
+    }
+    if (template.approvedAt) {
+      response.approvedAt = template.approvedAt.toISOString();
+    }
+    if (template.creator) {
+      response.creator = withFullName(template.creator);
+    }
+    if (template.versions.length > 0) {
+      response.versions = template.versions.map((version) => {
+        const hydratedVersion: any = {
+          ...version,
+          createdAt: version.createdAt.toISOString()
+        };
+        if (version.creator) hydratedVersion.creator = withFullName(version.creator)
+        return hydratedVersion;
+      })
+    }
+    if (template.documents.length > 0) {
+      response.documents = template.documents.map((doc) => ({
+        ...doc,
+        createdAt: doc.createdAt.toISOString()
+      }))
+    }
 
     return NextResponse.json(response);
   } catch (error) {
@@ -155,7 +141,6 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const validatedData = updateTemplateSchema.parse(body);
 
     // Check if template exists and user has permission
     const existingTemplate = await prisma.documentTemplate.findUnique({
@@ -171,10 +156,10 @@ export async function PUT(
     }
 
     // Check if new name conflicts with existing template
-    if (validatedData.name && validatedData.name !== existingTemplate.name) {
+    if (body.name && body.name !== existingTemplate.name) {
       const conflictingTemplate = await prisma.documentTemplate.findFirst({
         where: {
-          name: validatedData.name,
+          name: body.name,
           id: { not: id },
         },
       });
@@ -187,23 +172,26 @@ export async function PUT(
       }
     }
 
+    const payload: Prisma.DocumentTemplateUpdateInput = {
+      updatedAt: new Date()
+    };
+
+    if (body.name) payload.name = body.name;
+    if (body.description !== undefined) payload.description = body.description;
+    if (body.content) payload.content = body.content;
+    if (body.variables) payload.variables = body.variables as Prisma.InputJsonValue;
+    if (body.placeholders) payload.placeholders = body.placeholders as Prisma.InputJsonValue;
+    if (body.layout) payload.layout = body.layout as Prisma.InputJsonValue;
+    if (body.securityLevel) payload.securityLevel = body.securityLevel;
+    if (body.allowedRoles) payload.allowedRoles = body.allowedRoles;
+    if (body.requiredFields) payload.requiredFields = body.requiredFields as Prisma.InputJsonValue;
+    if (body.requiresApproval !== undefined) payload.requiresApproval = body.requiresApproval;
+    if (body.isActive !== undefined) payload.isActive = body.isActive;
+
     // Update template
     const template = await prisma.documentTemplate.update({
       where: { id },
-      data: {
-        name: validatedData.name,
-        description: validatedData.description,
-        content: validatedData.content,
-        variables: validatedData.variables,
-        placeholders: validatedData.placeholders,
-        layout: validatedData.layout,
-        securityLevel: validatedData.securityLevel,
-        allowedRoles: validatedData.allowedRoles,
-        requiredFields: validatedData.requiredFields,
-        requiresApproval: validatedData.requiresApproval,
-        isActive: validatedData.isActive,
-        updatedAt: new Date(),
-      },
+      data: payload,
       include: {
         creator: {
           select: {
@@ -217,14 +205,14 @@ export async function PUT(
     });
 
     // Create new version if content changed
-    if (validatedData.content && validatedData.content !== existingTemplate.content) {
+    if (body.content && body.content !== existingTemplate.content) {
       const newVersionNumber = existingTemplate.version + 1;
 
       await prisma.documentTemplateVersion.create({
         data: {
           templateId: id,
           version: newVersionNumber,
-          content: validatedData.content,
+          content: body.content,
           changeLog: 'Template updated',
           createdBy: session.user.id,
         },
@@ -240,10 +228,7 @@ export async function PUT(
     // Format response
     const response = {
       ...template,
-      creator: {
-        ...template.creator,
-        fullName: `${template.creator.firstName} ${template.creator.lastName}`,
-      },
+      creator: withFullName(template.creator),
       createdAt: template.createdAt.toISOString(),
       updatedAt: template.updatedAt.toISOString(),
     };
@@ -251,14 +236,6 @@ export async function PUT(
     return NextResponse.json(response);
   } catch (error) {
     logger.error('Error updating template:', error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: 400 }
-      );
-    }
-
     return NextResponse.json(
       { error: 'Failed to update template' },
       { status: 500 }
@@ -268,7 +245,7 @@ export async function PUT(
 
 // DELETE /api/templates/[id] - Delete template
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -339,7 +316,6 @@ export async function POST_VERSION(
 
     const { id } = await params;
     const body = await request.json();
-    const validatedData = createVersionSchema.parse(body);
 
     // Check if template exists and user has permission
     const existingTemplate = await prisma.documentTemplate.findUnique({
@@ -360,7 +336,7 @@ export async function POST_VERSION(
       orderBy: { version: 'desc' },
     });
 
-    const newVersionNumber = validatedData.isMajorVersion
+    const newVersionNumber = body.isMajorVersion
       ? Math.floor((lastVersion?.version || 0) / 10) * 10 + 10
       : (lastVersion?.version || 0) + 1;
 
@@ -369,8 +345,8 @@ export async function POST_VERSION(
       data: {
         templateId: id,
         version: newVersionNumber,
-        content: validatedData.content,
-        changeLog: validatedData.changeLog || 'New version created',
+        content: body.content,
+        changeLog: body.changeLog || 'New version created',
         createdBy: session.user.id,
       },
       include: {
@@ -389,32 +365,21 @@ export async function POST_VERSION(
       where: { id },
       data: {
         version: newVersionNumber,
-        content: validatedData.content,
+        content: body.content,
         updatedAt: new Date(),
       },
     });
 
     // Format response
-    const response = {
+    const response: any = {
       ...newVersion,
-      creator: {
-        ...newVersion.creator,
-        fullName: `${newVersion.creator.firstName} ${newVersion.creator.lastName}`,
-      },
+      creator: withFullName(newVersion.creator),
       createdAt: newVersion.createdAt.toISOString(),
     };
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
     logger.error('Error creating template version:', error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: 400 }
-      );
-    }
-
     return NextResponse.json(
       { error: 'Failed to create template version' },
       { status: 500 }
@@ -435,7 +400,6 @@ export async function POST_USE(
 
     const { id } = await params;
     const body = await request.json();
-    const validatedData = useTemplateSchema.parse(body);
 
     // Check if template exists and is active
     const template = await prisma.documentTemplate.findUnique({
@@ -454,7 +418,7 @@ export async function POST_USE(
     const hasAccess =
       template.createdBy === session.user.id ||
       template.isDefault ||
-      !template.allowedRoles.length;
+      (template.allowedRoles && Array.isArray(template.allowedRoles) && template.allowedRoles.length > 0) === false;
 
     if (!hasAccess) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
@@ -462,12 +426,12 @@ export async function POST_USE(
 
     // Process template content with variables
     let processedContent = template.content;
-    if (validatedData.variables) {
-      for (const [key, value] of Object.entries(validatedData.variables)) {
+    if (body.variables) {
+      for (const [key, value] of Object.entries(body.variables)) {
         const placeholder = `{{${key}}}`;
         processedContent = processedContent.replace(
-          new RegExp(placeholder, 'g'),
-          String(value)
+          new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
+          String(value ?? '')
         );
       }
     }
@@ -486,28 +450,20 @@ export async function POST_USE(
       templateId: id,
       templateName: template.name,
       processedContent,
-      variables: validatedData.variables,
+      variables: body.variables || {},
       documentData: {
-        title: validatedData.title,
+        title: body.title,
         description: `Document created from template: ${template.name}`,
         templateId: id,
-        caseId: validatedData.caseId,
-        documentType: validatedData.documentType,
-        category: validatedData.category || template.category,
-        securityLevel: validatedData.securityLevel || template.securityLevel,
+        caseId: body.caseId,
+        documentType: body.documentType,
+        category: body.category || template.category,
+        securityLevel: body.securityLevel || template.securityLevel,
         content: processedContent,
       },
-    });
+    } as any);
   } catch (error) {
     logger.error('Error using template:', error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
-        { status: 400 }
-      );
-    }
-
     return NextResponse.json(
       { error: 'Failed to use template' },
       { status: 500 }
@@ -547,7 +503,7 @@ export async function GET_PREVIEW(
     const hasAccess =
       template.createdBy === session.user.id ||
       template.isDefault ||
-      !template.allowedRoles.length;
+      (template.allowedRoles && Array.isArray(template.allowedRoles) && template.allowedRoles.length > 0) === false;
 
     if (!hasAccess) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
@@ -572,8 +528,8 @@ export async function GET_PREVIEW(
       for (const [key, value] of Object.entries(variables)) {
         const placeholder = `{{${key}}}`;
         processedContent = processedContent.replace(
-          new RegExp(placeholder, 'g'),
-          String(value)
+          new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'),
+          String(value ?? '')
         );
       }
     }
@@ -582,12 +538,11 @@ export async function GET_PREVIEW(
     return NextResponse.json({
       templateId: id,
       templateName: template.name,
-      templateDescription: template.description,
+      templateDescription: template.description || '',
       originalContent: template.content,
       processedContent,
       variables,
       placeholders: template.placeholders,
-      variables: template.variables,
       requiredFields: template.requiredFields,
     });
   } catch (error) {

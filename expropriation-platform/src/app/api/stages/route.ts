@@ -35,7 +35,7 @@ export async function GET(_request: NextRequest) {
         _count: {
           select: {
             caseStageAssignments: true,
-            stageProgressions: true
+            toProgressions: true
           }
         }
       }

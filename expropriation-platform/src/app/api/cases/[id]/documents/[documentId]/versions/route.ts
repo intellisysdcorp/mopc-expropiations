@@ -13,13 +13,13 @@ const createVersionSchema = z.object({
   changeDescription: z.string().optional(),
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
-  customFields: z.record(z.any()).optional(),
+  customFields: z.record(z.string(), z.any()).optional(),
   isDraft: z.boolean().default(true),
 });
 
 // GET /api/cases/[id]/documents/[documentId]/versions - Get document versions
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string; documentId: string }> }
 ) {
   try {
@@ -81,7 +81,7 @@ export async function GET(
     const versions = await prisma.documentVersion.findMany({
       where: { documentId },
       include: {
-        uploadedBy: {
+        creator: {
           select: {
             id: true,
             firstName: true,
@@ -98,7 +98,7 @@ export async function GET(
       where: {
         documentId,
         action: {
-          in: ['VERSION_CREATED', 'VERSION_UPLOADED', 'VERSION_RESTORED']
+          in: ['VERSIONED', 'UPLOADED', 'RESTORED']
         }
       },
       include: {
@@ -117,13 +117,12 @@ export async function GET(
     // Format versions
     const formattedVersions = versions.map(version => ({
       ...version,
-      uploadedBy: {
-        ...version.uploadedBy,
-        fullName: `${version.uploadedBy.firstName} ${version.uploadedBy.lastName}`,
+      creator: {
+        ...version.creator,
+        fullName: `${version.creator.firstName} ${version.creator.lastName}`,
       },
       fileSizeFormatted: formatFileSize(version.fileSize),
       createdAt: version.createdAt.toISOString(),
-      updatedAt: version.updatedAt.toISOString(),
     }));
 
     const formattedHistory = versionHistory.map(history => ({
@@ -193,11 +192,6 @@ export async function POST(
       }),
       prisma.document.findUnique({
         where: { id: documentId },
-        include: {
-          uploadedBy: {
-            select: { id: true }
-          }
-        },
       }),
     ]);
 
@@ -252,19 +246,19 @@ export async function POST(
           documentId,
           version: nextVersion,
           title: validatedData.title || currentDocument.title,
-          description: validatedData.description,
+          description: validatedData.description || null,
           fileName: currentDocument.fileName,
           filePath: currentDocument.filePath,
           fileSize: currentDocument.fileSize,
           mimeType: currentDocument.mimeType,
-          fileHash: currentDocument.fileHash || undefined,
-          changeDescription: validatedData.changeDescription,
-          isDraft: validatedData.isDraft,
-          createdById: session.user.id,
-          metadata: validatedData.customFields || {},
+          fileHash: currentDocument.fileHash || null,
+          changeSummary: validatedData.changeDescription || null,
+          isPublished: !validatedData.isDraft,
+          createdBy: session.user.id,
+          diffData: validatedData.customFields || {},
         },
         include: {
-          uploadedBy: {
+          creator: {
             select: {
               id: true,
               firstName: true,
@@ -282,17 +276,15 @@ export async function POST(
       data: { isLatest: false },
     });
 
-    // Update main document record
-    const updatedDocument = await prisma.document.update({
+    const updateObject = {
       where: { id: documentId },
       data: {
         title: validatedData.title || currentDocument.title,
-        description: validatedData.description,
         version: nextVersion,
         isLatest: true,
         isDraft: validatedData.isDraft,
         updatedAt: new Date(),
-        metadata: validatedData.customFields || currentDocument.metadata,
+        metadata: (validatedData.customFields || currentDocument.metadata) as any,
       },
       include: {
         uploadedBy: {
@@ -311,13 +303,20 @@ export async function POST(
           },
         },
       },
-    });
+    }
+
+    if (validatedData.description) {
+      (updateObject.data as any).description = validatedData.description;
+    }
+
+    // Update main document record
+    const updatedDocument = await prisma.document.update(updateObject);
 
     // Create history entry
     await prisma.documentHistory.create({
       data: {
         documentId,
-        action: file ? 'VERSION_UPLOADED' : 'VERSION_UPDATED',
+        action: file ? 'UPLOADED' : 'EDITED',
         description: `Version ${nextVersion} created: ${validatedData.changeDescription || 'Document updated'}`,
         userId: session.user.id,
         previousValue: JSON.stringify({ version: currentDocument.version }),
@@ -333,7 +332,7 @@ export async function POST(
     // Create activity log
     await prisma.activity.create({
       data: {
-        action: 'DOCUMENT_VERSIONED',
+        action: 'UPDATED',
         entityType: 'document',
         entityId: documentId,
         description: `New version ${nextVersion} created for document: ${updatedDocument.title}`,
@@ -377,9 +376,10 @@ async function hasDepartmentAccess(userId: string, departmentId: string): Promis
   if (!user) return false;
 
   const sameDepartment = user.departmentId === departmentId;
-  const hasAdminAccess = user.role?.permissions?.admin ||
-                        user.role?.permissions?.allDepartments ||
-                        user.role?.permissions?.viewAllCases;
+  const permissions = user.role?.permissions as any;
+  const hasAdminAccess = permissions?.admin ||
+                        permissions?.allDepartments ||
+                        permissions?.viewAllCases;
 
   return sameDepartment || hasAdminAccess;
 }

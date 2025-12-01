@@ -15,9 +15,9 @@ import { Loader2, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import clientLogger from '@/lib/client-logger';
 
 const loginSchema = z.object({
-  email: z.string().email('Correo electrónico no válido'),
+  email: z.email('Correo electrónico no válido'),
   password: z.string().min(1, 'La contraseña es obligatoria'),
-  remember: z.boolean().default(false),
+  remember: z.boolean(),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -100,8 +100,10 @@ export function LoginForm() {
       } else {
         setError('Error inesperado al iniciar sesión');
       }
-    } catch (err) {
-      clientLogger.error('Login error:', err);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Login error:', error);
+      }
       setError('Error de conexión. Por favor, intente nuevamente.');
     } finally {
       setIsLoading(false);

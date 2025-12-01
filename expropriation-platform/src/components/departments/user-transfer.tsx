@@ -137,8 +137,10 @@ export function UserTransfer({
           const data = await response.json();
           setTransferHistory(data.transfers || []);
         }
-      } catch (error) {
+    } catch (error: unknown) {
+      if (error instanceof Error) {
         clientLogger.error('Error fetching transfer history:', error);
+      }
       } finally {
         setLoadingHistory(false);
       }

@@ -208,7 +208,7 @@ export function AccessibleField({
           </span>
         )}
       </label>
-      {React.cloneElement(children as React.ReactElement, {
+      {React.cloneElement(children as React.ReactElement<any>, {
         id: fieldId,
         'aria-describedby': [
           description && descriptionId,
@@ -316,14 +316,17 @@ export function AccessibleTabs({
       case 'Enter':
       case ' ':
         e.preventDefault();
-        onTabChange(tabs[index].id);
+        const tab = tabs[index];
+        if (tab) {
+          onTabChange(tab.id);
+        }
         return;
       default:
         return;
     }
 
     const tabButtons = tabsRef.current?.querySelectorAll('[role="tab"]');
-    tabButtons?.[newIndex]?.focus();
+    (tabButtons?.[newIndex] as HTMLElement)?.focus();
   };
 
   return (
@@ -576,10 +579,14 @@ export const colorContrast = {
       const g = (rgb >> 8) & 0xff;
       const b = rgb & 0xff;
 
-      const [rs, gs, bs] = [r, g, b].map(c => {
+      const processedValues = [r, g, b].map(c => {
         c = c / 255;
         return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
       });
+
+      const rs = processedValues[0] ?? 0;
+      const gs = processedValues[1] ?? 0;
+      const bs = processedValues[2] ?? 0;
 
       return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
     };

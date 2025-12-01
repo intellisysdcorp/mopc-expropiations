@@ -31,14 +31,14 @@ export function OwnerInfoSection({
             id="ownerName"
             label="Nombre del Propietario"
             required
-            error={hasFieldError?.('ownerName')}
+            error={hasFieldError?.('ownerName') || false}
           >
             <TextInput
               id="ownerName"
               value={formData.ownerName}
               onChange={(value) => onInputChange('ownerName', value)}
               placeholder="Juan Pérez"
-              error={hasFieldError?.('ownerName')}
+              error={hasFieldError?.('ownerName') || false}
               required
             />
           </FormField>
@@ -64,7 +64,7 @@ export function OwnerInfoSection({
           >
             <TextInput
               id="ownerIdentification"
-              value={formData.ownerIdentification}
+              value={formData.ownerIdentification || undefined}
               onChange={(value) => onInputChange('ownerIdentification', value)}
               placeholder="123-4567890-1"
             />
@@ -76,7 +76,7 @@ export function OwnerInfoSection({
           >
             <TextInput
               id="ownerContact"
-              value={formData.ownerContact}
+              value={formData.ownerContact || undefined}
               onChange={(value) => onInputChange('ownerContact', value)}
               placeholder="809-555-0123"
             />
@@ -89,7 +89,7 @@ export function OwnerInfoSection({
         >
           <TextInput
             id="ownerEmail"
-            value={formData.ownerEmail}
+            value={formData.ownerEmail || undefined}
             onChange={(value) => onInputChange('ownerEmail', value)}
             type="email"
             placeholder="juan.perez@email.com"

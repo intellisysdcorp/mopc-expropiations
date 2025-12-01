@@ -16,7 +16,7 @@ const permissionAssignmentSchema = z.object({
 
 // GET /api/departments/[id]/permissions - Get department permissions
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -28,7 +28,7 @@ export async function GET(
     // Check if department exists
     const department = await prisma.department.findUnique({
       where: { id: (await params).id },
-      select: { id: true, name: true, code: true, parentId },
+      select: { id: true, name: true, code: true, parentId: true },
     });
 
     if (!department) {
@@ -208,7 +208,7 @@ export async function POST(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Datos inválidos', details: error.errors },
+        { error: 'Datos inválidos', details: error.issues },
         { status: 400 }
       );
     }
@@ -335,7 +335,7 @@ export async function PUT(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Datos inválidos', details: error.errors },
+        { error: 'Datos inválidos', details: error.issues },
         { status: 400 }
       );
     }

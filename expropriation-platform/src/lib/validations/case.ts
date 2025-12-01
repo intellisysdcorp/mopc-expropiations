@@ -222,6 +222,9 @@ export const CreateCaseSchema = CaseSchema.pick({
   ownerAddress: true,
   ownerType: true,
   estimatedValue: true,
+  actualValue: true,
+  appraisalValue: true,
+  compensationAmount: true,
   currency: true,
   expropriationDecree: true,
   judicialCaseNumber: true,
@@ -319,3 +322,6 @@ export type Priority = z.infer<typeof PriorityEnum>
 export type CaseStage = z.infer<typeof CaseStageEnum>
 export type ExpropriationReason = z.infer<typeof ExpropriationReasonEnum>
 export type UrgencyLevel = z.infer<typeof UrgencyLevelEnum>
+
+// Export enums for use in other files
+export { CaseStageEnum }

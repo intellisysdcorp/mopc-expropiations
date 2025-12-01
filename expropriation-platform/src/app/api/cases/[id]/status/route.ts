@@ -23,7 +23,7 @@ export async function PUT(
 
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: 'Invalid input', details: validationResult.error.errors },
+        { error: 'Invalid input', details: validationResult.error.issues },
         { status: 400 }
       )
     }
@@ -150,7 +150,7 @@ export async function PUT(
         action: 'status_change',
         previousValue: JSON.stringify({ status: currentStatus }),
         newValue: JSON.stringify({ status }),
-        reason,
+        reason: reason || null,
         notes: notes || `Estado cambiado de ${currentStatus} a ${status}`
       }
     })

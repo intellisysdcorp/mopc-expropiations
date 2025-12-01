@@ -331,7 +331,7 @@ export function EmptyStateWithLoading({
   className?: string;
 }) {
   if (isLoading) {
-    return <PageSkeleton className={className} />;
+    return className ? <PageSkeleton className={className} /> : <PageSkeleton />;
   }
 
   if (empty) {

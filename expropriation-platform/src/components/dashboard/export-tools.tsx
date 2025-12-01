@@ -65,7 +65,7 @@ interface ExportToolsProps {
 
 export function ExportTools({ departmentId, availableData }: ExportToolsProps) {
   const [isExporting, setIsExporting] = useState(false);
-  const [exportOptions, setExportOptions] = useState<ExportOptions>({
+  const [exportOptions, setExportOptions] = useState<ExportOptions>(() => ({
     format: 'pdf',
     dateRange: {
       from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
@@ -75,8 +75,8 @@ export function ExportTools({ departmentId, availableData }: ExportToolsProps) {
     includeStatistics: true,
     includeCases: true,
     includeAlerts: true,
-    departmentId
-  });
+    ...(departmentId && { departmentId })
+  }));
 
   const [exportResult, setExportResult] = useState<ExportResult | null>(null);
   const [showExportDialog, setShowExportDialog] = useState(false);
@@ -140,17 +140,19 @@ export function ExportTools({ departmentId, availableData }: ExportToolsProps) {
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const filename = `template-${type}.`;
+      const filename = `template-${type}.${type}`;
 
       const link = document.createElement('a');
       link.href = url;
-      link.download = filename + type;
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-    } catch (error) {
-      clientLogger.error('Template download error:', error);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Template download error:', error);
+      }
     } finally {
       setIsExporting(false);
     }

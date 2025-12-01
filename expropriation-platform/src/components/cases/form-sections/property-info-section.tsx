@@ -28,14 +28,14 @@ export function PropertyInfoSection({
           id="propertyAddress"
           label="Dirección de la Propiedad"
           required
-          error={hasFieldError?.('propertyAddress')}
+          error={hasFieldError?.('propertyAddress') || false}
         >
           <TextInput
             id="propertyAddress"
             value={formData.propertyAddress}
             onChange={(value) => onInputChange('propertyAddress', value)}
             placeholder="Calle Principal #123, Ciudad"
-            error={hasFieldError?.('propertyAddress')}
+            error={hasFieldError?.('propertyAddress') || false}
             required
           />
         </FormField>
@@ -45,14 +45,14 @@ export function PropertyInfoSection({
             id="propertyCity"
             label="Ciudad"
             required
-            error={hasFieldError?.('propertyCity')}
+            error={hasFieldError?.('propertyCity') || false}
           >
             <TextInput
               id="propertyCity"
               value={formData.propertyCity}
               onChange={(value) => onInputChange('propertyCity', value)}
               placeholder="Santo Domingo"
-              error={hasFieldError?.('propertyCity')}
+              error={hasFieldError?.('propertyCity') || false}
               required
             />
           </FormField>
@@ -61,14 +61,14 @@ export function PropertyInfoSection({
             id="propertyProvince"
             label="Provincia"
             required
-            error={hasFieldError?.('propertyProvince')}
+            error={hasFieldError?.('propertyProvince') || false}
           >
             <TextInput
               id="propertyProvince"
               value={formData.propertyProvince}
               onChange={(value) => onInputChange('propertyProvince', value)}
               placeholder="Santo Domingo"
-              error={hasFieldError?.('propertyProvince')}
+              error={hasFieldError?.('propertyProvince') || false}
               required
             />
           </FormField>
@@ -121,7 +121,7 @@ export function PropertyInfoSection({
         >
           <TextInput
             id="propertyCoordinates"
-            value={formData.propertyCoordinates}
+            value={formData.propertyCoordinates || undefined}
             onChange={(value) => onInputChange('propertyCoordinates', value)}
             placeholder="18.4802,-69.9388"
           />

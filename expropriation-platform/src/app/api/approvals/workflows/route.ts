@@ -12,7 +12,7 @@ const createWorkflowSchema = z.object({
   stage: z.string(),
   workflowType: z.string(),
   title: z.string(),
-  description: z.string().optional(),
+  description: z.string().nullable(),
   requiredApprovals: z.number().min(1),
   approvalMatrix: z.object({
     levels: z.array(z.object({
@@ -27,7 +27,7 @@ const createWorkflowSchema = z.object({
       timeframe: z.number(),
     })).optional(),
   }).optional(),
-  dueDate: z.string().datetime().optional(),
+  dueDate: z.iso.datetime().optional(),
 });
 
 
@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
         title: validatedData.title,
         description: validatedData.description,
         requiredApprovals: validatedData.requiredApprovals,
-        approvalMatrix: validatedData.approvalMatrix,
+        approvalMatrix: validatedData.approvalMatrix as any,
         dueDate: validatedData.dueDate ? new Date(validatedData.dueDate) : null,
         initiatedBy: session.user.id,
       },
@@ -213,14 +213,20 @@ export async function POST(request: NextRequest) {
 
     // Create approval assignments based on approval matrix
     if (validatedData.approvalMatrix?.levels) {
-      await prisma.approval.createMany({
-        data: validatedData.approvalMatrix.levels.map(level => ({
+      const approvalData = validatedData.approvalMatrix.levels
+        .filter(level => level.approvers.length > 0)
+        .map(level => ({
           workflowId: workflow.id,
-          userId: level.approvers[0], // For simplicity, taking first approver
+          userId: level.approvers[0]!, // Safe to use non-null assertion after filter
           approvalLevel: level.level,
-          conditions: level.conditions,
-        })),
-      });
+          conditions: level.conditions || [],
+        }));
+
+      if (approvalData.length > 0) {
+        await prisma.approval.createMany({
+          data: approvalData,
+        });
+      }
     }
 
     // Log activity
@@ -280,7 +286,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Validation failed', details: error.errors },
+        { error: 'Validation failed', details: error.issues },
         { status: 400 }
       );
     }

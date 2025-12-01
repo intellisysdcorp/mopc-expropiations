@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { logger } from '@/lib/logger';
+import type { ParticipantRole } from '@prisma/client';
 
 // PUT /api/meetings/[id]/participants/[participantId] - Update participant
 export async function PUT(
@@ -50,14 +51,14 @@ export async function PUT(
       prisma.meeting.findUnique({
         where: { id: (await params).id },
         include: {
-          organizer: { select: { id: true } },
-          chair: { select: { id: true } },
+          organizer: { select: { id: true, firstName: true, lastName: true } },
+          chair: { select: { id: true, firstName: true, lastName: true } },
         },
       }),
       prisma.meetingParticipant.findUnique({
         where: { id: (await params).participantId },
         include: {
-          user: { select: { id: true } },
+          user: { select: { id: true, firstName: true, lastName: true } },
         },
       }),
     ]);
@@ -99,14 +100,19 @@ export async function PUT(
         );
       }
 
+      const meetingParticipantUpdate: any = {
+        delegatedTo: validatedData.delegatedTo,
+        rsvpStatus: "DELEGATED",
+      };
+
+      if (validatedData.delegationReason) {
+        meetingParticipantUpdate.delegationReason = validatedData.delegationReason;
+      }
+
       // Create delegation record
       await prisma.meetingParticipant.update({
         where: { id: (await params).participantId },
-        data: {
-          delegatedTo: validatedData.delegatedTo,
-          delegationReason: validatedData.delegationReason,
-          rsvpStatus: "DELEGATED",
-        },
+        data: meetingParticipantUpdate,
       });
 
       // Create delegation notification
@@ -138,17 +144,30 @@ export async function PUT(
     }
 
     // Update participant
+    const updateData: any = {};
+
+    if (validatedData.role !== undefined) {
+      updateData.role = validatedData.role as ParticipantRole;
+    }
+
+    if (validatedData.permissions) {
+      if (validatedData.permissions.canEditAgenda !== undefined) {
+        updateData.canEditAgenda = validatedData.permissions.canEditAgenda;
+      }
+      if (validatedData.permissions.canUploadDocs !== undefined) {
+        updateData.canUploadDocs = validatedData.permissions.canUploadDocs;
+      }
+      if (validatedData.permissions.canVote !== undefined) {
+        updateData.canVote = validatedData.permissions.canVote;
+      }
+      if (validatedData.permissions.canInviteOthers !== undefined) {
+        updateData.canInviteOthers = validatedData.permissions.canInviteOthers;
+      }
+    }
+
     const updatedParticipant = await prisma.meetingParticipant.update({
       where: { id: (await params).participantId },
-      data: {
-        ...validatedData,
-        ...(validatedData.permissions && {
-          canEditAgenda: validatedData.permissions.canEditAgenda,
-          canUploadDocs: validatedData.permissions.canUploadDocs,
-          canVote: validatedData.permissions.canVote,
-          canInviteOthers: validatedData.permissions.canInviteOthers,
-        }),
-      },
+      data: updateData,
       include: {
         user: {
           select: {
@@ -188,7 +207,7 @@ export async function PUT(
     logger.error("Error updating participant:", error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Validation failed", details: error.errors },
+        { error: "Validation failed", details: error.issues },
         { status: 400 }
       );
     }
@@ -201,7 +220,7 @@ export async function PUT(
 
 // DELETE /api/meetings/[id]/participants/[participantId] - Remove participant
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string; participantId: string }> }
 ) {
   try {
@@ -215,8 +234,8 @@ export async function DELETE(
       prisma.meeting.findUnique({
         where: { id: (await params).id },
         include: {
-          organizer: { select: { id: true } },
-          chair: { select: { id: true } },
+          organizer: { select: { id: true, firstName: true, lastName: true } },
+          chair: { select: { id: true, firstName: true, lastName: true } },
         },
       }),
       prisma.meetingParticipant.findUnique({
@@ -256,15 +275,25 @@ export async function DELETE(
     });
 
     // Update meeting participant count
+    const meetingUpdateData: {
+      invitedCount: { decrement: number };
+      acceptedCount?: { decrement: number };
+      attendedCount?: { decrement: number };
+    } = {
+      invitedCount: { decrement: 1 },
+    };
+
+    if (participant.rsvpStatus === "ACCEPTED") {
+      meetingUpdateData.acceptedCount = { decrement: 1 };
+    }
+
+    if (participant.attended) {
+      meetingUpdateData.attendedCount = { decrement: 1 };
+    }
+
     await prisma.meeting.update({
       where: { id: (await params).id },
-      data: {
-        invitedCount: {
-          decrement: 1,
-        },
-        acceptedCount: participant.rsvpStatus === "ACCEPTED" ? { decrement: 1 } : undefined,
-        attendedCount: participant.attended ? { decrement: 1 } : undefined,
-      },
+      data: meetingUpdateData,
     });
 
     // Create activity log
@@ -317,7 +346,19 @@ export async function DELETE(
 }
 
 // Helper functions
-function checkEditParticipantPermission(meeting: any, participant: any, user: any): boolean {
+function checkEditParticipantPermission(
+  meeting: {
+    organizer: { id: string };
+    chair?: { id: string } | null;
+  },
+  participant: {
+    userId?: string | null;
+  },
+  user: {
+    id: string;
+    role: { name: string };
+  }
+): boolean {
   const userRole = user.role.name;
 
   // Super admins and department admins can edit any participant
@@ -331,7 +372,7 @@ function checkEditParticipantPermission(meeting: any, participant: any, user: an
   }
 
   // Chair can edit any participant
-  if (meeting.chair.id === user.id) {
+  if (meeting.chair?.id === user.id) {
     return true;
   }
 
@@ -343,7 +384,19 @@ function checkEditParticipantPermission(meeting: any, participant: any, user: an
   return false;
 }
 
-function checkRemoveParticipantPermission(meeting: any, participant: any, user: any): boolean {
+function checkRemoveParticipantPermission(
+  meeting: {
+    organizer: { id: string };
+    chair?: { id: string } | null;
+  },
+  participant: {
+    userId?: string | null;
+  },
+  user: {
+    id: string;
+    role: { name: string };
+  }
+): boolean {
   const userRole = user.role.name;
 
   // Super admins and department admins can remove any participant
@@ -357,7 +410,7 @@ function checkRemoveParticipantPermission(meeting: any, participant: any, user: 
   }
 
   // Chair can remove any participant
-  if (meeting.chair.id === user.id) {
+  if (meeting.chair?.id === user.id) {
     return true;
   }
 
