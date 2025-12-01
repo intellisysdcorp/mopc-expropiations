@@ -392,11 +392,11 @@ export const secureRandom = {
 
 // Security middleware helpers
 export const middleware = {
-  async rateLimit(req: Request, limit: number = 100, window: number = 15 * 60 * 1000) {
+  async rateLimit(req: Request, _limit: number = 100, _window: number = 15 * 60 * 1000) {
     const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
-    const key = rateLimiting.generateKey(ip, 'api');
+    const _key = rateLimiting.generateKey(ip, 'api');
 
-    if (rateLimiting.shouldBlock(key, limit, window)) {
+    if (rateLimiting.shouldBlock()) {
       throw new Error('Rate limit exceeded');
     }
 

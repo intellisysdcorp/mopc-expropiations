@@ -44,8 +44,10 @@ class PerformanceMonitor {
       })
       navObserver.observe({ entryTypes: ['navigation'] })
       this.observers.push(navObserver)
-    } catch (error) {
-      clientLogger.warn('Navigation timing not supported:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.warn('Navigation timing not supported:', error)
+      }
     }
 
     // Observe paint timing
@@ -60,8 +62,10 @@ class PerformanceMonitor {
       })
       paintObserver.observe({ entryTypes: ['paint'] })
       this.observers.push(paintObserver)
-    } catch (error) {
-      clientLogger.warn('Paint timing not supported:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.warn('Paint timing not supported:', error)
+      }
     }
 
     // Observe largest contentful paint
@@ -74,8 +78,10 @@ class PerformanceMonitor {
       })
       lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] })
       this.observers.push(lcpObserver)
-    } catch (error) {
-      clientLogger.warn('LCP not supported:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.warn('LCP not supported:', error)
+      }
     }
 
     // Observe layout shift
@@ -92,8 +98,10 @@ class PerformanceMonitor {
       })
       clsObserver.observe({ entryTypes: ['layout-shift'] })
       this.observers.push(clsObserver)
-    } catch (error) {
-      clientLogger.warn('CLS not supported:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.warn('CLS not supported:', error)
+      }
     }
 
     // Observe long tasks
@@ -110,8 +118,10 @@ class PerformanceMonitor {
       })
       longTaskObserver.observe({ entryTypes: ['longtask'] })
       this.observers.push(longTaskObserver)
-    } catch (error) {
-      clientLogger.warn('Long task observer not supported:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.warn('Long task observer not supported:', error)
+      }
     }
   }
 
@@ -137,7 +147,7 @@ class PerformanceMonitor {
 
   private logMetric(name: string, value: number) {
     if (process.env.NODE_ENV === 'development') {
-      clientLogger.info(`[Performance] ${name}:`, value)
+      clientLogger.info(`[Performance] ${name}:`, {value})
     }
 
     // Send to analytics service in production
@@ -154,7 +164,7 @@ class PerformanceMonitor {
     this.entries.push(entry)
 
     if (process.env.NODE_ENV === 'development') {
-      clientLogger.info(`[Performance Entry] ${entry.name}:`, entry.duration, 'ms')
+      clientLogger.info(`[Performance Entry] ${entry.name}:`, { duration: `${entry.duration}ms`})
     }
   }
 
@@ -178,8 +188,10 @@ class PerformanceMonitor {
             timestamp: Date.now()
           })
         }
-      } catch (error) {
-        clientLogger.warn('Failed to create measure:', error)
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+          clientLogger.warn('Failed to create measure:', error)
+        }
       }
     }
   }

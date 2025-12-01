@@ -45,10 +45,10 @@ export async function POST(
     }
 
     // Users can only revoke their own signatures, admins can revoke any
-    const user: UserWithRole | null = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       include: { role: true },
-    });
+    }) as UserWithRole | null;
 
     const canRevoke =
       signature.userId === session.user.id ||
@@ -106,8 +106,8 @@ export async function POST(
       message: 'Signature revoked successfully',
       signature: {
         id: revokedSignature.id,
-        revokedAt: revokedSignature.revokedAt,
-        revokedReason: revokedSignature.revokedReason,
+        revokedAt: revokedSignature.revokedAt as Date | null,
+        revokedReason: revokedSignature.revokedReason as string | null,
       },
     };
 

@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
       preferences: user.notificationPreference
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Error fetching notifications:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -294,10 +294,10 @@ export async function POST(request: NextRequest) {
         id: notification.id,
         title: notification.title,
         message: notification.message,
-        type: notification.type,
-        priority: notification.priority,
+        type: (notification.type as any).toLowerCase(),
+        priority: notification.priority as 'low' | 'medium' | 'high' | 'urgent',
         userId: notification.userId,
-        metadata: notification.metadata,
+        metadata: (notification.metadata as any) || {},
         createdAt: notification.createdAt
       });
     }
@@ -346,7 +346,7 @@ export async function POST(request: NextRequest) {
       }
     });
 
-  } catch (error) {
+  } catch (error: unknown) {
     logger.error('Error creating notification:', error);
 
     if (error instanceof z.ZodError) {

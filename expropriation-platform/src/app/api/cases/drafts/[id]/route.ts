@@ -19,7 +19,7 @@ export async function PUT(
 
     const { id: draftId } = await params
     const body = await request.json()
-    const { convertToComplete, ...updateData } = body
+    const { convertToComplete, ...requestData } = body
 
     // Get user to check permissions
     const user = await prisma.user.findUnique({
@@ -63,7 +63,7 @@ export async function PUT(
       // Validate all required fields for complete case
       const validationResult = CreateCaseSchema.safeParse({
         ...existingDraft,
-        ...updateData,
+        ...requestData,
         isDraft: false
       })
 
@@ -90,32 +90,36 @@ export async function PUT(
         }
       }
 
+      // Create update data object, filtering out undefined values
+      const updateData: any = {
+        ...completeCaseData,
+        isDraft: false,
+        startDate: existingDraft.startDate || new Date(),
+      }
+
+      // Only include fields that are defined (not undefined) to avoid TypeScript errors
+      if (completeCaseData.assignedToId !== undefined) updateData.assignedToId = completeCaseData.assignedToId
+      if (completeCaseData.description !== undefined) updateData.description = completeCaseData.description
+      if (completeCaseData.estimatedValue !== undefined) updateData.estimatedValue = completeCaseData.estimatedValue
+      if (completeCaseData.expectedEndDate !== undefined) updateData.expectedEndDate = completeCaseData.expectedEndDate
+      if (completeCaseData.expropriationDecree !== undefined) updateData.expropriationDecree = completeCaseData.expropriationDecree
+      if (completeCaseData.judicialCaseNumber !== undefined) updateData.judicialCaseNumber = completeCaseData.judicialCaseNumber
+      if (completeCaseData.legalStatus !== undefined) updateData.legalStatus = completeCaseData.legalStatus
+      if (completeCaseData.ownerAddress !== undefined) updateData.ownerAddress = completeCaseData.ownerAddress
+      if (completeCaseData.ownerContact !== undefined) updateData.ownerContact = completeCaseData.ownerContact
+      if (completeCaseData.ownerEmail !== undefined) updateData.ownerEmail = completeCaseData.ownerEmail
+      if (completeCaseData.ownerIdentification !== undefined) updateData.ownerIdentification = completeCaseData.ownerIdentification
+      if (completeCaseData.ownerType !== undefined) updateData.ownerType = completeCaseData.ownerType
+      if (completeCaseData.propertyArea !== undefined) updateData.propertyArea = completeCaseData.propertyArea
+      if (completeCaseData.propertyCoordinates !== undefined) updateData.propertyCoordinates = completeCaseData.propertyCoordinates
+      if (completeCaseData.propertyDescription !== undefined) updateData.propertyDescription = completeCaseData.propertyDescription
+      if (completeCaseData.propertyType !== undefined) updateData.propertyType = completeCaseData.propertyType
+      if (completeCaseData.supervisedById !== undefined) updateData.supervisedById = completeCaseData.supervisedById
+
       // Update the draft to become a complete case
       const updatedCase = await prisma.case.update({
         where: { id: draftId },
-        data: {
-          ...completeCaseData,
-          isDraft: false,
-          startDate: existingDraft.startDate || new Date(),
-          // Handle optional fields that can be null
-          description: completeCaseData.description ?? null,
-          propertyDescription: completeCaseData.propertyDescription ?? null,
-          propertyCoordinates: completeCaseData.propertyCoordinates ?? null,
-          propertyArea: completeCaseData.propertyArea ?? null,
-          propertyType: completeCaseData.propertyType ?? null,
-          ownerIdentification: completeCaseData.ownerIdentification ?? null,
-          ownerContact: completeCaseData.ownerContact ?? null,
-          ownerEmail: completeCaseData.ownerEmail ?? null,
-          ownerAddress: completeCaseData.ownerAddress ?? null,
-          ownerType: completeCaseData.ownerType ?? null,
-          estimatedValue: completeCaseData.estimatedValue ?? null,
-          expropriationDecree: completeCaseData.expropriationDecree ?? null,
-          judicialCaseNumber: completeCaseData.judicialCaseNumber ?? null,
-          legalStatus: completeCaseData.legalStatus ?? null,
-          assignedToId: completeCaseData.assignedToId ?? null,
-          supervisedById: completeCaseData.supervisedById ?? null,
-          expectedEndDate: completeCaseData.expectedEndDate ?? null
-        },
+        data: updateData,
         include: {
           department: {
             select: {
@@ -187,7 +191,7 @@ export async function PUT(
       const updatedDraft = await prisma.case.update({
         where: { id: draftId },
         data: {
-          ...updateData,
+          ...requestData,
           updatedAt: new Date()
         },
         include: {
@@ -235,7 +239,7 @@ export async function PUT(
 
 // DELETE /api/cases/drafts/[id] - Delete a draft case
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {

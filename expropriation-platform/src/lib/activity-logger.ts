@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { ActivityType } from '@prisma/client';
+import { ActivityType, type Prisma } from '@prisma/client';
 import { logger } from '@/lib/logger';
 
 interface LogActivityParams {
@@ -7,7 +7,7 @@ interface LogActivityParams {
   action: ActivityType | string;
   entityType: string;
   entityId: string;
-  description?: string;
+  description?: string | undefined;
   metadata?: any;
   caseId?: string;
 }
@@ -32,17 +32,32 @@ export async function logActivity({
       logger.warn(`Cannot log activity: User ${userId} not found`);
       return;
     }
+    
+    // Only fetch case if caseId is provided
+    let caseData = null;
+    if (caseId) {
+      caseData = await prisma.case.findUnique({
+        where: { id: caseId }
+      });
+      if (!caseData) {
+        logger.warn(`Cannot log activity: Case ${caseId} not found`);
+        return;
+      }
+    }
+
+    const activityCreatePayload: Prisma.ActivityCreateInput = {
+      action: action as ActivityType,
+      entityId,
+      entityType,
+      user: { connect: { id: userId } },
+    };
+
+    if (description) activityCreatePayload.description = description;
+    if (metadata) activityCreatePayload.metadata = JSON.parse(JSON.stringify(metadata))
+    if (caseId && caseData) activityCreatePayload.case = { connect: { id: caseId } };
 
     await prisma.activity.create({
-      data: {
-        userId,
-        action: action as ActivityType,
-        entityType,
-        entityId,
-        description,
-        metadata: metadata ? JSON.parse(JSON.stringify(metadata)) : null,
-        caseId,
-      },
+      data: activityCreatePayload
     });
   } catch (error) {
     logger.error('Error logging activity:', error);
@@ -59,18 +74,20 @@ export async function logActivity({
 }
 
 export async function logUserLogin(userId: string, ipAddress?: string, userAgent?: string) {
+  const userUpdatePayload: Prisma.UserUpdateInput = {
+    lastLoginAt: new Date(),
+    loginCount: { increment: 1 },
+    failedLoginAttempts: 0,
+    lockedUntil: null,
+  };
+
+  if (ipAddress) userUpdatePayload.lastLoginIp = ipAddress;
+  if (userAgent) userUpdatePayload.lastLoginUserAgent = userAgent;
   await Promise.all([
     // Update user login info
     prisma.user.update({
       where: { id: userId },
-      data: {
-        lastLoginAt: new Date(),
-        lastLoginIp: ipAddress,
-        lastLoginUserAgent: userAgent,
-        loginCount: { increment: 1 },
-        failedLoginAttempts: 0,
-        lockedUntil: null,
-      },
+      data: userUpdatePayload,
     }),
     // Log activity
     logActivity({
@@ -200,13 +217,18 @@ export async function logDocumentActivity(
   description?: string,
   metadata?: any
 ) {
-  await logActivity({
+  const activityParams: LogActivityParams = {
     userId,
     action,
     entityType: 'document',
     entityId: documentId,
     description,
     metadata,
-    caseId,
-  });
+  };
+
+  if (caseId) {
+    activityParams.caseId = caseId;
+  }
+
+  await logActivity(activityParams);
 }

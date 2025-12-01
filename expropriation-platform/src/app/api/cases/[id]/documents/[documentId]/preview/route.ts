@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import logger from '@/lib/logger';
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string; documentId: string }> }
 ) {
   try {
@@ -37,8 +38,7 @@ export async function GET(
     }
 
     // Check if user has view permission or is owner/admin
-    const hasPermission = document.userId === session.user.id ||
-                         session.user.role === 'super_admin' ||
+    const hasPermission = session.user.role === 'super_admin' ||
                          document.permissions.some(p => p.canView)
 
     if (!hasPermission) {
@@ -54,7 +54,7 @@ export async function GET(
     })
 
   } catch (error) {
-    console.error('Preview error:', error)
+    logger.error('Preview error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

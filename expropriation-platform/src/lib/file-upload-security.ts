@@ -4,7 +4,8 @@ import { validateMimeType, isMimeTypeAllowed, getMimeTypeCategory } from './mime
 import { scanFileForMalware } from './malware-scanner';
 import { atomicFileUpload, AtomicUploadOptions } from './atomic-upload';
 import { checkRateLimit, recordRequest, checkSuspiciousActivity } from './rate-limiter';
-import { logger } from '@/lib/logger';
+import { logger } from '../lib/logger';
+import { UserRole } from '@prisma/client';
 
 // Comprehensive file upload security configuration
 export interface FileUploadSecurityConfig {
@@ -14,13 +15,26 @@ export interface FileUploadSecurityConfig {
   requireMalwareScan: boolean;
   allowSuspiciousFiles: boolean;
   enableRateLimit: boolean;
-  userRole: string;
+  userRole: UserRole;
   enableStrictValidation: boolean;
+}
+
+// Helper function to convert Prisma UserRole to string-based role for rate limiter
+function prismaRoleToRateLimiterRole(prismaRole: UserRole): string {
+  const roleMapping = {
+    [UserRole.SUPER_ADMIN]: 'super_admin',
+    [UserRole.DEPARTMENT_ADMIN]: 'department_admin',
+    [UserRole.ANALYST]: 'analyst',
+    [UserRole.SUPERVISOR]: 'supervisor',
+    [UserRole.TECHNICAL_MEETING_COORDINATOR]: 'technical_meeting_coordinator',
+    [UserRole.OBSERVER]: 'observer'
+  };
+  return roleMapping[prismaRole] || 'default';
 }
 
 // Default security configurations for different user roles
 export const DEFAULT_SECURITY_CONFIGS: Record<string, FileUploadSecurityConfig> = {
-  super_admin: {
+  [UserRole.SUPER_ADMIN]: {
     allowedMimeTypes: [
       'application/pdf',
       'application/msword',
@@ -46,10 +60,10 @@ export const DEFAULT_SECURITY_CONFIGS: Record<string, FileUploadSecurityConfig> 
     requireMalwareScan: true,
     allowSuspiciousFiles: true, // Admins can override
     enableRateLimit: true,
-    userRole: 'super_admin',
+    userRole: UserRole.SUPER_ADMIN,
     enableStrictValidation: false,
   },
-  department_admin: {
+  [UserRole.DEPARTMENT_ADMIN]: {
     allowedMimeTypes: [
       'application/pdf',
       'application/msword',
@@ -71,10 +85,10 @@ export const DEFAULT_SECURITY_CONFIGS: Record<string, FileUploadSecurityConfig> 
     requireMalwareScan: true,
     allowSuspiciousFiles: false,
     enableRateLimit: true,
-    userRole: 'department_admin',
+    userRole: UserRole.DEPARTMENT_ADMIN,
     enableStrictValidation: true,
   },
-  analyst: {
+  [UserRole.ANALYST]: {
     allowedMimeTypes: [
       'application/pdf',
       'application/msword',
@@ -94,10 +108,10 @@ export const DEFAULT_SECURITY_CONFIGS: Record<string, FileUploadSecurityConfig> 
     requireMalwareScan: true,
     allowSuspiciousFiles: false,
     enableRateLimit: true,
-    userRole: 'analyst',
+    userRole: UserRole.ANALYST,
     enableStrictValidation: true,
   },
-  supervisor: {
+  [UserRole.SUPERVISOR]: {
     allowedMimeTypes: [
       'application/pdf',
       'application/msword',
@@ -117,10 +131,10 @@ export const DEFAULT_SECURITY_CONFIGS: Record<string, FileUploadSecurityConfig> 
     requireMalwareScan: true,
     allowSuspiciousFiles: false,
     enableRateLimit: true,
-    userRole: 'supervisor',
+    userRole: UserRole.SUPERVISOR,
     enableStrictValidation: true,
   },
-  technical_meeting_coordinator: {
+  [UserRole.TECHNICAL_MEETING_COORDINATOR]: {
     allowedMimeTypes: [
       'application/pdf',
       'application/vnd.openxmlformats-officedocument.presentationml.presentation',
@@ -135,10 +149,10 @@ export const DEFAULT_SECURITY_CONFIGS: Record<string, FileUploadSecurityConfig> 
     requireMalwareScan: true,
     allowSuspiciousFiles: false,
     enableRateLimit: true,
-    userRole: 'technical_meeting_coordinator',
+    userRole: UserRole.TECHNICAL_MEETING_COORDINATOR,
     enableStrictValidation: true,
   },
-  observer: {
+  [UserRole.OBSERVER]: {
     allowedMimeTypes: [
       'application/pdf',
       'image/jpeg',
@@ -151,10 +165,10 @@ export const DEFAULT_SECURITY_CONFIGS: Record<string, FileUploadSecurityConfig> 
     requireMalwareScan: true,
     allowSuspiciousFiles: false,
     enableRateLimit: true,
-    userRole: 'observer',
+    userRole: UserRole.OBSERVER,
     enableStrictValidation: true,
   },
-  default: {
+  'default': {
     allowedMimeTypes: [
       'application/pdf',
       'image/jpeg',
@@ -166,7 +180,7 @@ export const DEFAULT_SECURITY_CONFIGS: Record<string, FileUploadSecurityConfig> 
     requireMalwareScan: true,
     allowSuspiciousFiles: false,
     enableRateLimit: true,
-    userRole: 'default',
+    userRole: UserRole.OBSERVER, // Use OBSERVER as fallback
     enableStrictValidation: true,
   },
 };
@@ -179,10 +193,54 @@ export interface FileUploadValidationResult {
   securityLevel: 'low' | 'medium' | 'high' | 'critical';
   requiresManualReview: boolean;
   validationDetails: {
-    mimeValidation: any;
-    securityValidation: any;
-    malwareScan: any;
-    rateLimit: any;
+    mimeValidation: {
+      declaredMimeType: string;
+      detectedByMagicBytes: string[];
+      detectedByExtension: string;
+      confidence: number;
+      isConsistent: boolean;
+      recommendedMimeType: string;
+      warnings: string[];
+    } | null;
+    securityValidation: {
+      isValid: boolean;
+      errors: string[];
+      warnings: string[];
+      metadata: {
+        actualMimeType: string | undefined;
+        detectedSignatures: string[];
+        fileSize: number;
+        isExecutable: boolean;
+        hasSuspiciousContent: boolean;
+      };
+    } | null;
+    malwareScan: {
+      isClean: boolean;
+      threats: Array<{
+        type: 'virus' | 'trojan' | 'worm' | 'spyware' | 'adware' | 'suspicious' | 'policy_violation';
+        name: string;
+        description: string;
+        severity: 'low' | 'medium' | 'high' | 'critical';
+        confidence: number;
+      }>;
+      scanTime: number;
+      confidence: number;
+      warnings: string[];
+      metadata: {
+        fileSize: number;
+        fileHash: string;
+        scannedAt: string;
+        scannerVersion: string;
+      };
+    } | null;
+    rateLimit: {
+      allowed: boolean;
+      remainingRequests: number;
+      remainingUploads: number;
+      remainingStorageMB: number;
+      resetTime: number;
+      error?: string;
+    } | null;
   };
   recommendations: string[];
 }
@@ -193,10 +251,10 @@ export interface FileUploadValidationResult {
 export async function validateFileUpload(
   request: NextRequest,
   file: File,
-  userRole: string = 'default',
+  userRole: UserRole = UserRole.OBSERVER,
   options: Partial<FileUploadSecurityConfig> = {}
 ): Promise<FileUploadValidationResult> {
-  const baseConfig: FileUploadSecurityConfig = (DEFAULT_SECURITY_CONFIGS[userRole] || DEFAULT_SECURITY_CONFIGS.default) as FileUploadSecurityConfig;
+  const baseConfig: FileUploadSecurityConfig = DEFAULT_SECURITY_CONFIGS[userRole] ?? DEFAULT_SECURITY_CONFIGS['default'] ?? DEFAULT_SECURITY_CONFIGS[UserRole.OBSERVER]!;
   const config: FileUploadSecurityConfig = {
     ...baseConfig,
     ...options,
@@ -208,7 +266,7 @@ export async function validateFileUpload(
   let requiresManualReview = false;
 
   // Initialize validation details
-  const validationDetails: any = {
+  const validationDetails: FileUploadValidationResult['validationDetails'] = {
     mimeValidation: null,
     securityValidation: null,
     malwareScan: null,
@@ -219,7 +277,8 @@ export async function validateFileUpload(
     // 1. Rate limiting check
     if (config.enableRateLimit) {
       const uploadSizeMB = file.size / (1024 * 1024);
-      const rateLimitResult = checkRateLimit(request, config.userRole, true, uploadSizeMB);
+      const rateLimiterRole = prismaRoleToRateLimiterRole(config.userRole) as any;
+      const rateLimitResult = checkRateLimit(request, rateLimiterRole, true, uploadSizeMB);
 
       validationDetails.rateLimit = rateLimitResult;
 
@@ -372,7 +431,8 @@ export async function validateFileUpload(
 
     // Record the request for rate limiting
     if (config.enableRateLimit) {
-      recordRequest(request, config.userRole, true, file.size / (1024 * 1024));
+      const rateLimiterRole = prismaRoleToRateLimiterRole(config.userRole) as any;
+      recordRequest(request, rateLimiterRole, true, file.size / (1024 * 1024));
     }
 
     return {
@@ -402,10 +462,34 @@ export async function validateFileUpload(
 /**
  * Quick malware scan for buffer (helper function)
  */
-async function quickMalwareScanLocal(fileName: string, buffer: Buffer): Promise<{ isClean: boolean; threats: any[] }> {
+async function quickMalwareScanLocal(_fileName: string, buffer: Buffer): Promise<{
+  isClean: boolean;
+  threats: Array<{
+    type: 'virus' | 'trojan' | 'worm' | 'spyware' | 'adware' | 'suspicious' | 'policy_violation';
+    name: string;
+    description: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    confidence: number;
+  }>;
+  scanTime: number;
+  confidence: number;
+  warnings: string[];
+  metadata: {
+    fileSize: number;
+    fileHash: string;
+    scannedAt: string;
+    scannerVersion: string;
+  };
+}> {
   // This is a simplified version that works with buffers
   // In production, you'd save to temp file and use the full scanner
-  const threats: any[] = [];
+  const threats: Array<{
+    type: 'virus' | 'trojan' | 'worm' | 'spyware' | 'adware' | 'suspicious' | 'policy_violation';
+    name: string;
+    description: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    confidence: number;
+  }> = [];
 
   // Check for EICAR test signature
   const eicarPattern = Buffer.from('X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*');
@@ -421,7 +505,7 @@ async function quickMalwareScanLocal(fileName: string, buffer: Buffer): Promise<
 
   // Check for executable headers
   if (buffer.length >= 2) {
-    const header = buffer.slice(0, 2);
+    const header = buffer.subarray(0, 2);
     if (header.equals(Buffer.from([0x4D, 0x5A]))) { // MZ
       threats.push({
         type: 'suspicious',
@@ -436,6 +520,15 @@ async function quickMalwareScanLocal(fileName: string, buffer: Buffer): Promise<
   return {
     isClean: threats.length === 0,
     threats,
+    scanTime: Date.now(),
+    confidence: threats.length === 0 ? 1.0 : 0.8,
+    warnings: threats.length > 0 ? ['Suspicious content detected'] : [],
+    metadata: {
+      fileSize: buffer.length,
+      fileHash: '', // Would calculate actual hash in production
+      scannedAt: new Date().toISOString(),
+      scannerVersion: '1.0.0',
+    },
   };
 }
 
@@ -445,7 +538,7 @@ async function quickMalwareScanLocal(fileName: string, buffer: Buffer): Promise<
 export async function secureFileUpload(
   request: NextRequest,
   file: File,
-  userRole: string = 'default',
+  userRole: UserRole = UserRole.OBSERVER,
   uploadOptions: Partial<AtomicUploadOptions> = {},
   securityOptions: Partial<FileUploadSecurityConfig> = {}
 ): Promise<{
@@ -469,19 +562,34 @@ export async function secureFileUpload(
 
   try {
     // 2. Perform atomic upload
-    const baseConfig: FileUploadSecurityConfig = (DEFAULT_SECURITY_CONFIGS[userRole] || DEFAULT_SECURITY_CONFIGS.default) as FileUploadSecurityConfig;
+    const baseConfig: FileUploadSecurityConfig = DEFAULT_SECURITY_CONFIGS[userRole] ?? DEFAULT_SECURITY_CONFIGS['default'] ?? DEFAULT_SECURITY_CONFIGS[UserRole.OBSERVER]!;
     const config: FileUploadSecurityConfig = {
       ...baseConfig,
       ...securityOptions,
     };
 
     const mimeValidation = validation.validationDetails.mimeValidation;
-    const uploadOptionsAtomic: any = {
+    if (!mimeValidation) {
+      return {
+        success: false,
+        validation,
+        error: 'MIME validation failed',
+      };
+    }
+
+    const uploadOptionsAtomic: AtomicUploadOptions & {
+      expectedMimeType: string;
+      originalFileName: string;
+      userId: string;
+      maxSize: number;
+      skipSecurityValidation: boolean;
+    } = {
       expectedMimeType: mimeValidation.recommendedMimeType,
       originalFileName: file.name,
       userId: uploadOptions.userId || 'unknown',
       maxSize: config.maxFileSize,
       skipSecurityValidation: true, // Already done above
+      ...uploadOptions,
     };
 
     // Only add caseId if it's defined (for exactOptionalPropertyTypes compliance)
@@ -529,7 +637,13 @@ export async function secureFileUpload(
       }
     }
 
-    const result: any = {
+    const result: {
+      success: boolean;
+      validation: FileUploadValidationResult;
+      filePath?: string;
+      fileName?: string;
+      cleanup?: () => Promise<void>;
+    } = {
       success: true,
       validation,
     };

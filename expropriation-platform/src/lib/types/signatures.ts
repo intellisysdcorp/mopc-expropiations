@@ -176,7 +176,7 @@ export interface SignatureRevokeResponse {
   message: string;
   signature: {
     id: string;
-    revokedAt?: Date | null;
-    revokedReason?: string | null;
+    revokedAt: Date | null;
+    revokedReason: string | null;
   };
 }

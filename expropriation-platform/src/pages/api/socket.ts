@@ -4,22 +4,17 @@ import { Server as SocketIOServer } from 'socket.io';
 import { initializeWebSocket } from '@/lib/websocket-server';
 import { logger } from '@/lib/logger';
 
-interface EnhancedNextApiResponse extends NextApiResponse {
-  socket: {
-    server: NetServer & {
-      io?: SocketIOServer;
-    };
-  };
-}
-
 export const config = {
   api: {
     bodyParser: false,
   },
 };
 
-const SocketHandler = (req: NextApiRequest, res: EnhancedNextApiResponse) => {
-  if (res.socket.server.io) {
+const SocketHandler = (_req: NextApiRequest, res: NextApiResponse) => {
+  // Type assertion for Next.js API socket with server property
+  const socket = res.socket as any;
+
+  if (socket?.server?.io) {
     logger.info('Socket.IO server already running');
     res.end();
     return;
@@ -27,13 +22,19 @@ const SocketHandler = (req: NextApiRequest, res: EnhancedNextApiResponse) => {
 
   logger.info('Initializing Socket.IO server...');
 
-  const httpServer: NetServer = res.socket.server;
+  // Ensure socket exists and get the server
+  if (!socket) {
+    res.status(500).end('Socket not available');
+    return;
+  }
+
+  const httpServer: NetServer = socket.server;
   const io = new SocketIOServer(httpServer, {
     path: '/api/socket/io',
     addTrailingSlash: false,
     cors: {
       origin: process.env.NODE_ENV === 'production'
-        ? process.env.NEXTAUTH_URL
+        ? (process.env.NEXTAUTH_URL || "http://localhost:3000")
         : ["http://localhost:3000"],
       methods: ["GET", "POST"],
       credentials: true
@@ -43,7 +44,8 @@ const SocketHandler = (req: NextApiRequest, res: EnhancedNextApiResponse) => {
   // Initialize our WebSocket server
   initializeWebSocket(httpServer);
 
-  res.socket.server.io = io;
+  // Store the Socket.IO server instance
+  socket.server.io = io;
   res.end();
 };
 

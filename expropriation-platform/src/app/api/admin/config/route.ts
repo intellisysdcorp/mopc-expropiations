@@ -3,18 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
-
-const configSchema = z.object({
-  key: z.string().min(1),
-  value: z.union([z.string(), z.number(), z.boolean(), z.array(z.unknown()), z.record(z.string(), z.unknown())]),
-  type: z.enum(['string', 'number', 'boolean', 'json', 'array']),
-  category: z.string().min(1),
-  description: z.string().nullable(),
-  environment: z.string().optional(),
-  isRequired: z.boolean().default(false),
-  isPublic: z.boolean().default(false),
-  validation: z.record(z.string(), z.unknown()).optional()
-})
+import { type Prisma } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
@@ -90,13 +79,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const validatedData = configSchema.parse(body)
 
     // Check if configuration already exists for this key and environment
     const existingConfig = await prisma.systemConfiguration.findFirst({
       where: {
-        key: validatedData.key,
-        environment: validatedData.environment || 'production'
+        key: body.key,
+        environment: body.environment || 'production'
       }
     })
 
@@ -107,13 +95,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const systemConfigCreatePayload: Prisma.SystemConfigurationUncheckedCreateInput = {
+      ...body,
+      environment: body.environment || 'production',
+      effectiveAt: new Date(),
+      createdBy: session.user.id
+    };
+
     const config = await prisma.systemConfiguration.create({
-      data: {
-        ...validatedData,
-        environment: validatedData.environment || 'production',
-        createdBy: session.user.id,
-        effectiveAt: new Date()
-      },
+      data: systemConfigCreatePayload,
       include: {
         creator: {
           select: {

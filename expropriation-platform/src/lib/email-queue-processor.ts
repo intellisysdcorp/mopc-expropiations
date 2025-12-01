@@ -55,7 +55,7 @@ class EmailQueueProcessor {
       }
 
       // Create nodemailer transporter
-      this.transporter = nodemailer.createTransporter({
+      this.transporter = nodemailer.createTransport({
         host: this.config.host,
         port: this.config.port,
         secure: this.config.secure,
@@ -66,7 +66,9 @@ class EmailQueueProcessor {
       });
 
       // Verify the transporter
-      await this.transporter.verify();
+      if (this.transporter) {
+        await this.transporter.verify();
+      }
       logger.info('Email transporter initialized successfully');
 
       // Start processing
@@ -186,7 +188,7 @@ class EmailQueueProcessor {
           },
           OR: [
             { attempts: { lt: prisma.emailQueue.fields.maxAttempts } },
-            { nextRetryAt: { lte: new Date() } }
+            { retryAfter: { lte: new Date() } }
           ]
         },
         orderBy: [
@@ -280,7 +282,7 @@ class EmailQueueProcessor {
 
       // Calculate next retry time using exponential backoff
       const retryDelay = Math.min(1000 * Math.pow(2, attempts), 24 * 60 * 60 * 1000); // Max 24 hours
-      const nextRetryAt = new Date(Date.now() + retryDelay);
+      const retryAfter = new Date(Date.now() + retryDelay);
 
       if (attempts >= maxAttempts) {
         // Mark as failed
@@ -315,7 +317,7 @@ class EmailQueueProcessor {
           where: { id: emailQueueItem.id },
           data: {
             status: 'pending',
-            nextRetryAt,
+            retryAfter,
             error: errorMessage
           }
         });
@@ -341,25 +343,30 @@ class EmailQueueProcessor {
     batchId?: string;
   }): Promise<string> {
     try {
+      const baseEmailData = {
+        to: data.to,
+        subject: data.subject,
+        priority: data.priority || 'medium',
+        scheduledAt: data.scheduledAt || new Date(),
+        provider: 'nodemailer' as const
+      };
+
+      const emailPayload: any = { ...baseEmailData };
+
+      if (data.cc) emailPayload.cc = data.cc;
+      if (data.bcc) emailPayload.bcc = data.bcc;
+      if (data.textContent) emailPayload.textContent = data.textContent;
+      if (data.htmlContent) emailPayload.htmlContent = data.htmlContent;
+      if (data.fromName) emailPayload.fromName = data.fromName;
+      if (data.fromEmail) emailPayload.fromEmail = data.fromEmail;
+      if (data.replyTo) emailPayload.replyTo = data.replyTo;
+      if (data.templateId) emailPayload.templateId = data.templateId;
+      if (data.metadata) emailPayload.metadata = data.metadata;
+      if (data.correlationId) emailPayload.correlationId = data.correlationId;
+      if (data.batchId) emailPayload.batchId = data.batchId;
+
       const emailQueue = await prisma.emailQueue.create({
-        data: {
-          to: data.to,
-          cc: data.cc,
-          bcc: data.bcc,
-          subject: data.subject,
-          textContent: data.textContent,
-          htmlContent: data.htmlContent,
-          fromName: data.fromName,
-          fromEmail: data.fromEmail,
-          replyTo: data.replyTo,
-          priority: data.priority || 'medium',
-          scheduledAt: data.scheduledAt || new Date(),
-          provider: 'nodemailer',
-          templateId: data.templateId,
-          metadata: data.metadata,
-          correlationId: data.correlationId,
-          batchId: data.batchId
-        }
+        data: emailPayload
       });
 
       return emailQueue.id;
@@ -411,7 +418,9 @@ class EmailQueueProcessor {
     todaySent: number;
     todayFailed: number;
   }> {
-    const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
     const [
       total,
@@ -431,8 +440,8 @@ class EmailQueueProcessor {
         where: {
           status: 'sent',
           sentAt: {
-            gte: new Date(today),
-            lt: new Date(today + 'T23:59:59.999Z')
+            gte: startOfDay,
+            lt: endOfDay
           }
         }
       }),
@@ -440,8 +449,8 @@ class EmailQueueProcessor {
         where: {
           status: 'failed',
           failedAt: {
-            gte: new Date(today),
-            lt: new Date(today + 'T23:59:59.999Z')
+            gte: startOfDay,
+            lt: endOfDay
           }
         }
       })
@@ -474,8 +483,7 @@ class EmailQueueProcessor {
         },
         data: {
           status: 'pending',
-          nextRetryAt: new Date(),
-          error: null
+          retryAfter: new Date()
         }
       });
 

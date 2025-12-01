@@ -149,35 +149,64 @@ export async function createDocumentWithFile({
   // Extract text content for indexing
   const contentText = await extractTextContent(filePath, file.type);
 
-  // Create document record
+  // Create document record with separated required and conditional fields
+  const baseDocumentPayload = {
+    title: documentData.title || file.name,
+    fileName: fileName,
+    originalFileName: file.name,
+    filePath: path.relative(process.cwd(), filePath),
+    fileSize: file.size,
+    mimeType: file.type,
+    fileHash,
+    documentType: documentData.documentType as DocumentType || DocumentType.OTHER,
+    category: documentData.category as DocumentCategory || DocumentCategory.ADMINISTRATIVE,
+    status: DocumentStatus.DRAFT,
+    securityLevel: documentData.securityLevel as DocumentSecurityLevel || DocumentSecurityLevel.INTERNAL,
+    version: 1,
+    isLatest: true,
+    isDraft: true,
+    uploadedById: userId,
+    contentText,
+    isIndexed: contentText.length > 0,
+  };
+
+  // Add conditional fields only if they have meaningful values
+  const documentPayload: any = { ...baseDocumentPayload };
+
+  if (documentData.description) {
+    documentPayload.description = documentData.description;
+  }
+
+  if (documentData.caseId) {
+    documentPayload.caseId = documentData.caseId;
+  }
+
+  if (documentData.tags) {
+    documentPayload.tags = documentData.tags;
+  }
+
+  if (documentData.metadata) {
+    documentPayload.metadata = documentData.metadata;
+  }
+
+  if (documentData.customFields) {
+    documentPayload.customFields = documentData.customFields;
+  }
+
+  if (documentData.retentionPeriod) {
+    documentPayload.retentionPeriod = documentData.retentionPeriod;
+  }
+
+  if (documentData.expiresAt) {
+    documentPayload.expiresAt = new Date(documentData.expiresAt);
+  }
+
+  if (contentText.length > 0) {
+    documentPayload.indexedAt = new Date();
+  }
+
   const document = await prisma.document.create({
-    data: {
-      title: documentData.title || file.name,
-      description: documentData.description,
-      fileName: fileName,
-      originalFileName: file.name,
-      filePath: path.relative(process.cwd(), filePath),
-      fileSize: file.size,
-      mimeType: file.type,
-      fileHash,
-      documentType: documentData.documentType as DocumentType || DocumentType.OTHER,
-      category: documentData.category as DocumentCategory || DocumentCategory.ADMINISTRATIVE,
-      status: DocumentStatus.DRAFT,
-      securityLevel: documentData.securityLevel as DocumentSecurityLevel || DocumentSecurityLevel.INTERNAL,
-      version: 1,
-      isLatest: true,
-      isDraft: true,
-      caseId: documentData.caseId || null,
-      uploadedById: userId,
-      tags: documentData.tags,
-      metadata: documentData.metadata || {},
-      customFields: documentData.customFields || {},
-      retentionPeriod: documentData.retentionPeriod,
-      expiresAt: documentData.expiresAt ? new Date(documentData.expiresAt) : null,
-      contentText,
-      isIndexed: contentText.length > 0,
-      indexedAt: contentText.length > 0 ? new Date() : null,
-    },
+    data: documentPayload,
     include: {
       uploadedBy: {
         select: {
@@ -230,10 +259,10 @@ export async function createDocumentWithFile({
 
   return {
     ...document,
-    uploadedBy: {
+    uploadedBy: document.uploadedBy ? {
       ...document.uploadedBy,
       fullName: `${document.uploadedBy.firstName} ${document.uploadedBy.lastName}`,
-    },
+    } : undefined,
     fileSizeFormatted: formatFileSize(document.fileSize),
     createdAt: document.createdAt.toISOString(),
     updatedAt: document.updatedAt.toISOString(),
@@ -311,20 +340,22 @@ export async function updateDocument(
   // Check permissions first
   await getDocumentById(documentId, userId);
 
+  const updateFields: any = {};
+
+  if (updateData.title !== undefined) updateFields.title = updateData.title;
+  if (updateData.description !== undefined) updateFields.description = updateData.description;
+  if (updateData.documentType !== undefined) updateFields.documentType = updateData.documentType as DocumentType;
+  if (updateData.category !== undefined) updateFields.category = updateData.category as DocumentCategory;
+  if (updateData.securityLevel !== undefined) updateFields.securityLevel = updateData.securityLevel as DocumentSecurityLevel;
+  if (updateData.tags !== undefined) updateFields.tags = updateData.tags;
+  if (updateData.metadata !== undefined) updateFields.metadata = updateData.metadata;
+  if (updateData.customFields !== undefined) updateFields.customFields = updateData.customFields;
+  if (updateData.retentionPeriod !== undefined) updateFields.retentionPeriod = updateData.retentionPeriod;
+  if (updateData.expiresAt !== undefined) updateFields.expiresAt = updateData.expiresAt ? new Date(updateData.expiresAt) : null;
+
   const document = await prisma.document.update({
     where: { id: documentId },
-    data: {
-      title: updateData.title,
-      description: updateData.description,
-      documentType: updateData.documentType as DocumentType,
-      category: updateData.category as DocumentCategory,
-      securityLevel: updateData.securityLevel as DocumentSecurityLevel,
-      tags: updateData.tags,
-      metadata: updateData.metadata,
-      customFields: updateData.customFields,
-      retentionPeriod: updateData.retentionPeriod,
-      expiresAt: updateData.expiresAt ? new Date(updateData.expiresAt) : null,
-    },
+    data: updateFields,
     include: {
       uploadedBy: {
         select: {
@@ -348,7 +379,7 @@ export async function updateDocument(
   await prisma.documentHistory.create({
     data: {
       documentId,
-      action: 'UPDATED',
+      action: 'EDITED',
       description: `Document updated: ${document.title}`,
       userId,
       newValue: JSON.stringify(updateData),
@@ -401,7 +432,7 @@ export async function getDocumentVersions(documentId: string, userId: string) {
   const versions = await prisma.documentVersion.findMany({
     where: { documentId },
     include: {
-      uploadedBy: {
+      creator: {
         select: {
           id: true,
           firstName: true,
@@ -415,8 +446,8 @@ export async function getDocumentVersions(documentId: string, userId: string) {
   return versions.map(v => ({
     ...v,
     uploadedBy: {
-      ...v.uploadedBy,
-      fullName: `${v.uploadedBy.firstName} ${v.uploadedBy.lastName}`,
+      ...v.creator,
+      fullName: `${v.creator.firstName} ${v.creator.lastName}`,
     },
     fileSizeFormatted: formatFileSize(v.fileSize),
     createdAt: v.createdAt.toISOString(),
@@ -509,13 +540,12 @@ export async function createDocumentVersion({
       fileSize: file.size,
       mimeType: file.type,
       fileHash,
-      changeDescription: versionData.changeDescription,
-      isDraft: versionData.isDraft,
-      createdById: userId,
-      metadata: versionData.customFields || {},
+      changeSummary: versionData.changeDescription,
+      createdBy: userId,
+      diffData: versionData.customFields || {},
     },
     include: {
-      uploadedBy: {
+      creator: {
         select: {
           id: true,
           firstName: true,
@@ -530,7 +560,7 @@ export async function createDocumentVersion({
   await prisma.documentHistory.create({
     data: {
       documentId,
-      action: 'VERSION_CREATED',
+      action: 'VERSIONED',
       description: `Version ${versionNumber} uploaded: ${file.name}`,
       userId,
       fileSize: file.size,
