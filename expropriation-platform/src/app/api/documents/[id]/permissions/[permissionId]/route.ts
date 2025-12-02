@@ -149,21 +149,15 @@ export async function PUT(
     }
 
     if (permission.expiresAt) {
-      baseResponse.expiresAt = typeof permission.expiresAt === 'string'
-        ? permission.expiresAt
-        : permission.expiresAt.toISOString();
+      baseResponse.expiresAt = permission.expiresAt.toISOString();
     }
 
     if (permission.createdAt) {
-      baseResponse.createdAt = typeof permission.createdAt === 'string'
-        ? permission.createdAt
-        : permission.createdAt.toISOString();
+      baseResponse.createdAt = permission.createdAt.toISOString();
     }
 
     if (permission.updatedAt) {
-      baseResponse.updatedAt = typeof permission.updatedAt === 'string'
-        ? permission.updatedAt
-        : permission.updatedAt.toISOString();
+      baseResponse.updatedAt = permission.updatedAt.toISOString();
     }
 
     const response = baseResponse;

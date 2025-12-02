@@ -208,7 +208,7 @@ export async function DELETE(
     // Log activity
     await logActivity({
       userId: session.user.id,
-      action: 'UPDATED',
+      action: 'DELETED',
       entityType: 'department',
       entityId: departmentId,
       description: `Permiso eliminado del departamento: ${department.name}`,
