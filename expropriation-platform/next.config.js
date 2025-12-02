@@ -4,6 +4,10 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 });
 
 const nextConfig = withBundleAnalyzer({
+  // Use webpack instead of Turbopack for compatibility with custom config
+  turbopack: {
+    // Leave empty to use webpack with custom config
+  },
   // Move @prisma/client to serverExternalPackages for Next.js 15
   serverExternalPackages: [
     '@prisma/client',
