@@ -4,9 +4,9 @@ import { prisma } from '@/lib/prisma';
 import { ValidationDashboard } from '@/components/validation/validation-dashboard';
 
 interface Props {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
