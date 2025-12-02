@@ -19,7 +19,7 @@ const scriptLogger = {
  */
 
 // Read environment variables
-dotenvConfig({ path: '.env.local' });
+dotenvConfig({ path: '.env' });
 
 const NEXTAUTH_URL = process.env.NEXTAUTH_URL;
 const APP_URL = process.env.APP_URL;
@@ -89,15 +89,15 @@ ${NODE_ENV === 'development' ? `💡 Suggestion: Update APP_URL to use port 3000
 }
 
 function checkEnvFile() {
-  const envLocalPath = path.join(process.cwd(), '.env.local');
+  const envLocalPath = path.join(process.cwd(), '.env');
 
   if (!fs.existsSync(envLocalPath)) {
-    scriptLogger.info(`❌ .env.local file not found
-💡 Create .env.local from .env.example`);
+    scriptLogger.info(`❌ .env file not found
+💡 Create .env from .env.example`);
     return false;
   }
 
-  scriptLogger.info('✅ .env.local file exists');
+  scriptLogger.info('✅ .env file exists');
   return true;
 }
 

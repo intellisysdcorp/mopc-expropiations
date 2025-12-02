@@ -11,7 +11,7 @@ function createPrismaClient() {
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
     // Prisma 7: Use adapter for SQLite connection
     adapter: new PrismaLibSql({
-      url: process.env.DATABASE_URL || 'file:./dev.db',
+      url: process.env.DATABASE_URL || 'file:./prisma/dev.db',
     }),
   })
 
