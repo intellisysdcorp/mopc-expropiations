@@ -155,36 +155,6 @@ export async function PUT(
       }
     })
 
-    // Create notification for assigned user (if different from current user)
-    if (existingCase.assignedToId && existingCase.assignedToId !== user.id) {
-      await prisma.notification.create({
-        data: {
-          userId: existingCase.assignedToId,
-          title: 'Estado del Casio Actualizado',
-          message: `El caso ${updatedCase.fileNumber} ha cambiado de estado a ${status}`,
-          type: 'STATUS_UPDATE',
-          entityType: 'case',
-          entityId: updatedCase.id
-        }
-      })
-    }
-
-    // Create notification for supervisor (if different from current user and assigned user)
-    if (existingCase.supervisedById &&
-        existingCase.supervisedById !== user.id &&
-        existingCase.supervisedById !== existingCase.assignedToId) {
-      await prisma.notification.create({
-        data: {
-          userId: existingCase.supervisedById,
-          title: 'Estado del Casio Actualizado',
-          message: `El caso ${updatedCase.fileNumber} ha cambiado de estado a ${status}`,
-          type: 'STATUS_UPDATE',
-          entityType: 'case',
-          entityId: updatedCase.id
-        }
-      })
-    }
-
     return NextResponse.json(updatedCase)
   } catch (error) {
     logger.error('Error updating case status:', error)

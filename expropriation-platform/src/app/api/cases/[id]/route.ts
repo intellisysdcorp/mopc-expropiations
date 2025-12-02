@@ -108,9 +108,6 @@ export async function GET(
           orderBy: { createdAt: 'desc' },
           take: 50
         },
-        caseMeetings: {
-          orderBy: { scheduledStart: 'desc' }
-        },
         assignments: {
           include: {
             user: {
@@ -132,7 +129,6 @@ export async function GET(
             },
             histories: true,
             activities: true,
-            caseMeetings: true
           }
         }
       }

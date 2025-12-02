@@ -28,7 +28,6 @@ import { PerformanceMonitoringPanel } from './performance-monitoring-panel'
 import { HolidayManagementPanel } from './holiday-management-panel'
 import { SecurityConfigurationPanel } from './security-configuration-panel'
 import { UsageStatisticsPanel } from './usage-statistics-panel'
-import { NotificationConfigurationPanel } from './notification-configuration-panel'
 import { AdminDashboardSkeleton } from './admin-dashboard-skeleton'
 import clientLogger from '@/lib/client-logger';
 import { Database } from 'lucide-react'
@@ -258,10 +257,6 @@ export function AdminDashboard() {
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Estadísticas</span>
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex items-center gap-2">
-            <Bell className="h-4 w-4" />
-            <span className="hidden sm:inline">Notificaciones</span>
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="configuration" className="space-y-4">
@@ -294,10 +289,6 @@ export function AdminDashboard() {
 
         <TabsContent value="statistics" className="space-y-4">
           <UsageStatisticsPanel />
-        </TabsContent>
-
-        <TabsContent value="notifications" className="space-y-4">
-          <NotificationConfigurationPanel />
         </TabsContent>
       </Tabs>
     </div>

@@ -212,36 +212,6 @@ export async function PUT(
       }
     })
 
-    // Create notification for assigned user (if different from current user)
-    if (existingCase.assignedToId && existingCase.assignedToId !== user.id) {
-      await prisma.notification.create({
-        data: {
-          userId: existingCase.assignedToId,
-          title: 'Etapa del Casio Actualizada',
-          message: `El caso ${updatedCase.fileNumber} ha avanzado a la etapa: ${stage}`,
-          type: 'STATUS_UPDATE',
-          entityType: 'case',
-          entityId: updatedCase.id
-        }
-      })
-    }
-
-    // Create notification for supervisor (if different)
-    if (existingCase.supervisedById &&
-        existingCase.supervisedById !== user.id &&
-        existingCase.supervisedById !== existingCase.assignedToId) {
-      await prisma.notification.create({
-        data: {
-          userId: existingCase.supervisedById,
-          title: 'Etapa del Casio Actualizada',
-          message: `El caso ${updatedCase.fileNumber} ha avanzado a la etapa: ${stage}`,
-          type: 'STATUS_UPDATE',
-          entityType: 'case',
-          entityId: updatedCase.id
-        }
-      })
-    }
-
     return NextResponse.json(updatedCase)
   } catch (error) {
     logger.error('Error updating case stage:', error)

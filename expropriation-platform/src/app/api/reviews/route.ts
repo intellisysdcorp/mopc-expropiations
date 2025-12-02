@@ -121,20 +121,6 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Create notification for assigner
-    if (assignment.assignedBy !== session.user.id) {
-      await prisma.notification.create({
-        data: {
-          title: 'Review Completed',
-          message: `Review for case ${assignment.case.fileNumber} has been completed with decision: ${body.decision}`,
-          type: 'STATUS_UPDATE',
-          userId: assignment.assignedBy,
-          entityType: 'review',
-          entityId: review.id,
-        },
-      });
-    }
-
     return NextResponse.json(review, { status: 201 });
   } catch (error) {
     if (error instanceof Error) {

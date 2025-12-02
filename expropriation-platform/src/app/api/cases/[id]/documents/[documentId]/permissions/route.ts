@@ -314,26 +314,6 @@ export async function POST(
           )
         );
 
-        // Create notifications for shared users
-        await Promise.all(
-          validatedData.userIds.map(userId =>
-            prisma.notification.create({
-              data: {
-                type: 'INFO',
-                title: 'Documento Compartido',
-                message: `Se ha compartido un documento contigo: ${validatedData.message || 'Sin mensaje'}`,
-                userId,
-                entityType: 'document',
-                entityId: documentId,
-                metadata: {
-                  documentId,
-                  sharedBy: session.user.id,
-                },
-              },
-            })
-          )
-        );
-
         // Create activity log
         await prisma.activity.create({
           data: {

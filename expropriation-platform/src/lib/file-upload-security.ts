@@ -26,7 +26,6 @@ function prismaRoleToRateLimiterRole(prismaRole: UserRole): string {
     [UserRole.DEPARTMENT_ADMIN]: 'department_admin',
     [UserRole.ANALYST]: 'analyst',
     [UserRole.SUPERVISOR]: 'supervisor',
-    [UserRole.TECHNICAL_MEETING_COORDINATOR]: 'technical_meeting_coordinator',
     [UserRole.OBSERVER]: 'observer'
   };
   return roleMapping[prismaRole] || 'default';
@@ -132,24 +131,6 @@ export const DEFAULT_SECURITY_CONFIGS: Record<string, FileUploadSecurityConfig> 
     allowSuspiciousFiles: false,
     enableRateLimit: true,
     userRole: UserRole.SUPERVISOR,
-    enableStrictValidation: true,
-  },
-  [UserRole.TECHNICAL_MEETING_COORDINATOR]: {
-    allowedMimeTypes: [
-      'application/pdf',
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-      'image/jpeg',
-      'image/png',
-      'image/gif',
-      'text/plain',
-      'text/csv',
-    ],
-    maxFileSize: 25 * 1024 * 1024, // 25MB
-    maxFilesPerRequest: 3,
-    requireMalwareScan: true,
-    allowSuspiciousFiles: false,
-    enableRateLimit: true,
-    userRole: UserRole.TECHNICAL_MEETING_COORDINATOR,
     enableStrictValidation: true,
   },
   [UserRole.OBSERVER]: {

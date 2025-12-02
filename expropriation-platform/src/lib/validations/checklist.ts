@@ -12,7 +12,6 @@ export const ChecklistItemTypeEnum = z.enum([
   'INSPECTION',
   'SIGNATURE',
   'PAYMENT',
-  'NOTIFICATION'
 ])
 
 // Type exports

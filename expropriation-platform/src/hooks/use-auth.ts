@@ -55,7 +55,6 @@ export function useAuth(options: UseAuthOptions = {}) {
   const isAnalyst = hasUserRole('analyst');
   const isSupervisor = hasUserRole('supervisor');
   const isObserver = hasUserRole('observer');
-  const isTechnicalMeetingCoordinator = hasUserRole('technical_meeting_coordinator');
 
   // Permission-based checks
   const canCreateCases = hasUserPermission('canCreate');
@@ -124,7 +123,6 @@ export function useAuth(options: UseAuthOptions = {}) {
     isAnalyst,
     isSupervisor,
     isObserver,
-    isTechnicalMeetingCoordinator,
 
     // Permission checks
     canCreateCases,

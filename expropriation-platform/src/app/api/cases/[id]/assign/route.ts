@@ -228,33 +228,6 @@ export async function PUT(
       }
     })
 
-    // Create notifications for newly assigned users
-    if (assignedToId && assignedToId !== existingCase.assignedToId && assignedToId !== user.id) {
-      await prisma.notification.create({
-        data: {
-          userId: assignedToId,
-          title: 'Nuevo Casio Asignado',
-          message: `Te ha sido asignado el caso ${updatedCase.fileNumber}: ${updatedCase.title}`,
-          type: 'TASK_ASSIGNED',
-          entityType: 'case',
-          entityId: updatedCase.id
-        }
-      })
-    }
-
-    if (supervisedById && supervisedById !== existingCase.supervisedById && supervisedById !== user.id) {
-      await prisma.notification.create({
-        data: {
-          userId: supervisedById,
-          title: 'Nuevo Casio para Supervisión',
-          message: `Se te ha asignado supervisar el caso ${updatedCase.fileNumber}: ${updatedCase.title}`,
-          type: 'TASK_ASSIGNED',
-          entityType: 'case',
-          entityId: updatedCase.id
-        }
-      })
-    }
-
     return NextResponse.json(updatedCase)
   } catch (error) {
     logger.error('Error updating case assignment:', error)

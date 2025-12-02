@@ -16,8 +16,6 @@ import {
   createCaseHistory,
   getAvailableReturnStages,
   resetChecklistCompletions,
-  createReturnNotifications,
-  createApprovalNotification,
   handleApiError,
   type StageTransitionData,
   type CaseWithAssignments
@@ -132,15 +130,6 @@ export async function POST(
       notifyStakeholders: validatedData.notifyStakeholders
     };
 
-    // Check if approval is required
-    if (validatedData.requiresApproval && user.role.name !== 'super_admin') {
-      if (user.role.name === 'department_admin' || user.role.name === 'supervisor') {
-        // Already approved
-      } else {
-        await createApprovalNotification(caseId, transitionData, user);
-      }
-    }
-
     // Calculate duration at current stage
     let duration: number | undefined = undefined;
     if (caseData.stageAssignments) {
@@ -190,13 +179,6 @@ export async function POST(
 
     // Reset checklist completions for target stage
     await resetChecklistCompletions(newStageAssignment.id, fromStageConfig.name);
-
-    // Create notifications
-    if (validatedData.notifyStakeholders) {
-      await createReturnNotifications(caseId, transitionData, user, {
-        fileNumber: caseData.fileNumber
-      });
-    }
 
     // Log activity
     await logStageTransitionActivity(

@@ -7,7 +7,6 @@ import { useAuth } from '@/hooks/use-auth'
 import {
   BarChart3,
   FileText,
-  Calendar,
   Users,
   Settings,
   Building2,
@@ -28,13 +27,6 @@ const moduleInfo = [
     icon: FileText,
     description: 'Sistema completo para la gestión de casos de expropiación.',
     features: ['17 etapas de workflow', 'Asignación de casos', 'Seguimiento en tiempo real']
-  },
-  {
-    title: 'Reuniones Técnicas',
-    href: '/meetings',
-    icon: Calendar,
-    description: 'Planificación y gestión de reuniones técnicas.',
-    features: ['Programación de reuniones', 'Actas digitales', 'Toma de decisiones']
   },
   {
     title: 'Reportes y Análisis',

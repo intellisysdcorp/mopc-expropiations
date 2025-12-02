@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import {
-  Bell,
   Building2,
   ChevronDown,
   ChevronRight,
@@ -225,14 +224,6 @@ export function SidebarNavigation({
               >
                 <Search className="h-4 w-4 mr-3" />
                 Búsqueda global
-              </Button>
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => (window.location.href = '/notifications')}
-              >
-                <Bell className="h-4 w-4 mr-3" />
-                Ver notificaciones
               </Button>
             </>
           )}

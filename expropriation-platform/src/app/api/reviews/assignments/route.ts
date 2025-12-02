@@ -175,20 +175,6 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Create notification for assignee
-    if (validatedData.assignedTo !== session.user.id) {
-      await prisma.notification.create({
-        data: {
-          title: 'New Review Assignment',
-          message: `You have been assigned a ${assignment.reviewType.replace('_', ' ')} review for case ${caseExists.fileNumber}`,
-          type: 'TASK_ASSIGNED',
-          userId: validatedData.assignedTo,
-          entityType: 'review_assignment',
-          entityId: assignment.id,
-        },
-      });
-    }
-
     return NextResponse.json(assignment, { status: 201 });
   } catch (error) {
     logger.error('Error creating review assignment:', error);

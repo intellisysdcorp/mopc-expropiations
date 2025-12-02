@@ -14,7 +14,6 @@ export type UserRole =
   | 'department_admin'
   | 'analyst'
   | 'supervisor'
-  | 'technical_meeting_coordinator'
   | 'observer'
   | 'default';
 
@@ -43,12 +42,6 @@ export const RATE_LIMIT_CONFIGS: Record<UserRole, RateLimitConfig> = {
     maxRequests: 300,
     maxUploads: 30,
     maxStorageMB: 300,
-  },
-  technical_meeting_coordinator: {
-    windowMs: 60 * 60 * 1000, // 1 hour
-    maxRequests: 150,
-    maxUploads: 15,
-    maxStorageMB: 150,
   },
   observer: {
     windowMs: 60 * 60 * 1000, // 1 hour

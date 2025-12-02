@@ -5,7 +5,7 @@ import { AuthProvider } from "@/components/providers/auth-provider";
 import { QueryProvider } from "@/components/providers/query-client-provider";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { TutorialProvider } from "@/components/tutorial/tutorial-provider";
-import { EnhancedToastProvider } from "@/components/notifications/enhanced-toast-provider";
+import { EnhancedToastProvider } from "@/components/ui/enhanced-toast-provider";
 import { KeyboardShortcutsProvider } from "@/components/navigation/enhanced-keyboard-shortcuts";
 import { SkipLink as AccessibleSkipLink } from "@/components/ui/accessibility";
 import { PerformanceMonitor as PerfMonitor } from "@/lib/performance";
