@@ -77,7 +77,6 @@ export function SystemConfigurationPanel() {
     'all',
     'general',
     'security',
-    'notification',
     'backup',
     'performance',
     'email',
@@ -444,7 +443,6 @@ export function SystemConfigurationPanel() {
                   <SelectContent>
                     <SelectItem value="general">General</SelectItem>
                     <SelectItem value="security">Seguridad</SelectItem>
-                    <SelectItem value="notification">Notificación</SelectItem>
                     <SelectItem value="backup">Backup</SelectItem>
                     <SelectItem value="performance">Rendimiento</SelectItem>
                     <SelectItem value="email">Email</SelectItem>

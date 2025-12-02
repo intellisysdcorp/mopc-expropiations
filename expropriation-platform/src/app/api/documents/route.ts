@@ -218,7 +218,6 @@ export async function POST(request: NextRequest) {
       'department_admin': UserRole.DEPARTMENT_ADMIN,
       'analyst': UserRole.ANALYST,
       'supervisor': UserRole.SUPERVISOR,
-      'technical_meeting_coordinator': UserRole.TECHNICAL_MEETING_COORDINATOR,
       'observer': UserRole.OBSERVER,
     };
 

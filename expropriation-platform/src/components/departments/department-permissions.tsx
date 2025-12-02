@@ -277,7 +277,6 @@ export function DepartmentPermissions({
       SYSTEM_CONFIG: <Settings className="h-4 w-4" />,
       VIEW_REPORTS: <BarChart3 className="h-4 w-4" />,
       APPROVE_DECISIONS: <CheckCircle2 className="h-4 w-4" />,
-      COORDINATE_MEETINGS: <Users className="h-4 w-4" />,
     };
     return icons[type as keyof typeof icons] || <Key className="h-4 w-4" />;
   };

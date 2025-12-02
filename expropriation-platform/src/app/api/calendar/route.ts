@@ -22,7 +22,7 @@ interface CalendarEvent {
   id: string;
   title: string;
   date: string;
-  type: 'deadline' | 'meeting' | 'milestone' | 'reminder';
+  type: 'deadline' | 'milestone' | 'reminder';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   status: 'pending' | 'completed' | 'overdue';
   description?: string;
@@ -111,101 +111,7 @@ function calculateStageDeadlines(currentCase: any): CalendarEvent[] {
   return events;
 }
 
-// Helper function to get meeting events
-async function getMeetingEvents(startDate: Date, endDate: Date, session: any): Promise<CalendarEvent[]> {
-  const where: any = {
-    scheduledDate: {
-      gte: startDate,
-      lte: endDate,
-    },
-  };
 
-  // Department-based access control
-  if (session.user.role !== 'SUPER_ADMIN') {
-    where.OR = [
-      { organizerId: session.user.id },
-      {
-        participants: {
-          some: {
-            userId: session.user.id
-          }
-        }
-      },
-      {
-        case: {
-          department: {
-            OR: [
-              { id: session.user.departmentId },
-              { parentId: session.user.departmentId }
-            ]
-          }
-        }
-      }
-    ];
-  }
-
-  const meetings = await prisma.meeting.findMany({
-    where: {
-      scheduledStart: {
-        gte: startDate,
-        lte: endDate,
-      },
-      ...(session.user.role !== 'SUPER_ADMIN' && {
-        OR: [
-          { organizerId: session.user.id },
-          {
-            participants: {
-              some: {
-                userId: session.user.id
-              }
-            }
-          },
-          {
-            case: {
-              department: {
-                OR: [
-                  { id: session.user.departmentId },
-                  { parentId: session.user.departmentId }
-                ]
-              }
-            }
-          }
-        ]
-      })
-    },
-    include: {
-      organizer: {
-        select: {
-          firstName: true,
-          lastName: true
-        }
-      },
-      case: {
-        select: {
-          fileNumber: true,
-          department: {
-            select: { name: true }
-          }
-        }
-      }
-    },
-  });
-
-  return meetings.map((meeting: any) => ({
-    id: meeting.id,
-    title: meeting.title,
-    date: meeting.scheduledStart.toISOString(),
-    type: 'meeting' as const,
-    priority: meeting.priority.toLowerCase() as any,
-    status: meeting.status === 'COMPLETED' ? 'completed' :
-            meeting.status === 'CANCELLED' ? 'overdue' : 'pending',
-    description: meeting.description,
-    caseId: meeting.caseId,
-    caseNumber: meeting.case?.fileNumber,
-    assignedTo: `${meeting.organizer?.firstName} ${meeting.organizer?.lastName}`.trim(),
-    department: meeting.case?.department?.name,
-  }));
-}
 
 // Helper function to get reminder events
 async function getReminderEvents(startDate: Date, endDate: Date, session: any): Promise<CalendarEvent[]> {
@@ -371,10 +277,6 @@ export async function GET(request: NextRequest) {
       const caseEvents = calculateStageDeadlines(case_);
       events.push(...caseEvents);
     }
-
-    // Get meeting events
-    const meetingEvents = await getMeetingEvents(startDate, endDate, session);
-    events.push(...meetingEvents);
 
     // Get reminder events
     const reminderEvents = await getReminderEvents(startDate, endDate, session);

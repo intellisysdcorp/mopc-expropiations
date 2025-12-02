@@ -24,7 +24,6 @@ import { toast } from 'react-hot-toast';
 import { CaseTimeline } from './case-timeline';
 import { ChecklistManager } from './checklist-manager';
 import { StageProgressionControl } from './stage-progression-control';
-import { NotificationCenter } from '@/components/notifications/notification-center';
 import clientLogger from '@/lib/client-logger';
 
 interface CaseData {
@@ -138,13 +137,6 @@ export function WorkflowManager({ caseId, className }: WorkflowManagerProps) {
     fetchCaseData();
   };
 
-  const handleNotificationClick = (notification: any) => {
-    // Handle notification click - could navigate to specific case or section
-    if (notification.case?.id) {
-      setActiveTab('timeline');
-    }
-  };
-
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('es-DO', {
       day: '2-digit',
@@ -228,7 +220,6 @@ export function WorkflowManager({ caseId, className }: WorkflowManagerProps) {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <NotificationCenter onNotificationClick={handleNotificationClick} />
           <Button
             variant="outline"
             onClick={() => setRefreshKey(prev => prev + 1)}

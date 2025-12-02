@@ -46,10 +46,6 @@ export default function DashboardPage() {
       action: () => router.push('/reports'),
     },
     {
-      ...commonShortcuts.goToMeetings,
-      action: () => router.push('/meetings'),
-    },
-    {
       ...commonShortcuts.createNew,
       action: () => router.push('/cases?action=create'),
     },

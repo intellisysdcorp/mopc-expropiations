@@ -33,7 +33,7 @@ import { DocumentList } from '@/components/cases/document-list'
 import { useCaseForm } from '@/hooks/use-case-form'
 import { useCaseFormNavigation } from '@/hooks/use-case-form-navigation'
 import { useDocumentSubmission } from '@/hooks/use-document-submission'
-import { useEnhancedToast } from '@/components/notifications/enhanced-toast-provider'
+import { useEnhancedToast } from '@/components/ui/enhanced-toast-provider'
 
 // Constants
 import { REQUIRED_FIELDS } from '@/constants/case-constants'

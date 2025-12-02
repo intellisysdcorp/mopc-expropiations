@@ -102,7 +102,7 @@ export default async function middleware(req: NextRequest) {
   const userRole = token.role as string;
 
   // Validate user role to prevent privilege escalation
-  const validRoles = ['super_admin', 'department_admin', 'analyst', 'supervisor', 'observer', 'technical_meeting_coordinator'];
+  const validRoles = ['super_admin', 'department_admin', 'analyst', 'supervisor', 'observer'];
   if (!validRoles.includes(userRole)) {
     const ip = getClientIP(req);
     edgeLogger.security.suspiciousActivity('invalid_role_detected', {
@@ -151,21 +151,6 @@ export default async function middleware(req: NextRequest) {
   if (pathname.startsWith('/users') &&
       !['super_admin', 'department_admin'].includes(userRole)) {
     edgeLogger.security.suspiciousActivity('unauthorized_user_management_access', {
-      userId: token.sub || 'unknown',
-      userEmail: token.email || 'unknown',
-      userRole,
-      attemptedPath: pathname,
-      ip: getClientIP(req),
-      userAgent: req.headers.get('user-agent') || 'unknown',
-    });
-    const response = NextResponse.redirect(new URL('/dashboard', req.url));
-    return addSecurityHeaders(response, nonce);
-  }
-
-  // Meeting coordination routes
-  if (pathname.startsWith('/meetings') &&
-      !['super_admin', 'department_admin', 'technical_meeting_coordinator'].includes(userRole)) {
-    edgeLogger.security.suspiciousActivity('unauthorized_meeting_access', {
       userId: token.sub || 'unknown',
       userEmail: token.email || 'unknown',
       userRole,

@@ -291,20 +291,6 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Create notification for assignee if specified
-    if (body.assignedTo && body.assignedTo !== session.user.id) {
-      await prisma.notification.create({
-        data: {
-          title: 'New Observation Assigned',
-          message: `You have been assigned a new observation: ${observation.title}`,
-          type: 'TASK_ASSIGNED',
-          userId: body.assignedTo,
-          entityType: 'observation',
-          entityId: observation.id,
-        },
-      });
-    }
-
     return NextResponse.json(observation, { status: 201 });
   } catch (error) {
     logger.error('Error creating observation:', error);
@@ -413,20 +399,6 @@ export async function POST_RESPONSE(request: NextRequest) {
         },
       },
     });
-
-    // Create notification for observation observer if they're not the responder
-    if (observation.observedBy !== session.user.id) {
-      await prisma.notification.create({
-        data: {
-          title: 'Response to Your Observation',
-          message: `New response to observation: ${observation.title}`,
-          type: 'STATUS_UPDATE',
-          userId: observation.observedBy,
-          entityType: 'observation',
-          entityId: body.observationId,
-        },
-      });
-    }
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {

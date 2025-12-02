@@ -16,7 +16,6 @@ import {
   createStageAssignment,
   handleAutoAssignment,
   logStageTransitionActivity,
-  createStageNotifications,
   handleApiError,
   type StageTransitionData
 } from '@/lib/services/stage-transition.service';
@@ -237,9 +236,6 @@ export async function POST(
 
     // Handle auto-assignment
     await handleAutoAssignment(caseId, toStageConfig);
-
-    // Create notification for relevant users
-    await createStageNotifications(caseId, validatedData.toStage, user, updatedCase);
 
     // Log activity
     await logStageTransitionActivity(

@@ -1,8 +1,6 @@
 import {
   BarChart3,
-  Bell,
   Building2,
-  Calendar,
   Database,
   FileImage,
   FileText,
@@ -24,31 +22,6 @@ export const navigationItems: NavItem[] = [
     href: '/cases',
     icon: FileText,
     description: 'Gestión de casos de expropiación',
-  },
-  {
-    title: 'Reuniones',
-    href: '/meetings',
-    icon: Calendar,
-    description: 'Gestión de reuniones técnicas',
-    children: [
-      {
-        title: 'Todas las Reuniones',
-        href: '/meetings',
-        icon: Calendar,
-        description: 'Ver todas las reuniones programadas',
-      },
-      {
-        title: 'Nueva Reunión',
-        href: '/meetings/create',
-        icon: Calendar,
-        description: 'Agendar una nueva reunión técnica',
-        roles: [
-          'super_admin',
-          'department_admin',
-          'technical_meeting_coordinator',
-        ],
-      },
-    ],
   },
   {
     title: 'Informes',
@@ -90,26 +63,6 @@ export const navigationItems: NavItem[] = [
     href: '/documents',
     icon: FileImage,
     description: 'Gestión de documentos digitales',
-  },
-  {
-    title: 'Notificaciones',
-    href: '/notifications',
-    icon: Bell,
-    description: 'Centro de notificaciones',
-    children: [
-      {
-        title: 'Ver Notificaciones',
-        href: '/notifications',
-        icon: Bell,
-        description: 'Ver todas las notificaciones recibidas',
-      },
-      {
-        title: 'Configuración',
-        href: '/notifications/settings',
-        icon: Settings,
-        description: 'Configurar preferencias de notificación',
-      },
-    ],
   },
   {
     title: 'Administración',

@@ -1,7 +1,7 @@
 'use client'
 
 import { Card, CardContent } from '@/components/ui/card'
-import { FileText, History, Calendar, Users } from 'lucide-react'
+import { FileText, History, Users } from 'lucide-react'
 import { Case } from '@/types/client'
 
 interface CaseStatsProps {
@@ -21,12 +21,6 @@ export function CaseStats({ caseData }: CaseStatsProps) {
       label: 'Cambios',
       count: caseData._count?.histories || 0,
       color: 'text-green-600'
-    },
-    {
-      icon: Calendar,
-      label: 'Reuniones',
-      count: caseData._count?.meetings || 0,
-      color: 'text-purple-600'
     },
     {
       icon: Users,

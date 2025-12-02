@@ -14,10 +14,13 @@ export function generateCSPHeader(nonce: string): string {
 
   const cspDirectives = [
     "default-src 'self'",
-    // In development, allow unsafe-eval for Next.js HMR
+    // Script sources: Use nonce for inline scripts, allow unsafe-eval in dev for Next.js HMR
+    // Note: We avoid 'unsafe-inline' when using nonce to prevent browser warnings
     isDevelopment
-      ? `script-src 'self' 'nonce-${nonce}' 'unsafe-eval' 'unsafe-inline'`
+      ? `script-src 'self' 'nonce-${nonce}' 'unsafe-eval'`
       : `script-src 'self' 'nonce-${nonce}'`,
+    // Style sources: Use nonce but allow unsafe-inline for development tools
+    // This is necessary for Tailwind and some development tools
     `style-src 'self' 'nonce-${nonce}' ${isDevelopment ? "'unsafe-inline'" : ''}`,
     "img-src 'self' data: https:",
     "font-src 'self'",

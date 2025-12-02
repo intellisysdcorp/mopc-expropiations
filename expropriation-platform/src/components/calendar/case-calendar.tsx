@@ -29,7 +29,7 @@ interface CalendarEvent {
   id: string;
   title: string;
   date: Date;
-  type: 'deadline' | 'meeting' | 'milestone' | 'reminder';
+  type: 'deadline' | 'milestone' | 'reminder';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   status: 'pending' | 'completed' | 'overdue';
   description?: string;
@@ -49,7 +49,7 @@ export function CaseCalendar({ className }: CaseCalendarProps) {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState({
-    types: ['deadline', 'meeting', 'milestone', 'reminder'],
+    types: ['deadline', 'milestone', 'reminder'],
     priorities: ['low', 'medium', 'high', 'urgent'],
     departments: [] as string[],
     showCompleted: true,
@@ -117,7 +117,6 @@ export function CaseCalendar({ className }: CaseCalendarProps) {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'deadline': return <Clock className="h-4 w-4" />;
-      case 'meeting': return <Users className="h-4 w-4" />;
       case 'milestone': return <CheckCircle className="h-4 w-4" />;
       case 'reminder': return <AlertTriangle className="h-4 w-4" />;
       default: return <FileText className="h-4 w-4" />;
@@ -271,7 +270,7 @@ export function CaseCalendar({ className }: CaseCalendarProps) {
               <div>
                 <label className="text-sm font-medium mb-2 block">Tipos de Evento</label>
                 <div className="space-y-2">
-                  {['deadline', 'meeting', 'milestone', 'reminder'].map(type => (
+                  {['deadline', 'milestone', 'reminder'].map(type => (
                     <div key={type} className="flex items-center space-x-2">
                       <Checkbox
                         id={`type-${type}`}
@@ -287,7 +286,6 @@ export function CaseCalendar({ className }: CaseCalendarProps) {
                       />
                       <label htmlFor={`type-${type}`} className="text-sm capitalize">
                         {type === 'deadline' ? 'Plazos' :
-                         type === 'meeting' ? 'Reuniones' :
                          type === 'milestone' ? 'Hitos' : 'Recordatorios'}
                       </label>
                     </div>
@@ -409,7 +407,6 @@ export function CaseCalendar({ className }: CaseCalendarProps) {
                 <div className="space-y-1">
                   {[
                     { type: 'deadline', label: 'Plazos', icon: <Clock className="h-4 w-4" /> },
-                    { type: 'meeting', label: 'Reuniones', icon: <Users className="h-4 w-4" /> },
                     { type: 'milestone', label: 'Hitos', icon: <CheckCircle className="h-4 w-4" /> },
                     { type: 'reminder', label: 'Recordatorios', icon: <AlertTriangle className="h-4 w-4" /> },
                   ].map(item => (
