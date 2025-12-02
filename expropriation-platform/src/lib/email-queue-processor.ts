@@ -257,22 +257,6 @@ class EmailQueueProcessor {
 
       logger.info(`Email sent successfully: ${emailQueueItem.id} -> ${emailQueueItem.to}`);
 
-      // Update notification delivery record
-      if (emailQueueItem.metadata?.notificationId) {
-        await prisma.notificationDelivery.updateMany({
-          where: {
-            notificationId: emailQueueItem.metadata.notificationId,
-            channel: 'email',
-            recipient: emailQueueItem.to
-          },
-          data: {
-            status: 'delivered',
-            sentAt: new Date(),
-            messageId: result.messageId
-          }
-        });
-      }
-
     } catch (error) {
       logger.error(`Failed to send email ${emailQueueItem.id}:`, error);
 
@@ -294,23 +278,6 @@ class EmailQueueProcessor {
             error: errorMessage
           }
         });
-
-        // Update notification delivery record
-        if (emailQueueItem.metadata?.notificationId) {
-          await prisma.notificationDelivery.updateMany({
-            where: {
-              notificationId: emailQueueItem.metadata.notificationId,
-              channel: 'email',
-              recipient: emailQueueItem.to
-            },
-            data: {
-              status: 'failed',
-              failedAt: new Date(),
-              error: errorMessage
-            }
-          });
-        }
-
       } else {
         // Schedule retry
         await prisma.emailQueue.update({
