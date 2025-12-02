@@ -161,8 +161,8 @@ export async function GET(
   }
 }
 
-// POST /api/documents/[id]/history/export - Export document history
-export async function POST_EXPORT(
+// POST /api/documents/[id]/history - Export document history
+export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {

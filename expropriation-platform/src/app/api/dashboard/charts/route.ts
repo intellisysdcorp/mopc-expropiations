@@ -99,7 +99,7 @@ async function getTimelineData(departmentFilter: any, startDate: Date, endDate: 
   return NextResponse.json({ timeline: dailyData });
 }
 
-async function getOverviewData(departmentFilter: any, startDate: Date, endDate: Date, days: number) {
+async function getOverviewData(departmentFilter: any, startDate: Date, endDate: Date, _days: number) {
   // Get priority distribution
   const priorityData = await prisma.case.groupBy({
     by: ['priority'],

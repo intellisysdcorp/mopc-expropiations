@@ -65,6 +65,7 @@ You will implement the complete Prisma schema including:
 - Create proper separation of concerns
 - Implement proper error logging and monitoring
 - Follow Next.js best practices for performance
+- Always insert a new line at the end of files
 
 **Security Implementation:**
 - Validate all inputs on both client and server
