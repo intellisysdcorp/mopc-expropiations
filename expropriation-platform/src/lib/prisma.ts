@@ -9,11 +9,11 @@ const globalForPrisma = globalThis as unknown as {
 function createPrismaClient() {
   // Create a Prisma client with MariaDB adapter
   const adapter = new PrismaMariaDb({
-    host: process.env.DATABASE_HOST,
+    host: process.env.DATABASE_HOST || '',
     port: parseInt(process.env.DATABASE_PORT || "3306"),
-    user: process.env.DATABASE_USER,
-    password: process.env.DATABASE_PASSWORD,
-    database: process.env.DATABASE_NAME,
+    user: process.env.DATABASE_USER || '',
+    password: process.env.DATABASE_PASSWORD || '',
+    database: process.env.DATABASE_NAME || '',
     connectionLimit: parseInt(process.env.DATABASE_CONNECTION_LIMIT || "5")
   })
 
