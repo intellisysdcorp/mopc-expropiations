@@ -1,18 +1,25 @@
-import { PrismaClient } from '@prisma/client'
-import { PrismaLibSQL } from '@prisma/adapter-libsql'
-import { logger } from './logger'
+import { PrismaClient } from '@prisma/client';
+import { PrismaMariaDb } from '@prisma/adapter-mariadb'
+import { logger } from './logger';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
 function createPrismaClient() {
+  // Create a Prisma client with MariaDB adapter
+  const adapter = new PrismaMariaDb({
+    host: process.env.DATABASE_HOST,
+    port: parseInt(process.env.DATABASE_PORT || "3306"),
+    user: process.env.DATABASE_USER,
+    password: process.env.DATABASE_PASSWORD,
+    database: process.env.DATABASE_NAME,
+    connectionLimit: parseInt(process.env.DATABASE_CONNECTION_LIMIT || "5")
+  })
+
   const client = new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-    // Prisma 7: Use adapter for SQLite connection
-    adapter: new PrismaLibSQL({
-      url: process.env.DATABASE_URL || 'file:./prisma/dev.db',
-    }),
+    adapter
   })
 
   // Enhanced connection health check (server-side only)

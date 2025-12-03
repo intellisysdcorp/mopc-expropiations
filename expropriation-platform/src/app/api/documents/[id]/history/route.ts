@@ -375,7 +375,7 @@ async function getHistoryStatistics(documentId: string): Promise<any> {
         COUNT(*) as count
       FROM document_histories
       WHERE documentId = ${documentId}
-        AND createdAt >= datetime('now', '-30 days')
+        AND createdAt >= DATE_SUB(NOW(), INTERVAL 30 DAY)
       GROUP BY DATE(createdAt)
       ORDER BY date DESC
     `,
