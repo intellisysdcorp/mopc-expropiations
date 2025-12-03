@@ -1,17 +1,4 @@
 /**
- * Client-side authentication utility functions
- * These functions are safe to use in the browser and don't require server-side resources
- */
-
-export interface PasswordResetRequest {
-  email: string;
-  token: string;
-  expiresAt: Date;
-  isUsed: boolean;
-  createdAt: Date;
-}
-
-/**
  * Validate password strength
  */
 export function validatePassword(password: string): {
@@ -66,8 +53,8 @@ export function hasRole(userRole: string, allowedRoles: string[]): boolean {
 /**
  * Get session error message from URL parameters
  */
-export function getAuthErrorMessage(error?: string): string | null {
-  if (!error) return null;
+export function getAuthErrorMessage(error?: string): string | undefined {
+  if (!error) return;
 
   const errorMessages: Record<string, string> = {
     CredentialsSignin: 'Credenciales inválidas',
@@ -84,5 +71,5 @@ export function getAuthErrorMessage(error?: string): string | null {
     SessionRequired: 'Sesión requerida',
   };
 
-  return (errorMessages[error] ?? errorMessages.Default) as string;
+  return errorMessages[error] ?? errorMessages.Default;
 }
