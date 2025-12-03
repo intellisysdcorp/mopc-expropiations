@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaLibSql } from '@prisma/adapter-libsql'
-import { logger } from './logger'
+import clientLogger from './client-logger'
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
@@ -19,10 +19,10 @@ function createPrismaClient() {
   if (typeof window === 'undefined') {
     client.$connect()
       .then(() => {
-        logger.info('✅ Database connected successfully')
+        clientLogger.info('✅ Database connected successfully')
       })
       .catch((error) => {
-        logger.error('❌ Database connection failed:', error)
+        clientLogger.error('❌ Database connection failed:', { error })
         // In production, you might want to implement retry logic here
       })
 
@@ -36,7 +36,7 @@ function createPrismaClient() {
           await client.$disconnect();
           // Only log disconnection in production to reduce development noise
           if (process.env.NODE_ENV === 'production') {
-            logger.info('📴 Database disconnected');
+            clientLogger.info('📴 Database disconnected');
           }
         }
       };

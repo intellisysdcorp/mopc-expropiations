@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react'
 import { CreateCaseInput, UpdateCaseInput, Priority, CaseStatus, CaseStage } from '@/lib/validations/case'
 import { User, Department, Document, Case } from '@/types/client'
 import { formatDate } from '@/constants/case-constants'
-import { logger } from '@/lib/logger';
+import clientLogger from '@/lib/client-logger';
 
 interface CaseFormState {
   loading: boolean
@@ -191,8 +191,10 @@ export function useCaseForm(mode: 'create' | 'edit', caseId?: string, initialDat
         progressPercentage: data.progressPercentage,
         isDraft: false
       })
-    } catch (error) {
-      logger.error('Error fetching case:', error)
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          clientLogger.error('Error fetching case:', error)
+        }
       throw error
     }
   }, [caseId])
@@ -207,8 +209,10 @@ export function useCaseForm(mode: 'create' | 'edit', caseId?: string, initialDat
       updateState({
         departments: Array.isArray(data) ? data : (data.departments || [])
       })
-    } catch (error) {
-      logger.error('Error fetching departments:', error)
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          clientLogger.error('Error fetching departments:', error)
+        }
       throw error
     }
   }, [])
@@ -230,8 +234,10 @@ export function useCaseForm(mode: 'create' | 'edit', caseId?: string, initialDat
           supervisedById: 'UNASSIGNED'
         }))
       }
-    } catch (error) {
-      logger.error('Error fetching users:', error)
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          clientLogger.error('Error fetching users:', error)
+        }
       throw error
     }
   }, [mode])
@@ -243,8 +249,10 @@ export function useCaseForm(mode: 'create' | 'edit', caseId?: string, initialDat
         const data = await response.json()
         updateState({ existingDocuments: data.documents || [] })
       }
-    } catch (error) {
-      logger.error('Error fetching existing documents:', error)
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          clientLogger.error('Error fetching existing documents:', error)
+        }
     }
   }, [])
 
@@ -270,8 +278,10 @@ export function useCaseForm(mode: 'create' | 'edit', caseId?: string, initialDat
         const data = await response.json()
         index = (data.cases?.length || 0) + 1
       }
-    } catch (error) {
-      logger.error('Couldn\'t get today\'s case count:', error)
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          clientLogger.error('Couldn\'t get today\'s case count:', error)
+        }
     }
     const indexString = index.toString().padStart(2, '0')
     return `EXP-${year}-${month}-${day}-${indexString}`
