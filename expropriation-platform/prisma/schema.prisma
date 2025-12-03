@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
 }
 
 // Enums for type safety and consistency
@@ -2824,7 +2824,6 @@ model SystemLog {
   @@index([sessionId])
   @@index([requestId])
   @@index([ipAddress])
-  @@index([tags])
   @@map("system_logs")
 }
 
