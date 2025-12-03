@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { createPasswordResetToken, checkRateLimit } from '@/lib/auth-utils';
+import { createPasswordResetToken, checkRateLimit } from '@/utils/auth-server';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 

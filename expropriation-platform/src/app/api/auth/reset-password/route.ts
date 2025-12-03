@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { resetPassword, verifyPasswordResetToken } from '@/lib/auth-utils';
+import { resetPassword, verifyPasswordResetToken } from '@/utils/auth-server';
 import { logger } from '@/lib/logger';
 
 const resetPasswordSchema = z.object({

@@ -3,7 +3,7 @@
 import { useSession as useNextAuthSession, signOut as nextAuthSignOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo } from 'react';
-import { hasPermission, hasRole } from '@/lib/auth-utils';
+import { hasPermission, hasRole } from '@/utils/auth-client';
 import clientLogger from '@/lib/client-logger';
 
 interface UseAuthOptions {
