@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client'
-import { PrismaLibSql } from '@prisma/adapter-libsql'
+import { PrismaLibSQL } from '@prisma/adapter-libsql'
 import clientLogger from './client-logger'
 
 const globalForPrisma = globalThis as unknown as {
@@ -10,7 +10,7 @@ function createPrismaClient() {
   const client = new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
     // Prisma 7: Use adapter for SQLite connection
-    adapter: new PrismaLibSql({
+    adapter: new PrismaLibSQL({
       url: process.env.DATABASE_URL || 'file:./prisma/dev.db',
     }),
   })
