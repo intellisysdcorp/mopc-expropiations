@@ -1,9 +1,9 @@
-import { logger } from '@/lib/logger';
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-hot-toast'
 import { Case } from '@/types/client'
+import clientLogger from '@/lib/client-logger';
 
 export const useCase = (caseId: string) => {
   const { data: session, status } = useSession()
@@ -26,8 +26,10 @@ export const useCase = (caseId: string) => {
 
       const data = await response.json()
       setCaseData(data)
-    } catch (error) {
-      logger.error('Error fetching case:', error)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.error('Error fetching case:', error)
+      }
       toast.error('Error al cargar los detalles del caso')
     } finally {
       setLoading(false)
