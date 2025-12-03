@@ -13,7 +13,7 @@ Plataforma digital integral para la gestión y seguimiento de casos de expropiac
 
 - **Frontend**: Next.js 15 con App Router y TypeScript
 - **Estilos**: Tailwind CSS con shadcn/ui
-- **Base de Datos**: SQLite con Prisma ORM
+- **Base de Datos**: MySQL con Prisma ORM
 - **Autenticación**: NextAuth.js con adaptador Prisma
 - **Validación**: Zod y React Hook Form
 
