@@ -86,7 +86,7 @@ const SECURITY_LEVELS = [
 ]           
 
 // Document type configurations based on case stages
-export const STAGE_DOCUMENT_TYPES = {
+const STAGE_DOCUMENT_TYPES = {
   'RECEPCION_SOLICITUD': ['LEGAL', 'ADMINISTRATIVE', 'CORRESPONDENCE'],
   'VALIDACION_PRELIMINAR': ['LEGAL', 'ADMINISTRATIVE', 'EVIDENCE'],
   'EVALUACION_TECNICA': ['TECHNICAL', 'PLAN', 'EVIDENCE', 'PHOTO'],

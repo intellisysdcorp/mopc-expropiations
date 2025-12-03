@@ -75,9 +75,10 @@ export function useAuth(options: UseAuthOptions = {}) {
     try {
       await update();
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        clientLogger.error('Failed to refresh session:', error);
-      }
+      clientLogger.error(
+        'Failed to refresh session:',
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
   }, [update]);
 

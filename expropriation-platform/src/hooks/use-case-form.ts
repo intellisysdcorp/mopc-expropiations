@@ -193,9 +193,11 @@ export function useCaseForm(mode: 'create' | 'edit', caseId?: string, initialDat
       })
       } catch (error: unknown) {
         if (error instanceof Error) {
-          clientLogger.error('Error fetching case:', error)
+          clientLogger.error('Error fetching case:', error);
+          throw error;
         }
-      throw error
+        clientLogger.error('An unknown error occurred while fetching the case.', { error });
+        throw new Error(String(error));
     }
   }, [caseId])
 
@@ -211,9 +213,11 @@ export function useCaseForm(mode: 'create' | 'edit', caseId?: string, initialDat
       })
       } catch (error: unknown) {
         if (error instanceof Error) {
-          clientLogger.error('Error fetching departments:', error)
+          clientLogger.error('Error fetching departments:', error);
+          throw error;
         }
-      throw error
+        clientLogger.error('An unknown error occurred while fetching departments.', { error });
+        throw new Error(String(error));
     }
   }, [])
 
@@ -236,9 +240,11 @@ export function useCaseForm(mode: 'create' | 'edit', caseId?: string, initialDat
       }
       } catch (error: unknown) {
         if (error instanceof Error) {
-          clientLogger.error('Error fetching users:', error)
+          clientLogger.error('Error fetching users:', error);
+          throw error;
         }
-      throw error
+        clientLogger.error('An unknown error occurred while fetching users.', { error });
+        throw new Error(String(error));
     }
   }, [mode])
 

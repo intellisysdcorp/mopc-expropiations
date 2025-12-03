@@ -8,7 +8,6 @@ const nextConfig = withBundleAnalyzer({
   turbopack: {
     // Leave empty to use webpack with custom config
   },
-  // Move @prisma/client to serverExternalPackages for Next.js 15
   serverExternalPackages: [
     '@prisma/client',
     'sharp',
@@ -23,17 +22,6 @@ const nextConfig = withBundleAnalyzer({
   ],
   // Enable React strict mode for better error handling
   reactStrictMode: true,
-  // Experimental optimizations for tree-shaking
-  experimental: {
-    optimizePackageImports: [
-      'lucide-react',
-      'recharts',
-      'react-day-picker',
-      'date-fns',
-      'lodash-es',
-      '@radix-ui/react-icons'
-    ],
-  },
   // Handle proper module resolution with bundle splitting
   webpack: (config, { isServer, dev }) => {
     if (!isServer) {
