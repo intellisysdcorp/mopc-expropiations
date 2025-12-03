@@ -4,7 +4,7 @@ import { useSession as useNextAuthSession, signOut as nextAuthSignOut } from 'ne
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo } from 'react';
 import { hasPermission, hasRole } from '@/lib/auth-utils';
-import { logger } from '@/lib/logger';
+import clientLogger from '@/lib/client-logger';
 
 interface UseAuthOptions {
   required?: boolean;
@@ -74,8 +74,11 @@ export function useAuth(options: UseAuthOptions = {}) {
   const refreshSession = useCallback(async () => {
     try {
       await update();
-    } catch (error) {
-      logger.error('Failed to refresh session:', error);
+    } catch (error: unknown) {
+      clientLogger.error(
+        'Failed to refresh session:',
+        error instanceof Error ? error : new Error(String(error))
+      );
     }
   }, [update]);
 

@@ -483,13 +483,6 @@ export function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-// Get suggested document types for a case stage
-export function getSuggestedDocumentTypes(stage: string): string[] {
-  return STAGE_DOCUMENT_TYPES[stage as keyof typeof STAGE_DOCUMENT_TYPES] || [
-    'LEGAL', 'ADMINISTRATIVE', 'TECHNICAL', 'OTHER'
-  ];
-}
-
 // Create document version with file (exported for use in API routes)
 export async function createDocumentVersion({
   documentId,
