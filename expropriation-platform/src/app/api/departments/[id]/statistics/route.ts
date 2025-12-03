@@ -140,7 +140,7 @@ export async function GET(
       }),
       // Average case duration (in days)
       prisma.$queryRaw`
-        SELECT AVG(CAST(julianday(COALESCE(actualEndDate, datetime('now'))) - julianday(startDate) AS INTEGER)) as avgDuration
+        SELECT AVG(DATEDIFF(COALESCE(actualEndDate, NOW()), startDate)) as avgDuration
         FROM cases
         WHERE departmentId = ${departmentId}
         AND status IN ('COMPLETADO', 'ARCHIVED')
