@@ -52,7 +52,10 @@ export function LoginForm() {
   useEffect(() => {
     const urlError = searchParams?.get('error');
     if (urlError) {
-      setError(getAuthErrorMessage(urlError));
+      const errorMessage = getAuthErrorMessage(urlError);
+      if (errorMessage) {
+        setError(errorMessage);
+      }
     }
   }, [searchParams]);
 
@@ -69,7 +72,10 @@ export function LoginForm() {
       });
 
       if (result?.error) {
-        setError(getAuthErrorMessage(result.error));
+        const errorMessage = getAuthErrorMessage(result.error);
+        if (errorMessage) {
+          setError(errorMessage);
+        }
         return;
       }
 
