@@ -150,17 +150,17 @@ export function WorkflowManager({ caseId, className }: WorkflowManagerProps) {
   const getStageStatusColor = (status: string) => {
     switch (status) {
       case 'COMPLETADO':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-green-50 text-green-700 border-green-200';
       case 'EN_PROGRESO':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-brand-blue-50 text-brand-blue-700 border-brand-blue-200';
       case 'PENDIENTE':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'bg-yellow-50 text-yellow-700 border-yellow-200';
       case 'SUSPENDED':
-        return 'bg-orange-100 text-orange-800 border-orange-200';
+        return 'bg-brand-orange-50 text-brand-orange-700 border-brand-orange-200';
       case 'CANCELLED':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'bg-brand-red-50 text-brand-red-700 border-brand-red-200';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-gray-50 text-brand-gray-700 border-brand-gray-200';
     }
   };
 
@@ -376,7 +376,7 @@ export function WorkflowManager({ caseId, className }: WorkflowManagerProps) {
                 <CardContent>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600">
+                      <div className="text-2xl font-bold text-primary">
                         {workflowStats.totalCases}
                       </div>
                       <div className="text-sm text-gray-600">Total de Casos</div>
