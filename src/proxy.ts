@@ -33,7 +33,7 @@ function addSecurityHeaders(response: NextResponse, nonce: string): NextResponse
   return response;
 }
 
-export default async function middleware(req: NextRequest) {
+export default async function proxy(req: NextRequest) {
   // Generate a nonce for this request
   const nonce = generateNonce();
 
