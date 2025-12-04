@@ -13,19 +13,9 @@ Plataforma digital integral para la gestión y seguimiento de casos de expropiac
 
 - **Frontend**: Next.js 15 con App Router y TypeScript
 - **Estilos**: Tailwind CSS con shadcn/ui
-- **Base de Datos**: MySQL con Prisma ORM
+- **Base de Datos**: SQLite con Prisma ORM
 - **Autenticación**: NextAuth.js con adaptador Prisma
 - **Validación**: Zod y React Hook Form
-
-## 📚 Documentación
-
-| Documento | Descripción |
-|-----------|-------------|
-| [**Setup Guide**](./expropriation-platform/docs/SETUP.md) | Instalación detallada y configuración del entorno |
-| [**Database Schema**](./expropriation-platform/docs/DATABASE.md) | Modelos de datos, relaciones y migraciones |
-| [**Development Guide**](./expropriation-platform/docs/DEVELOPMENT.md) | Flujo de desarrollo, pruebas y contribución |
-| [**Deployment Guide**](./expropriation-platform/docs/DEPLOYMENT.md) | Despliegue en producción y configuración |
-| [**Workflow Documentation**](./expropriation-platform/docs/WORKFLOW.md) | Procesos de negocio y flujos de casos |
 
 ## 🚀 Quick Start
 
@@ -70,6 +60,16 @@ expropriation-platform/
 └── docs/            # Documentación adicional
 ```
 
+## 📚 Documentación
+
+| Documento | Descripción |
+|-----------|-------------|
+| [**Setup Guide**](./docs/SETUP.md) | Instalación detallada y configuración del entorno |
+| [**Database Schema**](./docs/DATABASE.md) | Modelos de datos, relaciones y migraciones |
+| [**Development Guide**](./docs/DEVELOPMENT.md) | Flujo de desarrollo, pruebas y contribución |
+| [**Deployment Guide**](./docs/DEPLOYMENT.md) | Despliegue en producción y configuración |
+| [**Workflow Documentation**](./docs/WORKFLOW.md) | Procesos de negocio y flujos de casos |
+
 ## 🔐 Roles del Sistema
 
 - **Super Admin**: Acceso completo al sistema
@@ -83,7 +83,7 @@ expropriation-platform/
 
 El sistema gestiona 17 etapas desde la revisión inicial hasta el cierre del caso, incluyendo verificación legal, evaluación técnica, avalúo, negociación y ejecución.
 
-[Ver documentación completa del flujo →](./expropriation-platform/docs/WORKFLOW.md)
+[Ver documentación completa del flujo →](./docs/WORKFLOW.md)
 
 ## 🧪 Scripts Esenciales
 
@@ -99,7 +99,7 @@ npm run lint            # Verificar código
 
 - **Email**: support@mopc.gob.do
 - **Issues**: [GitHub Issues](https://github.com/mopc/expropriation-platform/issues)
-- **Documentación**: [docs/](./expropriation-platform/docs/)
+- **Documentación**: [docs/](./docs/)
 
 ## 📄 Licencia
 
