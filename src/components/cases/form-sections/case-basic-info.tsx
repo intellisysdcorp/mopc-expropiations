@@ -1,15 +1,16 @@
 'use client'
 
 import { Control, FieldErrors, UseFormRegister, UseFormSetValue, UseFormWatch } from 'react-hook-form'
+import { RefreshCw, Loader2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { RefreshCw, Loader2 } from 'lucide-react'
 import clientLogger from '@/lib/client-logger'
-import { useState, useEffect } from 'react'
+import { useEnhancedToast } from '@/components/ui/enhanced-toast-provider'
 
 interface FormSectionProps {
   register: UseFormRegister<any>
@@ -65,6 +66,7 @@ const STAGES = [
 export function CaseBasicInfo({ register, errors, setValue, watch }: FormSectionProps) {
   const [departments, setDepartments] = useState<Department[]>([])
   const [isLoadingDepartments, setIsLoadingDepartments] = useState(false)
+  const { error: toastError } = useEnhancedToast();
 
   // Fetch departments from API
   useEffect(() => {
@@ -81,13 +83,14 @@ export function CaseBasicInfo({ register, errors, setValue, watch }: FormSection
         if (error instanceof Error) {
           clientLogger.error('Error fetching departments:', error)
         }
+        toastError('Error al cargar departamentos', 'No se pudieron obtener los departamentos. Por favor, intente de nuevo más tarde.');
       } finally {
         setIsLoadingDepartments(false)
       }
     }
 
     fetchDepartments()
-  }, [])
+  }, [toastError])
 
   const generateCaseNumber = async () => {
     const now = new Date()
@@ -316,7 +319,7 @@ export function CaseBasicInfo({ register, errors, setValue, watch }: FormSection
                 </SelectItem>
               ))}
               {departments.length === 0 && !isLoadingDepartments && (
-                <SelectItem value="" disabled>
+                <SelectItem value="no-departments-available" disabled>
                   No hay departamentos disponibles
                 </SelectItem>
               )}
