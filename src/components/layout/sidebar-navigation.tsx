@@ -158,27 +158,27 @@ export function SidebarNavigation({
         className={cn('flex flex-col h-full bg-background border-r', className)}
       >
         {/* Header */}
-        <div className={cn('border-b', isCollapsed ? 'p-2' : 'p-4')}>
+        <div className={cn('bg-primary border-primary border-b', isCollapsed ? 'p-2' : 'p-4')}>
           <div className="flex items-center justify-between">
             {!isCollapsed && (
               <div className="flex items-center space-x-2">
-                <Building2 className="h-6 w-6 text-primary" />
+                <Building2 className="h-6 w-6 text-primary-foreground" />
                 <div>
-                  <h2 className="font-bold text-sm">MOPC</h2>
-                  <p className="text-xs text-muted-foreground">
+                  <h2 className="font-bold text-sm text-primary-foreground">MOPC</h2>
+                  <p className="text-xs text-primary-foreground/80">
                     Sistema de Expropiación
                   </p>
                 </div>
               </div>
             )}
             {isCollapsed && (
-              <Building2 className="h-6 w-6 text-primary mx-auto" />
+              <Building2 className="h-6 w-6 text-primary-foreground mx-auto" />
             )}
             <Button
               variant="ghost"
               size="sm"
               onClick={onToggle}
-              className="p-1 h-8 w-8"
+              className="p-1 h-8 w-8 hover:bg-primary-foreground/10 text-primary-foreground"
             >
               {isCollapsed ? (
                 <Menu className="h-4 w-4" />
