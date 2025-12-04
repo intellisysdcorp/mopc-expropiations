@@ -27,11 +27,8 @@ export default function LoginPage() {
   }
 
   // Don't render if already authenticated
-  if (status === 'authenticated') {
-    if (session?.user?.isActive) {
-      router.push('/dashboard');
-      return null;
-    }
+  if (status === 'authenticated' && session?.user?.isActive) {
+    return null;
   }
 
   return (
