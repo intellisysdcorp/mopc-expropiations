@@ -7,8 +7,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw, Loader2 } from 'lucide-react'
 import clientLogger from '@/lib/client-logger'
+import { useState, useEffect } from 'react'
 
 interface FormSectionProps {
   register: UseFormRegister<any>
@@ -16,6 +17,13 @@ interface FormSectionProps {
   control: Control<any>
   setValue: UseFormSetValue<any>
   watch: UseFormWatch<any>
+}
+
+interface Department {
+  id: string
+  name: string
+  code: string
+  isActive: boolean
 }
 
 const PRIORITIES = [
@@ -34,13 +42,59 @@ const STATUSES = [
   { value: 'CANCELLED', label: 'Cancelado', color: 'bg-red-100 text-red-800' },
 ]
 
+const STAGES = [
+  { value: 'RECEPCION_SOLICITUD', label: 'Recepción de Solicitud' },
+  { value: 'VERIFICACION_REQUISITOS', label: 'Verificación de Requisitos' },
+  { value: 'CARGA_DOCUMENTOS', label: 'Carga de Documentos' },
+  { value: 'ASIGNACION_ANALISTA', label: 'Asignación de Analista' },
+  { value: 'ANALISIS_PRELIMINAR', label: 'Análisis Preliminar' },
+  { value: 'NOTIFICACION_PROPIETARIO', label: 'Notificación al Propietario' },
+  { value: 'PERITAJE_TECNICO', label: 'Peritaje Técnico' },
+  { value: 'DETERMINACION_VALOR', label: 'Determinación de Valor' },
+  { value: 'OFERTA_COMPRA', label: 'Oferta de Compra' },
+  { value: 'NEGOCIACION', label: 'Negociación' },
+  { value: 'APROBACION_ACUERDO', label: 'Aprobación de Acuerdo' },
+  { value: 'ELABORACION_ESCRITURA', label: 'Elaboración de Escritura' },
+  { value: 'FIRMA_DOCUMENTOS', label: 'Firma de Documentos' },
+  { value: 'REGISTRO_PROPIEDAD', label: 'Registro de Propiedad' },
+  { value: 'DESEMBOLSO_PAGO', label: 'Desembolso y Pago' },
+  { value: 'ENTREGA_INMUEBLE', label: 'Entrega del Inmueble' },
+  { value: 'CIERRE_ARCHIVO', label: 'Cierre de Archivo' },
+]
+
 export function CaseBasicInfo({ register, errors, setValue, watch }: FormSectionProps) {
+  const [departments, setDepartments] = useState<Department[]>([])
+  const [isLoadingDepartments, setIsLoadingDepartments] = useState(false)
+
+  // Fetch departments from API
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      setIsLoadingDepartments(true)
+      try {
+        const response = await fetch('/api/departments?isActive=true&sortBy=name&sortOrder=asc')
+        if (!response.ok) {
+          throw new Error('Failed to fetch departments')
+        }
+        const data = await response.json()
+        setDepartments(data)
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          clientLogger.error('Error fetching departments:', error)
+        }
+      } finally {
+        setIsLoadingDepartments(false)
+      }
+    }
+
+    fetchDepartments()
+  }, [])
+
   const generateCaseNumber = async () => {
     const now = new Date()
     const year = now.getFullYear()
     const month = (now.getMonth() + 1).toString().padStart(2, '0')
     const day = now.getDate().toString().padStart(2, '0')
-    let index = 0;
+    let index = 1;
     try {
       // Get today's case count from database
       const response = await fetch('/api/cases/count-today', {
@@ -55,7 +109,7 @@ export function CaseBasicInfo({ register, errors, setValue, watch }: FormSection
       }
 
       const data = await response.json()
-      index = data.count + 1 // Next case number
+      index += data.count
     } catch (error: unknown) {
       if (error instanceof Error) {
         clientLogger.error('Error getting number of cases:', error)
@@ -199,23 +253,11 @@ export function CaseBasicInfo({ register, errors, setValue, watch }: FormSection
                 <SelectValue placeholder="Seleccionar etapa" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="RECEPCION_SOLICITUD">Recepción de Solicitud</SelectItem>
-                <SelectItem value="VERIFICACION_REQUISITOS">Verificación de Requisitos</SelectItem>
-                <SelectItem value="CARGA_DOCUMENTOS">Carga de Documentos</SelectItem>
-                <SelectItem value="ASIGNACION_ANALISTA">Asignación de Analista</SelectItem>
-                <SelectItem value="ANALISIS_PRELIMINAR">Análisis Preliminar</SelectItem>
-                <SelectItem value="NOTIFICACION_PROPIETARIO">Notificación al Propietario</SelectItem>
-                <SelectItem value="PERITAJE_TECNICO">Peritaje Técnico</SelectItem>
-                <SelectItem value="DETERMINACION_VALOR">Determinación de Valor</SelectItem>
-                <SelectItem value="OFERTA_COMPRA">Oferta de Compra</SelectItem>
-                <SelectItem value="NEGOCIACION">Negociación</SelectItem>
-                <SelectItem value="APROBACION_ACUERDO">Aprobación de Acuerdo</SelectItem>
-                <SelectItem value="ELABORACION_ESCRITURA">Elaboración de Escritura</SelectItem>
-                <SelectItem value="FIRMA_DOCUMENTOS">Firma de Documentos</SelectItem>
-                <SelectItem value="REGISTRO_PROPIEDAD">Registro de Propiedad</SelectItem>
-                <SelectItem value="DESEMBOLSO_PAGO">Desembolso y Pago</SelectItem>
-                <SelectItem value="ENTREGA_INMUEBLE">Entrega del Inmueble</SelectItem>
-                <SelectItem value="CIERRE_ARCHIVO">Cierre de Archivo</SelectItem>
+                {STAGES.map(stage => (
+                  <SelectItem key={stage.value} value={stage.value}>
+                    {stage.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             {errors.currentStage && (
@@ -256,19 +298,28 @@ export function CaseBasicInfo({ register, errors, setValue, watch }: FormSection
           </div>
         </div>
 
-        <div>
+        <div className="w-fit">
           <Label htmlFor="departmentId">Departamento *</Label>
           <Select
             value={watch('departmentId')}
             onValueChange={(value) => setValue('departmentId', value)}
+            disabled={isLoadingDepartments}
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Seleccionar departamento" />
+            <SelectTrigger className="w-fit min-w-[200px]">
+              <SelectValue placeholder={isLoadingDepartments ? "Cargando departamentos..." : "Seleccionar departamento"} />
+              {isLoadingDepartments && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="dept-1">Departamento Legal</SelectItem>
-              <SelectItem value="dept-2">Departamento Técnico</SelectItem>
-              <SelectItem value="dept-3">Departamento Financiero</SelectItem>
+              {departments.map((department) => (
+                <SelectItem key={department.id} value={department.id}>
+                  {department.name}
+                </SelectItem>
+              ))}
+              {departments.length === 0 && !isLoadingDepartments && (
+                <SelectItem value="" disabled>
+                  No hay departamentos disponibles
+                </SelectItem>
+              )}
             </SelectContent>
           </Select>
           {errors.departmentId && (

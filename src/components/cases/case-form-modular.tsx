@@ -59,14 +59,18 @@ export function CaseFormModular({
   const [progress, setProgress] = useState(0)
   const [submitAttempted, setSubmitAttempted] = useState(false)
   const [isSubmittingForm, setIsSubmittingForm] = useState(false)
-  const startDate = new Date(caseData?.startDate || "");
+  const today = new Date();
+  const startDate = new Date(caseData?.startDate ?? today).toISOString().split('T')[0];
+
   // Default form values
   const defaultFormValues = {
     fileNumber: caseData?.fileNumber || '',
     title: caseData?.title || '',
     description: caseData?.description || '',
+    status: caseData?.status || 'PENDIENTE',
     priority: (caseData?.priority as 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT') || 'MEDIUM',
-    startDate: startDate.toISOString().split('T')[0],
+    currentStage: caseData?.currentStage || 'RECEPCION_SOLICITUD',
+    startDate,
     propertyAddress: caseData?.propertyAddress || '',
     propertyCity: caseData?.propertyCity || '',
     propertyProvince: caseData?.propertyProvince || '',
