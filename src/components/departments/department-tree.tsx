@@ -336,6 +336,39 @@ export const DepartmentTree: React.FC<DepartmentTreeProps> = ({
     return treeData.map(filterDepartment).filter(Boolean) as Department[];
   }, [treeData, searchTerm, showInactive]);
 
+    // Auto-expand nodes when searching
+  useEffect(() => {
+    if (searchTerm) {
+      const nodesToExpand = new Set<string>();
+
+      const findMatchingNodes = (depts: Department[]) => {
+        depts.forEach(dept => {
+          const matchesSearch = dept.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            dept.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            dept.description?.toLowerCase().includes(searchTerm.toLowerCase());
+
+          if (matchesSearch) {
+            // Add all parent nodes to expansion list
+            let current = dept;
+            while (current.parentId) {
+              nodesToExpand.add(current.parentId);
+              const parent = departments.find(d => d.id === current.parentId);
+              if (!parent) {break;}
+              current = { ...parent } as Department;
+            }
+          }
+
+          if (dept.children) {
+            findMatchingNodes(dept.children);
+          }
+        });
+      };
+
+      findMatchingNodes(filteredTree);
+      setExpandedNodes(nodesToExpand);
+    }
+  }, [searchTerm, departments, filteredTree]);
+
   useEffect(() => {
     handleExpandAll();
   }, []);
