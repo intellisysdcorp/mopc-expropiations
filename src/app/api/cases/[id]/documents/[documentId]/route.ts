@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import path from 'path';
 import fs from 'fs/promises';
 import crypto from 'crypto';
+import { Readable } from 'stream';
 import archiver from 'archiver';
 
 import { authOptions } from '@/lib/auth';
@@ -217,20 +218,44 @@ async function convertDocumentFormat(
       throw new Error('PDF conversion not implemented');
 
     case 'zip':
-      return new Promise((resolve, reject) => {
-        const archive = archiver('zip', { zlib: { level: 9 } });
-        const chunks: Buffer[] = [];
+      // Create archiver instance
+      const archive = archiver('zip', { zlib: { level: 9 } });
 
-        archive.on('data', (chunk: Buffer) => chunks.push(chunk));
-        archive.on('end', () => {
-          const zipBuffer = Buffer.concat(chunks);
-          resolve({ buffer: zipBuffer, mimeType: 'application/zip' });
-        });
-        archive.on('error', reject);
+      // Asynchronously add files and finalize the archive.
+      // Errors should be piped to the stream.
+      (async () => {
+        try {
+          archive.append(buffer, { name: 'document' });
+          await archive.finalize();
+        } catch (err) {
+          archive.emit('error', err);
+        }
+      })();
 
-        archive.append(buffer, { name: 'document' });
-        archive.finalize();
-      });
+      // Convert Node.js stream to a Web Stream
+      const webStream = Readable.toWeb(archive);
+
+      // Convert Web Stream to Buffer for the expected return type
+      const reader = webStream.getReader();
+      const chunks: Buffer[] = [];
+
+      try {
+        let done = false;
+        while (!done) {
+          const { value, done: readerDone } = await reader.read();
+          done = readerDone;
+          if (value) {
+            chunks.push(Buffer.from(value));
+          }
+        }
+
+        const zipBuffer = Buffer.concat(chunks);
+        return { buffer: zipBuffer, mimeType: 'application/zip' };
+      } catch (error) {
+        throw error;
+      } finally {
+        reader.releaseLock();
+      }
 
     default:
       throw new Error(`Format ${targetFormat} not supported`);
