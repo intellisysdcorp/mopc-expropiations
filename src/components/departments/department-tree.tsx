@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -336,8 +336,8 @@ export const DepartmentTree: React.FC<DepartmentTreeProps> = ({
     return treeData.map(filterDepartment).filter(Boolean) as Department[];
   }, [treeData, searchTerm, showInactive]);
 
-  // Auto-expand nodes when searching
-  React.useEffect(() => {
+    // Auto-expand nodes when searching
+  useEffect(() => {
     if (searchTerm) {
       const nodesToExpand = new Set<string>();
 
@@ -368,6 +368,10 @@ export const DepartmentTree: React.FC<DepartmentTreeProps> = ({
       setExpandedNodes(nodesToExpand);
     }
   }, [searchTerm, departments, filteredTree]);
+
+  useEffect(() => {
+    handleExpandAll();
+  }, []);
 
   const handleToggleExpand = useCallback((nodeId: string) => {
     setExpandedNodes(prev => {
