@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
@@ -16,28 +16,26 @@ import { UserSessions } from '@/components/users/user-sessions';
 import { UserPasswordManagement } from '@/components/users/user-password-management';
 import { RolePermissionMatrix } from '@/components/users/role-permission-matrix';
 import {
-  Plus,
-  Eye,
+  AlertCircle,
+  Building,
+  CheckCircle2,
+  Clock,
   Edit,
-  Trash2,
+  Eye,
+  History,
+  Key,
   Lock,
+  Mail,
+  Monitor,
+  Plus,
+  Shield,
+  Trash2,
   Unlock,
   UserCheck,
-  UserX,
-  Key,
-  History,
-  Monitor,
-  Shield,
   Users,
-  AlertCircle,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  Mail,
-  Phone,
-  Building,
-  Briefcase,
+  UserX,
   X,
+  XCircle,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import clientLogger from '@/lib/client-logger';
