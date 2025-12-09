@@ -33,8 +33,6 @@ spec:
               cpu: $CPU
               memory: $MEMORY
           env:
-            - name: DATABASE_URL
-              value: "$DATABASE_URL"
             - name: APP_URL
               value: "$APP_URL"
             - name: BCRYPT_ROUNDS
@@ -50,16 +48,6 @@ spec:
               value: "$EMAIL_HOST"
             - name: EMAIL_PORT
               value: "$EMAIL_PORT"
-            - name: ADMIN_JWT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  key: latest
-                  name: $ADMIN_JWT_SECRET
-            - name: JWT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  key: latest
-                  name: $JWT_SECRET
             - name: ENCRYPTION_KEY
               valueFrom:
                 secretKeyRef:
@@ -97,6 +85,21 @@ spec:
               value: "$SESSION_MAX_AGE"
             - name: UPLOAD_DIR
               value: "$UPLOAD_DIR"
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: latest
+                  name: $DATABASE_PASSWORD
+            - name: DATABASE_NAME
+              value: "$DATABASE_NAME"
+            - name: DATABASE_USER
+              value: "$DATABASE_USER"      
+            - name: DATABASE_PORT
+              value: "$DATABASE_PORT"
+            - name: DATABASE_HOST
+              value: "$DATABASE_HOST"
+            - name: NEXTAUTH_URL 
+              value: "$NEXTAUTH_URL "
 
   traffic:
     - latestRevision: true
