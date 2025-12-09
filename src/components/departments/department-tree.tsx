@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -336,38 +336,9 @@ export const DepartmentTree: React.FC<DepartmentTreeProps> = ({
     return treeData.map(filterDepartment).filter(Boolean) as Department[];
   }, [treeData, searchTerm, showInactive]);
 
-  // Auto-expand nodes when searching
-  React.useEffect(() => {
-    if (searchTerm) {
-      const nodesToExpand = new Set<string>();
-
-      const findMatchingNodes = (depts: Department[]) => {
-        depts.forEach(dept => {
-          const matchesSearch = dept.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            dept.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            dept.description?.toLowerCase().includes(searchTerm.toLowerCase());
-
-          if (matchesSearch) {
-            // Add all parent nodes to expansion list
-            let current = dept;
-            while (current.parentId) {
-              nodesToExpand.add(current.parentId);
-              const parent = departments.find(d => d.id === current.parentId);
-              if (!parent) {break;}
-              current = { ...parent } as Department;
-            }
-          }
-
-          if (dept.children) {
-            findMatchingNodes(dept.children);
-          }
-        });
-      };
-
-      findMatchingNodes(filteredTree);
-      setExpandedNodes(nodesToExpand);
-    }
-  }, [searchTerm, departments, filteredTree]);
+  useEffect(() => {
+    handleExpandAll();
+  }, []);
 
   const handleToggleExpand = useCallback((nodeId: string) => {
     setExpandedNodes(prev => {
