@@ -26,11 +26,10 @@ function constructDatabaseUrl(): string {
   const port = env("DATABASE_PORT");
   const database = env("DATABASE_NAME");
 
-  // URL encode each component to handle special characters
+  // URL encode select components to handle special characters
   const encodedUser = encodeURIComponent(user);
   const encodedPassword = encodeURIComponent(password);
-  const encodedHost = encodeURIComponent(host);
   const encodedDatabase = encodeURIComponent(database);
 
-  return `mysql://${encodedUser}:${encodedPassword}@${encodedHost}:${port}/${encodedDatabase}`;
+  return `mysql://${encodedUser}:${encodedPassword}@${host}:${port}/${encodedDatabase}`;
 }
