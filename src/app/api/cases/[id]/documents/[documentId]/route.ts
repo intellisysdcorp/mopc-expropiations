@@ -4,7 +4,6 @@ import { getServerSession } from 'next-auth';
 import path from 'path';
 import fs from 'fs/promises';
 import crypto from 'crypto';
-import { Readable } from 'stream';
 import archiver from 'archiver';
 
 import { authOptions } from '@/lib/auth';
@@ -231,7 +230,7 @@ async function convertDocumentFormat(
 
         archive.append(buffer, { name: 'document' });
         archive.finalize();
-      })
+      });
 
     default:
       throw new Error(`Format ${targetFormat} not supported`);
