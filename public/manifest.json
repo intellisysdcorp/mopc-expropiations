@@ -60,44 +60,6 @@
       "purpose": "maskable any"
     }
   ],
-  "shortcuts": [
-    {
-      "name": "Nuevo Caso",
-      "short_name": "Nuevo Caso",
-      "description": "Crear un nuevo caso de expropiación",
-      "url": "/cases?action=create",
-      "icons": [
-        {
-          "src": "/icons/icon-96x96.png",
-          "sizes": "96x96"
-        }
-      ]
-    },
-    {
-      "name": "Ver Casos",
-      "short_name": "Casos",
-      "description": "Ver lista de casos",
-      "url": "/cases",
-      "icons": [
-        {
-          "src": "/icons/icon-96x96.png",
-          "sizes": "96x96"
-        }
-      ]
-    },
-    {
-      "name": "Reportes",
-      "short_name": "Reportes",
-      "description": "Ver reportes y análisis",
-      "url": "/reports",
-      "icons": [
-        {
-          "src": "/icons/icon-96x96.png",
-          "sizes": "96x96"
-        }
-      ]
-    }
-  ],
   "related_applications": [],
   "prefer_related_applications": false,
   "edge_side_panel": {

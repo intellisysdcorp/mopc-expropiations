@@ -6,11 +6,9 @@ import { QueryProvider } from "@/components/providers/query-client-provider";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { TutorialProvider } from "@/components/tutorial/tutorial-provider";
 import { EnhancedToastProvider } from "@/components/ui/enhanced-toast-provider";
-import { KeyboardShortcutsProvider } from "@/components/navigation/enhanced-keyboard-shortcuts";
 import { SkipLink as AccessibleSkipLink } from "@/components/ui/accessibility";
 import { PerformanceMonitor as PerfMonitor } from "@/lib/performance";
 import { TutorialOverlay } from "@/components/tutorial/tutorial-overlay";
-import { QuickAccessButton } from "@/components/navigation/enhanced-keyboard-shortcuts";
 import { MicroInteractionStyles } from "@/components/ui/micro-interactions";
 import "./globals.css";
 
@@ -62,7 +60,6 @@ export default async function RootLayout({
           <TutorialProvider>
             <AuthProvider>
               <QueryProvider>
-                <KeyboardShortcutsProvider>
                 <EnhancedToastProvider>
                   <PerfMonitor />
                   <MicroInteractionStyles />
@@ -81,13 +78,9 @@ export default async function RootLayout({
                     </main>
                   </div>
 
-                  {/* Quick access floating button */}
-                  <QuickAccessButton />
-
                   {/* Tutorial overlay */}
                   <TutorialOverlay />
                 </EnhancedToastProvider>
-              </KeyboardShortcutsProvider>
               </QueryProvider>
             </AuthProvider>
           </TutorialProvider>
