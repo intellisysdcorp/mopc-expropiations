@@ -34,72 +34,60 @@ spec:
               memory: $MEMORY
           env:
             - name: APP_URL
-              value: "$APP_URL"
+              value: $APP_URL
             - name: BCRYPT_ROUNDS
-              value: "$BCRYPT_ROUNDS"
+              value: $BCRYPT_ROUNDS
             - name: EMAIL_PASSWORD
               valueFrom:
                 secretKeyRef:
                   key: latest
-                  name: $EMAIL_PASSWORD
+                  name: "$EMAIL_PASSWORD"
             - name: EMAIL_FROM
-              value: "$EMAIL_FROM"
+              value: $EMAIL_FROM
             - name: EMAIL_HOST
-              value: "$EMAIL_HOST"
+              value: $EMAIL_HOST
             - name: EMAIL_PORT
-              value: "$EMAIL_PORT"
-            - name: ENCRYPTION_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: latest
-                  name: $ENCRYPTION_KEY
-            - name: RESEND_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  key: latest
-                  name: $RESEND_API_KEY
+              value: $EMAIL_PORT
             - name: NEXTAUTH_SECRET
               valueFrom:
                 secretKeyRef:
                   key: latest
-                  name: $NEXTAUTH_SECRET
+                  name: "$NEXTAUTH_SECRET"
             - name: EMAIL_USER
-              value: "$EMAIL_USER"
+              value: $EMAIL_USER
             - name: ENABLE_DEBUG
-              value: "$ENABLE_DEBUG"
+              value: $ENABLE_DEBUG
             - name: ENABLE_LOGGING
-              value: "$ENABLE_LOGGING"
+              value: $ENABLE_LOGGING
             - name: GOOGLE_ANALYTICS_ID
-              value: "$GOOGLE_ANALYTICS_ID"
+              value: $GOOGLE_ANALYTICS_ID
             - name: GOV_API_KEY
-              value: "$GOV_API_KEY"
+              value: $GOV_API_KEY
             - name: GOV_API_URL
-              value: "$GOV_API_URL"
+              value: $GOV_API_URL
             - name: MAX_FILE_SIZE
-              value: "$MAX_FILE_SIZE"
+              value: $MAX_FILE_SIZE
             - name: NEXTAUTH_URL
-              value: "$NEXTAUTH_URL"
+              value: $NEXTAUTH_URL
             - name: SENTRY_DSN
-              value: "$SENTRY_DSN"
+              value: $SENTRY_DSN
             - name: SESSION_MAX_AGE
-              value: "$SESSION_MAX_AGE"
+              value: $SESSION_MAX_AGE
             - name: UPLOAD_DIR
-              value: "$UPLOAD_DIR"
+              value: $UPLOAD_DIR
             - name: DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   key: latest
-                  name: $DATABASE_PASSWORD
+                  name: "$DATABASE_PASSWORD"
             - name: DATABASE_NAME
-              value: "$DATABASE_NAME"
+              value: $DATABASE_NAME
             - name: DATABASE_USER
-              value: "$DATABASE_USER"      
+              value: $DATABASE_USER      
             - name: DATABASE_PORT
-              value: "$DATABASE_PORT"
+              value: $DATABASE_PORT
             - name: DATABASE_HOST
-              value: "$DATABASE_HOST"
-            - name: NEXTAUTH_URL 
-              value: "$NEXTAUTH_URL "
+              value: $DATABASE_HOST
 
   traffic:
     - latestRevision: true

@@ -8,4 +8,4 @@ RUN npm install --os=linux --libc=musl --cpu=x64 sharp && npm install
 
 RUN npm run build 
 
-CMD [ "npm", "run", "dev" ]
+CMD [ "npm", "start" ]
