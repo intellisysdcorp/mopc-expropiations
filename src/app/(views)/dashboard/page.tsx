@@ -6,8 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
-import { KeyboardShortcutsPanel } from '@/components/help/keyboard-shortcuts-panel';
-import { useKeyboardShortcuts, commonShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { useTutorial } from '@/components/tutorial/tutorial-provider';
 import {
   FileText,
@@ -15,8 +13,7 @@ import {
   AlertTriangle,
   Clock,
   TrendingUp,
-  HelpCircle,
-  Keyboard
+  HelpCircle
 } from 'lucide-react';
 import { DashboardStats } from '@/components/dashboard/dashboard-stats';
 import { DashboardCharts } from '@/components/dynamic';
@@ -29,39 +26,6 @@ import { CaseCalendar } from '@/components/calendar/case-calendar';
 export default function DashboardPage() {
   const { user } = useAuth();
   const { startTutorial } = useTutorial();
-  const router = useRouter();
-
-  // Keyboard shortcuts
-  const shortcuts = [
-    {
-      ...commonShortcuts.goToDashboard,
-      action: () => router.push('/dashboard'),
-    },
-    {
-      ...commonShortcuts.goToCases,
-      action: () => router.push('/cases'),
-    },
-    {
-      ...commonShortcuts.goToReports,
-      action: () => router.push('/reports'),
-    },
-    {
-      ...commonShortcuts.createNew,
-      action: () => router.push('/cases?action=create'),
-    },
-    {
-      ...commonShortcuts.help,
-      action: () => startTutorial('dashboard-intro'),
-    },
-    {
-      ...commonShortcuts.toggleTheme,
-      action: () => {
-        // Theme toggle is handled by the component
-      },
-    },
-  ];
-
-  useKeyboardShortcuts(shortcuts);
 
   return (
     <div className="p-6 lg:p-8 space-y-6">
@@ -79,13 +43,6 @@ export default function DashboardPage() {
               <GlobalSearch />
               <DataExport />
               <ThemeToggle />
-              <KeyboardShortcutsPanel
-                shortcuts={shortcuts.map(s => ({ ...s, category: 'Navegación' }))}
-              >
-                <Button variant="ghost" size="sm" aria-label="Atajos de teclado">
-                  <Keyboard className="h-4 w-4" />
-                </Button>
-              </KeyboardShortcutsPanel>
               <Button
                 variant="ghost"
                 size="sm"

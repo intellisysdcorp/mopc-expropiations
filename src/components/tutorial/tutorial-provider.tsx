@@ -69,18 +69,6 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
           position: 'bottom',
           showProgress: true,
         },
-        {
-          id: 'shortcuts',
-          title: 'Atajos de Teclado',
-          content: 'Puedes usar atajos de teclado para navegar más rápido. Presiona Ctrl+K para ver todos los atajos disponibles.',
-          position: 'center',
-          action: () => {
-            // Open keyboard shortcuts
-            const event = new CustomEvent('open-keyboard-shortcuts');
-            window.dispatchEvent(event);
-          },
-          showProgress: true,
-        },
       ],
       autoStart: true,
       required: false,

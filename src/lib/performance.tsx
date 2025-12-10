@@ -464,7 +464,14 @@ export const PerformanceMonitor = () => {
   }
 
   return (
-    <div className="fixed bottom-4 left-4 bg-black/80 text-white p-4 rounded-lg text-xs font-mono z-50">
+    <div
+      className="bg-black/80 text-white p-4 rounded-lg text-xs font-mono z-50"
+      style={{
+        position: 'fixed',
+        bottom: '1rem',
+        right: '1rem',
+      }}
+    >
       <div className="space-y-1">
         <div>FCP: {Math.round(metrics.firstContentfulPaint)}ms</div>
         <div>LCP: {Math.round(metrics.largestContentfulPaint)}ms</div>
