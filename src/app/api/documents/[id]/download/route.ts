@@ -5,7 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import fs from 'fs/promises';
 import path from 'path';
-import { DocumentActionType } from '@prisma/client';
+import { DocumentActionType } from '@/prisma/client';
 import { logger } from '@/lib/logger';
 
 // GET /api/documents/[id]/download - Download a document

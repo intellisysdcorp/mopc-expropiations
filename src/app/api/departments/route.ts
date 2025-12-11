@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 import { departmentSchema } from '@/lib/validators/department-validator';
 import { logger } from '@/lib/logger';
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '@/prisma/client';
 
 // GET /api/departments - List departments with filtering and hierarchy
 export async function GET(request: NextRequest) {

@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import { DocumentStatus, DocumentSecurityLevel, DocumentActionType } from '@prisma/client';
+import { DocumentStatus, DocumentSecurityLevel, DocumentActionType } from '@/prisma/client';
 import { logger } from '@/lib/logger';
 
 // Types

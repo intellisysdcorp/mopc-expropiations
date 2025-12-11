@@ -9,7 +9,7 @@ import {
   DocumentCategory,
   DocumentStatus,
   DocumentSecurityLevel,
-} from '@prisma/client';
+} from '@/prisma/client';
 import { logger } from '@/lib/logger';
 
 // Advanced search validation schema

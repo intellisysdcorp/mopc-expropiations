@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { DocumentCategory } from '@prisma/client';
+import { DocumentCategory } from '@/prisma/client';
 import { logger } from '@/lib/logger';
 
 // Helper function to get category descriptions

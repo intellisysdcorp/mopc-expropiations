@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { CaseStatus } from '@prisma/client';
+import { CaseStatus } from '@/prisma/client';
 
 // GET /api/departments/[id]/statistics - Get department statistics
 export async function GET(

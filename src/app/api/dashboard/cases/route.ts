@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { logger } from '@/lib/logger';
-import type { CaseStatus, Priority } from '@prisma/client';
+import type { CaseStatus, Priority } from '@/prisma/client';
 
 export async function GET(request: NextRequest) {
   try {

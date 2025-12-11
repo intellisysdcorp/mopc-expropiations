@@ -5,7 +5,7 @@ import type {
   ObservationPriority,
   ObservationStatus,
   Prisma
-} from '@prisma/client';
+} from '@/prisma/client';
 
 // Re-export Prisma enums
 export type { ObservationPriority, ObservationStatus };

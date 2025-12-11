@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 import bcrypt from 'bcryptjs';
 import { logger } from '@/lib/logger';
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '@/prisma/client';
 
 // Schema for bulk operations
 const bulkOperationSchema = z.object({

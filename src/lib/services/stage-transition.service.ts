@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { CaseStage, CaseStatus, Prisma } from '@prisma/client';
+import { CaseStage, CaseStatus, Prisma } from '@/prisma/client';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import type { NextRequest } from 'next/server';

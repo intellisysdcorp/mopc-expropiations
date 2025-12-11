@@ -1,5 +1,5 @@
 import { prisma } from './prisma';
-import { DocumentType, DocumentCategory, DocumentStatus, DocumentSecurityLevel } from '@prisma/client';
+import { DocumentType, DocumentCategory, DocumentStatus, DocumentSecurityLevel } from '@/prisma/client';
 import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs/promises';

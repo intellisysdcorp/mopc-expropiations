@@ -1,19 +1,18 @@
+import { defineConfig, env, type PrismaConfig } from 'prisma/config'
 import 'dotenv/config'
-import type { PrismaConfig } from "prisma";
-import { env } from "prisma/config";
 
 const databaseUrl = constructDatabaseUrl();
 
-export default {
-  schema: "prisma/schema.prisma",
+export default defineConfig({
+  schema: 'prisma/schema.prisma',
   migrations: {
     path: "prisma/migrations",
     seed: 'tsx prisma/seed.ts',
   },
-  datasource: { 
-    url: databaseUrl 
-  }
-} satisfies PrismaConfig;
+  datasource: {
+    url: databaseUrl,
+  },
+}) satisfies PrismaConfig;
 
 /**
  * Constructs a database URL from environment variables with proper URL encoding

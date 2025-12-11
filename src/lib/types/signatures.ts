@@ -1,6 +1,6 @@
 // Digital Signature types based on Prisma schema
 
-import { ActivityType, SignatureType } from '@prisma/client';
+import { ActivityType, SignatureType } from '@/prisma/client';
 
 // Base User type for signature operations
 export interface SignatureUser {

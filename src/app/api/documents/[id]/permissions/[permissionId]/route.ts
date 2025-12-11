@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import { DocumentActionType, type Prisma } from '@prisma/client';
+import { DocumentActionType, type Prisma } from '@/prisma/client';
 import { logger } from '@/lib/logger';
 
 // Validation schemas
