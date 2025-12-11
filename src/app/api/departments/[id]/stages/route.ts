@@ -5,7 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
-import { CaseStage } from '@prisma/client';
+import { CaseStage } from '@/prisma/client';
 import { logger } from '@/lib/logger';
 
 // Schema for stage assignment

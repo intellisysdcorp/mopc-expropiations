@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import { DocumentActionType } from '@prisma/client';
+import { DocumentActionType } from '@/prisma/client';
 import { logger } from '@/lib/logger';
 
 const documentActionEnum = Object.values(DocumentActionType) as [string, ...string[]];

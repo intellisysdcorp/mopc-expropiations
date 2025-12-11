@@ -10,8 +10,8 @@
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
@@ -52,14 +52,15 @@
       ],
       "@/app/*": [
         "./src/app/*"
-      ]
+      ],
+      "@/prisma/*": ["./src/generated/prisma/*"]
     },
     "forceConsistentCasingInFileNames": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "exactOptionalPropertyTypes": true,
-    "target": "ES2017"
+    "target": "ES2023"
   },
   "include": [
     "next-env.d.ts",

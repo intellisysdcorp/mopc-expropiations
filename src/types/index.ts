@@ -6,7 +6,7 @@ import type {
   Role,
   Document,
   Activity,
-} from '@prisma/client';
+} from '@/prisma/client';
 
 // Export Prisma types as server-only types
 export type {
@@ -18,7 +18,7 @@ export type {
   Activity as PrismaActivity,
   Observation as PrismaObservation,
   ObservationResponse as PrismaObservationResponse
-} from '@prisma/client';
+} from '@/prisma/client';
 
 // Server-only types that extend Prisma types
 export interface UserWithRelations extends User {

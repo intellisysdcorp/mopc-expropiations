@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '@/prisma/client';
 
 // Helper function to add fullName to objects with firstName and lastName
 function withFullName<T extends { firstName: string; lastName: string }>(obj: T): T & { fullName: string } {

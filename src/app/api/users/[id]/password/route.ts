@@ -8,7 +8,7 @@ import bcrypt from 'bcryptjs';
 import { logActivity } from '@/lib/activity-logger';
 import { logger } from '@/lib/logger';
 import type { Session } from 'next-auth';
-import type { User, Role } from '@prisma/client';
+import type { User, Role } from '@/prisma/client';
 
 // Type definitions
 interface ChangePasswordData {

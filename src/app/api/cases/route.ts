@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { logActivity } from '@/lib/activity-logger'
 import { logger } from '@/lib/logger'
 import { CreateCaseSchema, CaseSearchSchema } from '@/lib/validations/case'
-import { type Prisma } from '@prisma/client';
+import { type Prisma } from '@/prisma/client';
 
 // GET /api/cases - List cases with filtering and pagination
 export async function GET(request: NextRequest) {

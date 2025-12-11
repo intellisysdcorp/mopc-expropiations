@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { CaseStage } from '@prisma/client';
+import { CaseStage } from '@/prisma/client';
 import { z } from 'zod';
 import {
   authenticateUser,

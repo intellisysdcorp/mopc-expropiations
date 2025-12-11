@@ -8,7 +8,7 @@
     "dev:simple": "next dev",
     "build": "npm run check-config && next build",
     "build:analyze": "ANALYZE=true npm run build",
-    "check-config": "node scripts/check-port-config.js",
+    "check-config": "node scripts/check-port-config.cjs",
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
@@ -126,5 +126,6 @@
   "overrides": {
     "glob": "10.4.5",
     "rimraf": "5.0.10"
-  }
+  },
+   "type": "module"
 }

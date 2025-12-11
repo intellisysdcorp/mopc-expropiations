@@ -1,15 +1,16 @@
-/** @type {import('next').NextConfig} */
-const withBundleAnalyzer = require('@next/bundle-analyzer')({
+import bundleAnalyzer from '@next/bundle-analyzer';
+
+const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 });
 
-const nextConfig = withBundleAnalyzer({
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   // Use webpack instead of Turbopack for compatibility with custom config
   turbopack: {
     // Leave empty to use webpack with custom config
   },
   serverExternalPackages: [
-    '@prisma/client',
     'sharp',
     'archiver',
     'xlsx',
@@ -152,6 +153,6 @@ const nextConfig = withBundleAnalyzer({
 
     return headers;
   },
-});
+};
 
-module.exports = nextConfig;
+export default withBundleAnalyzer(nextConfig);

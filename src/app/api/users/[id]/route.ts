@@ -5,7 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { logActivity } from '@/lib/activity-logger';
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '@/prisma/client';
 
 // GET /api/users/[id] - Get a specific user
 export async function GET(

@@ -13,7 +13,7 @@ import {
   DocumentStatus,
   DocumentSecurityLevel,
   UserRole,
-} from '@prisma/client';
+} from '@/prisma/client';
 import {
   secureFileUpload,
   getSecurityHeaders,
