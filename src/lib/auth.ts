@@ -1,5 +1,6 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import AzureADProvider from 'next-auth/providers/azure-ad';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
@@ -9,7 +10,6 @@ import { loggers } from '@/lib/logger';
 import { randomBytes } from 'crypto';
 import { getServerSession as nextAuthGetServerSession } from 'next-auth/next';
 
-// Validate required environment variables
 if (!process.env.NEXTAUTH_SECRET) {
   loggers.security.configurationIssue('NEXTAUTH_SECRET not set during auth initialization', {
     environment: process.env.NODE_ENV,
@@ -23,9 +23,16 @@ const credentialsSchema = z.object({
   password: z.string().min(1, 'La contraseña es requerida'),
 });
 
+const adProvider = {
+  clientId: process.env.AZURE_AD_CLIENT_ID || '',
+  clientSecret: process.env.AZURE_AD_CLIENT_SECRET || '',
+  tenantId: process.env.AZURE_AD_TENANT_ID || '',
+};
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
+    AzureADProvider(adProvider),
     CredentialsProvider({
       name: 'credentials',
       credentials: {

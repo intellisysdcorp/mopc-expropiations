@@ -14,8 +14,13 @@ function createPrismaClient() {
     user: process.env.DATABASE_USER || '',
     password: process.env.DATABASE_PASSWORD || '',
     database: process.env.DATABASE_NAME || '',
-    connectionLimit: parseInt(process.env.DATABASE_CONNECTION_LIMIT || "5")
-  })
+    connectionLimit: parseInt(process.env.DATABASE_CONNECTION_LIMIT || "5"),
+    ssl: false,
+    allowPublicKeyRetrieval: true,
+    logger: {
+      error: (err) => logger.error('PrismaMariaDb error:', err),
+    },
+  });
 
   const client = new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
