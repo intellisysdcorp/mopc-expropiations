@@ -1,0 +1,11 @@
+FROM node:22-alpine
+
+WORKDIR /app
+
+COPY . .
+
+RUN npm install --os=linux --libc=musl --cpu=x64 sharp && npm install 
+
+RUN npm run build 
+
+CMD [ "npm", "start" ]
