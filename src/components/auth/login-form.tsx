@@ -63,7 +63,7 @@ export function LoginForm() {
         if (error instanceof Error) {
           clientLogger.error('Failed to check SSO configuration:', error);
         } else {
-          clientLogger.error('Failed to check SSO configuration:');
+          clientLogger.error('Failed to check SSO configuration:', { error });
         }
         // If we can't check, assume it's not available for safety
         setIsMicrosoftSSOAvailable(false);

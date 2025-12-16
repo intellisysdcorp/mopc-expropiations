@@ -16,7 +16,6 @@ function createPrismaClient() {
     database: process.env.DATABASE_NAME || '',
     connectionLimit: parseInt(process.env.DATABASE_CONNECTION_LIMIT || "5"),
     ssl: false,
-    allowPublicKeyRetrieval: true,
     logger: {
       error: (err) => logger.error('PrismaMariaDb error:', err),
     },
