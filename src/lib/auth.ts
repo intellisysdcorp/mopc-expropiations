@@ -27,7 +27,6 @@ const adProvider = {
   clientId: process.env.AZURE_AD_CLIENT_ID || '',
   clientSecret: process.env.AZURE_AD_CLIENT_SECRET || '',
   tenantId: process.env.AZURE_AD_TENANT_ID || '',
-  allowDangerousEmailAccountLinking: true, // Allow linking to existing accounts by email
 };
 
 export const authOptions: NextAuthOptions = {
