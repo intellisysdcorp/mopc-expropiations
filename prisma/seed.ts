@@ -1,4 +1,4 @@
-import { CaseStage } from '@prisma/client';
+import { CaseStage } from '@/prisma/client';
 import bcrypt from 'bcryptjs';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';

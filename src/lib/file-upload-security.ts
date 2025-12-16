@@ -5,7 +5,7 @@ import { scanFileForMalware } from './malware-scanner';
 import { atomicFileUpload, AtomicUploadOptions } from './atomic-upload';
 import { checkRateLimit, recordRequest, checkSuspiciousActivity } from './rate-limiter';
 import { logger } from '../lib/logger';
-import { UserRole } from '@prisma/client';
+import { UserRole } from '@/prisma/client';
 
 // Comprehensive file upload security configuration
 export interface FileUploadSecurityConfig {

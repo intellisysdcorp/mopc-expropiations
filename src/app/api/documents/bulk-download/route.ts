@@ -7,7 +7,7 @@ import { z } from 'zod';
 import fs from 'fs/promises';
 import path from 'path';
 import archiver from 'archiver';
-import { DocumentActionType } from '@prisma/client';
+import { DocumentActionType } from '@/prisma/client';
 import { logger } from '@/lib/logger';
 
 // Validation schema
@@ -198,91 +198,86 @@ async function createZipDownload(
   createFolders: boolean,
   userId: string
 ) {
-  return new Promise<Response>((resolve, reject) => {
+  // Create archiver instance
+  const archive = archiver('zip', {
+    zlib: { level: 9 }, // Maximum compression
+  });
+
+  // Asynchronously add files and finalize the archive.
+  // Errors should be piped to the stream.
+  (async () => {
     try {
-      // Create archiver instance
-      const archive = archiver('zip', {
-        zlib: { level: 9 }, // Maximum compression
-      });
+      // Add metadata file if requested
+      if (includeMetadata) {
+        const metadata = generateMetadata(documents, userId);
+        archive.append(JSON.stringify(metadata, null, 2), {
+          name: 'metadata.json',
+        });
+      }
 
-      // Archive error handling
-      archive.on('error', (err) => {
-        reject(err);
-      });
+      // Add documents
+      for (const doc of documents) {
+        const filePath = path.join(process.cwd(), doc.filePath);
+        const fileBuffer = await fs.readFile(filePath);
 
-      // Create response headers
-      const headers = new Headers({
-        'Content-Type': 'application/zip',
-        'Content-Disposition': `attachment; filename="${filename}"`,
-        'Cache-Control': 'no-cache',
-      });
+        // Determine folder structure
+        let archivePath = doc.originalFileName;
 
-      // Collect archive data
-      const chunks: Buffer[] = [];
+        if (createFolders) {
+          const folder = getDocumentFolder(doc);
+          archivePath = `${folder}/${doc.originalFileName}`;
+        }
+
+        archive.append(fileBuffer, { name: archivePath });
+
+        // Add document-specific metadata if requested
+        if (includeMetadata) {
+          const docMetadata = generateDocumentMetadata(doc);
+          const metadataFilename = archivePath.replace(/\.[^/.]+$/, '') + '_metadata.json';
+          archive.append(JSON.stringify(docMetadata, null, 2), {
+            name: metadataFilename,
+          });
+        }
+      }
+
+      // Finalize the archive
+      await archive.finalize();
+    } catch (err) {
+      archive.emit('error', err);
+    }
+  })();
+
+  const headers = new Headers({
+    'Content-Type': 'application/zip',
+    'Content-Disposition': `attachment; filename="${filename}"`,
+    'Cache-Control': 'no-cache',
+  });
+
+  // Convert Node.js stream to Web Stream
+  const webStream = new ReadableStream({
+    start(controller) {
       archive.on('data', (chunk) => {
-        chunks.push(chunk);
+        controller.enqueue(chunk);
       });
 
       archive.on('end', () => {
-        const zipBuffer = Buffer.concat(chunks);
-        resolve(new NextResponse(zipBuffer, { headers }));
+        controller.close();
       });
 
-      // Add files to archive
-      const addFilesToArchive = async () => {
-        try {
-          // Add metadata file if requested
-          if (includeMetadata) {
-            const metadata = generateMetadata(documents, userId);
-            archive.append(JSON.stringify(metadata, null, 2), {
-              name: 'metadata.json',
-            });
-          }
-
-          // Add documents
-          for (const doc of documents) {
-            const filePath = path.join(process.cwd(), doc.filePath);
-            const fileBuffer = await fs.readFile(filePath);
-
-            // Determine folder structure
-            let archivePath = doc.originalFileName;
-
-            if (createFolders) {
-              const folder = getDocumentFolder(doc);
-              archivePath = `${folder}/${doc.originalFileName}`;
-            }
-
-            archive.append(fileBuffer, { name: archivePath });
-
-            // Add document-specific metadata if requested
-            if (includeMetadata) {
-              const docMetadata = generateDocumentMetadata(doc);
-              const metadataFilename = archivePath.replace(/\.[^/.]+$/, '') + '_metadata.json';
-              archive.append(JSON.stringify(docMetadata, null, 2), {
-                name: metadataFilename,
-              });
-            }
-          }
-
-          // Finalize the archive
-          archive.finalize();
-        } catch (error) {
-          archive.emit('error', error);
-        }
-      };
-
-      addFilesToArchive();
-    } catch (error) {
-      reject(error);
+      archive.on('error', (err) => {
+        controller.error(err);
+      });
     }
   });
+
+  return new NextResponse(webStream, { headers });
 }
 
 // Create PDF download (placeholder implementation)
 async function createPdfDownload(
   documents: any[],
   filename: string,
-  includeMetadata: boolean,
+  _includeMetadata: boolean,
   userId: string
 ): Promise<Response> {
   // This is a placeholder implementation

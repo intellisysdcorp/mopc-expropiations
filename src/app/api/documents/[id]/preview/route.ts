@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma';
 import fs from 'fs/promises';
 import path from 'path';
 import sharp from 'sharp';
-import { DocumentActionType } from '@prisma/client';
+import { DocumentActionType } from '@/prisma/client';
 import { logger } from '@/lib/logger';
 
 // Supported preview types and their processing

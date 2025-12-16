@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
-import { ActivityType, ApprovalStatus } from '@prisma/client';
+import { ActivityType, ApprovalStatus } from '@/prisma/client';
 import { logger } from '@/lib/logger';
 
 const updateApprovalSchema = z.object({

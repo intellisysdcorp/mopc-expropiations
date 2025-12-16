@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
@@ -16,28 +16,26 @@ import { UserSessions } from '@/components/users/user-sessions';
 import { UserPasswordManagement } from '@/components/users/user-password-management';
 import { RolePermissionMatrix } from '@/components/users/role-permission-matrix';
 import {
-  Plus,
-  Eye,
+  AlertCircle,
+  Building,
+  CheckCircle2,
+  Clock,
   Edit,
-  Trash2,
+  Eye,
+  History,
+  Key,
   Lock,
+  Mail,
+  Monitor,
+  Plus,
+  Shield,
+  Trash2,
   Unlock,
   UserCheck,
-  UserX,
-  Key,
-  History,
-  Monitor,
-  Shield,
   Users,
-  AlertCircle,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  Mail,
-  Phone,
-  Building,
-  Briefcase,
+  UserX,
   X,
+  XCircle,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import clientLogger from '@/lib/client-logger';
@@ -381,21 +379,6 @@ export default function UsersManagementPage() {
       filterable: true,
     },
     {
-      id: 'phone',
-      header: 'Teléfono',
-      accessorKey: 'phone' as keyof User,
-      cell: (row: User) => (
-        row.phone ? (
-          <div className="flex items-center gap-2">
-            <Phone className="h-4 w-4 text-muted-foreground" />
-            <span>{row.phone}</span>
-          </div>
-        ) : (
-          <span className="text-muted-foreground">—</span>
-        )
-      ),
-    },
-    {
       id: 'department',
       header: 'Departamento',
       accessorKey: 'department' as keyof User,
@@ -405,24 +388,6 @@ export default function UsersManagementPage() {
           <div>
             <div className="font-medium">{row.department.name}</div>
             <div className="text-sm text-muted-foreground">{row.department.code}</div>
-          </div>
-        </div>
-      ),
-      sortable: true,
-      filterable: true,
-    },
-    {
-      id: 'role',
-      header: 'Rol',
-      accessorKey: 'role' as keyof User,
-      cell: (row: User) => (
-        <div className="flex items-center gap-2">
-          <Briefcase className="h-4 w-4 text-muted-foreground" />
-          <div>
-            <div className="font-medium">{row.role.name}</div>
-            {row.role.description && (
-              <div className="text-sm text-muted-foreground">{row.role.description}</div>
-            )}
           </div>
         </div>
       ),
@@ -471,16 +436,6 @@ export default function UsersManagementPage() {
         )
       ),
       sortable: true,
-    },
-    {
-      id: 'stats',
-      header: 'Estadísticas',
-      cell: (row: User) => (
-        <div className="text-sm">
-          <div>Casos: {row._count.createdCases + row._count.assignedCases + row._count.supervisedCases}</div>
-          <div>Actividades: {row._count.activities}</div>
-        </div>
-      ),
     },
   ];
 

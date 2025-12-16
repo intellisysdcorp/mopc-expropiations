@@ -7,7 +7,7 @@ import { z } from 'zod';
 import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
-import { DocumentActionType } from '@prisma/client';
+import { DocumentActionType } from '@/prisma/client';
 import { logger } from '@/lib/logger';
 
 // Validation schemas

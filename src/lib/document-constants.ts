@@ -3,7 +3,7 @@ import {
   DocumentCategory,
   DocumentStatus,
   DocumentSecurityLevel
-} from '@prisma/client';
+} from '@/prisma/client';
 
 // Spanish translations for Document Types
 export const documentTypeTranslations: Record<DocumentType, string> = {

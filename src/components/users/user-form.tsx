@@ -223,7 +223,8 @@ export function UserForm({
       const { password: _password, confirmPassword: _confirmPassword, ...submitData } = data;
       await onSubmit(submitData);
     } else {
-      await onSubmit(data);
+      const { confirmPassword: _confirmPassword, ...submitData } = data;
+      await onSubmit(submitData);
     }
   };
 

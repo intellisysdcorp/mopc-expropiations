@@ -8,7 +8,7 @@
     "dev:simple": "next dev",
     "build": "npm run check-config && next build",
     "build:analyze": "ANALYZE=true npm run build",
-    "check-config": "node scripts/check-port-config.js",
+    "check-config": "node scripts/check-port-config.cjs",
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
@@ -72,7 +72,7 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vercel/otel": "^2.1.0",
-    "archiver": "^5.3.2",
+    "archiver": "^7.0.1",
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -87,7 +87,7 @@
     "jspdf-autotable": "^5.0.2",
     "lodash-es": "^4.17.21",
     "lucide-react": "^0.546.0",
-    "next": "^16.0.6",
+    "next": "^16.0.7",
     "next-auth": "^4.24.11",
     "nodemailer": "^7.0.7",
     "prisma": "^7.1.0",
@@ -106,7 +106,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@next/bundle-analyzer": "^16.0.6",
+    "@next/bundle-analyzer": "^16.0.7",
     "@prisma/migrate": "^7.1.0",
     "@tailwindcss/typography": "^0.5.19",
     "@types/archiver": "^6.0.3",
@@ -116,12 +116,17 @@
     "@typescript-eslint/parser": "^8.46.1",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.39.1",
-    "eslint-config-next": "^16.0.6",
+    "eslint-config-next": "^16.0.7",
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.7.1",
     "tailwindcss": "^3.4.0",
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^13.0.0"
-  }
+  },
+  "overrides": {
+    "glob": "10.4.5",
+    "rimraf": "5.0.10"
+  },
+   "type": "module"
 }

@@ -90,7 +90,7 @@ export default function DepartmentsManagementPage() {
   }, [status, session, router, isSuperAdmin, isDepartmentAdmin, loadData]);
 
   const fetchDepartments = async () => {
-    const response = await fetch('/api/departments?includeHierarchy=true');
+    const response = await fetch('/api/departments');
     if (!response.ok) {throw new Error('Error fetching departments');}
 
     const data = await response.json();

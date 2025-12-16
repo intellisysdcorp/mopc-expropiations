@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { CaseStage } from '@prisma/client';
+import { CaseStage } from '@/prisma/client';
 import { logger } from '@/lib/logger';
 
 interface TimelineEvent {

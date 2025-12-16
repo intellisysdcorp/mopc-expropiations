@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { TemplateType, DocumentCategory, DocumentSecurityLevel } from '@prisma/client';
-import type { Prisma } from '@prisma/client';
+import { TemplateType, DocumentCategory, DocumentSecurityLevel } from '@/prisma/client';
+import type { Prisma } from '@/prisma/client';
 import { logger } from '@/lib/logger';
 
 // Type for template search parameters

@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
-import { ActivityType, ObservationPriority, ObservationStatus, CaseStage, Prisma } from '@prisma/client';
+import { ActivityType, ObservationPriority, ObservationStatus, CaseStage, Prisma } from '@/prisma/client';
 import { logger } from '@/lib/logger';
 import type {
   CreateObservationRequest,

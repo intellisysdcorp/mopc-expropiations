@@ -25,7 +25,7 @@ import {
   DocumentCategory,
   DocumentStatus,
   DocumentSecurityLevel
-} from '@prisma/client';
+} from '@/prisma/enums';
 import {
   getDocumentTypeTranslation,
   getDocumentCategoryTranslation,

@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { ActivityType, type Prisma } from '@prisma/client';
+import { ActivityType, type Prisma } from '@/prisma/client';
 import { logger } from '@/lib/logger';
 
 interface LogActivityParams {

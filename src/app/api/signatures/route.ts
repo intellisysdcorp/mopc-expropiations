@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
-import { ActivityType, SignatureType } from '@prisma/client';
+import { ActivityType, SignatureType } from '@/prisma/client';
 import crypto from 'crypto';
 import { logger } from '@/lib/logger';
 import type {

@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@/prisma/client';
 
 // Types based on Prisma schema
 export type ReviewType = "INTERNAL_CONTROL" | "TECHNICAL_ANALYSIS" | "LEGAL_REVIEW" | "FINANCIAL_REVIEW" | "SUPERVISORY_REVIEW" | "QUALITY_ASSURANCE";

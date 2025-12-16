@@ -144,24 +144,7 @@ export function GlobalSearch() {
     }
   };
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl/Cmd + K to open search
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        setIsOpen(true);
-      }
-      // Escape to close
-      if (e.key === 'Escape' && isOpen) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
-
+  
   return (
     <>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -169,13 +152,10 @@ export function GlobalSearch() {
           <Button
             variant="outline"
             className="relative w-full max-w-sm justify-start text-sm text-muted-foreground"
-            aria-label="Búsqueda global (Ctrl+K)"
+            aria-label="Búsqueda global"
           >
             <Search className="h-4 w-4 mr-2" />
             Buscar en toda la plataforma...
-            <kbd className="pointer-events-none absolute right-2 flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
-              <span className="text-xs">⌘</span>K
-            </kbd>
           </Button>
         </DialogTrigger>
 
@@ -351,7 +331,6 @@ export function GlobalSearch() {
                     <p>• Usa palabras clave para encontrar casos específicos</p>
                     <p>• Busca por nombres de usuarios o departamentos</p>
                     <p>• Encuentra documentos por título o contenido</p>
-                    <p>• Presiona Ctrl+K (⌘K) para abrir rápidamente</p>
                   </div>
                 </div>
               )}

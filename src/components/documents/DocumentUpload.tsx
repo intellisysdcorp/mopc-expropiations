@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { DocumentType, DocumentCategory, DocumentSecurityLevel } from '@prisma/client';
+import { DocumentType, DocumentCategory, DocumentSecurityLevel } from '@/prisma/enums';
 import toast from 'react-hot-toast';
 import { neutralToast } from '@/lib/toast-utils';
 import {
