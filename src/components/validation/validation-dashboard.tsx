@@ -52,7 +52,7 @@ interface ValidationDashboardProps {
   editable?: boolean;
   refreshInterval?: number;
   validationSummary?: CaseValidationSummary | null;
-  onValidationComplete?: () => void | Promise<void>;
+  onValidationComplete: () => void | Promise<void>;
 }
 
 export function ValidationDashboard({
@@ -73,9 +73,7 @@ export function ValidationDashboard({
     setRefreshing(true);
 
     // Call the onValidationComplete callback to refresh data in parent
-    if (onValidationComplete) {
-      await onValidationComplete();
-    }
+    await onValidationComplete();
 
     // Force refresh of all child components
     window.dispatchEvent(new CustomEvent('refreshValidationData'));
@@ -322,7 +320,7 @@ export function ValidationDashboard({
                 caseId={caseId}
                 stage={caseStage}
                 showAnalytics={true}
-                onRiskUpdate={() => onValidationComplete && onValidationComplete()}
+                onRiskUpdate={() => onValidationComplete()}
               />
             </div>
           )}
@@ -341,7 +339,7 @@ export function ValidationDashboard({
             stage={caseStage || ''}
             caseStageId={caseId} // This would normally be the case stage assignment ID
             editable={editable}
-            onComplete={() => onValidationComplete && onValidationComplete()}
+            onComplete={() => onValidationComplete()}
           />
         </TabsContent>
 
@@ -350,7 +348,7 @@ export function ValidationDashboard({
             entityType="case"
             entityId={caseId}
             entityTitle={caseTitle || `Case ${caseId}`}
-            onSignatureComplete={() => onValidationComplete && onValidationComplete()}
+            onSignatureComplete={() => onValidationComplete()}
             allowDelegation={editable}
           />
         </TabsContent>
@@ -368,7 +366,7 @@ export function ValidationDashboard({
               <ParallelReview
                 caseId={caseId}
                 caseStage={caseStage}
-                onReviewComplete={() => onValidationComplete && onValidationComplete()}
+                onReviewComplete={() => onValidationComplete()}
               />
             </TabsContent>
 
@@ -376,7 +374,7 @@ export function ValidationDashboard({
               <ApprovalMatrix
                 caseId={caseId}
                 editable={editable}
-                onApprovalUpdate={() => onValidationComplete && onValidationComplete()}
+                onApprovalUpdate={() => onValidationComplete()}
               />
             </TabsContent>
 
@@ -386,7 +384,7 @@ export function ValidationDashboard({
                 stage={caseStage}
                 allowCreate={editable}
                 allowRespond={editable}
-                onObservationUpdate={() => onValidationComplete && onValidationComplete()}
+                onObservationUpdate={() => onValidationComplete()}
               />
             </TabsContent>
 
@@ -396,7 +394,7 @@ export function ValidationDashboard({
                 stage={caseStage}
                 autoAssess={false}
                 showAnalytics={true}
-                onRiskUpdate={() => onValidationComplete && onValidationComplete()}
+                onRiskUpdate={() => onValidationComplete()}
               />
             </TabsContent>
           </>

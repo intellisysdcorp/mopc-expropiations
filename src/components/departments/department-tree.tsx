@@ -26,6 +26,51 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Department } from '@/lib/types/department';
 
+// Helper function to build tree structure from flat department list
+const buildDepartmentTree = (departments: Department[]): Department[] => {
+  const deptMap = new Map<string, Department>();
+  const rootDepartments: Department[] = [];
+
+  // Create map with empty children arrays
+  departments.forEach(dept => {
+    deptMap.set(dept.id, { ...dept, children: [] });
+  });
+
+  // Build tree structure
+  departments.forEach(dept => {
+    const deptWithChildren = deptMap.get(dept.id)!;
+    if (dept.parentId && deptMap.has(dept.parentId)) {
+      const parent = deptMap.get(dept.parentId)!;
+      parent.children = parent.children || [];
+      parent.children.push(deptWithChildren);
+    } else {
+      rootDepartments.push(deptWithChildren);
+    }
+  });
+
+  // Sort departments by name recursively
+  const sortDepartments = (depts: Department[]): Department[] => {
+    return depts.sort((a, b) => a.name.localeCompare(b.name))
+      .map(dept => ({
+        ...dept,
+        children: dept.children ? sortDepartments(dept.children) : [],
+      }));
+  };
+
+  return sortDepartments(rootDepartments);
+};
+
+// Helper function to get all node IDs from tree structure
+const getAllNodeIds = (departments: Department[]): string[] => {
+  return departments.reduce((acc, dept) => {
+    acc.push(dept.id);
+    if (dept.children) {
+      acc.push(...getAllNodeIds(dept.children));
+    }
+    return acc;
+  }, [] as string[]);
+};
+
 
 interface DepartmentTreeProps {
   departments: Department[];
@@ -257,35 +302,8 @@ export const DepartmentTree: React.FC<DepartmentTreeProps> = ({
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(() => {
     // Initialize with all nodes expanded if we have initial data
     if (departments.length > 0) {
-      const getAllNodeIds = (departments: Department[]): string[] => {
-        return departments.reduce((acc, dept) => {
-          acc.push(dept.id);
-          if (dept.children) {
-            acc.push(...getAllNodeIds(dept.children));
-          }
-          return acc;
-        }, [] as string[]);
-      };
-
-      // Build initial tree to get all node IDs
-      const deptMap = new Map<string, Department>();
-      departments.forEach(dept => {
-        deptMap.set(dept.id, { ...dept, children: [] });
-      });
-
-      const rootDepartments: Department[] = [];
-      departments.forEach(dept => {
-        const deptWithChildren = deptMap.get(dept.id)!;
-        if (dept.parentId && deptMap.has(dept.parentId)) {
-          const parent = deptMap.get(dept.parentId)!;
-          parent.children = parent.children || [];
-          parent.children.push(deptWithChildren);
-        } else {
-          rootDepartments.push(deptWithChildren);
-        }
-      });
-
-      return new Set(getAllNodeIds(rootDepartments));
+      const treeData = buildDepartmentTree(departments);
+      return new Set(getAllNodeIds(treeData));
     }
     return new Set();
   });
@@ -293,36 +311,7 @@ export const DepartmentTree: React.FC<DepartmentTreeProps> = ({
 
   // Build tree structure from flat list
   const treeData = useMemo(() => {
-    const deptMap = new Map<string, Department>();
-    const rootDepartments: Department[] = [];
-
-    // Create map
-    departments.forEach(dept => {
-      deptMap.set(dept.id, { ...dept, children: [] });
-    });
-
-    // Build tree
-    departments.forEach(dept => {
-      const deptWithChildren = deptMap.get(dept.id)!;
-      if (dept.parentId && deptMap.has(dept.parentId)) {
-        const parent = deptMap.get(dept.parentId)!;
-        parent.children = parent.children || [];
-        parent.children.push(deptWithChildren);
-      } else {
-        rootDepartments.push(deptWithChildren);
-      }
-    });
-
-    // Sort departments by name
-    const sortDepartments = (depts: Department[]): Department[] => {
-      return depts.sort((a, b) => a.name.localeCompare(b.name))
-        .map(dept => ({
-          ...dept,
-          children: dept.children ? sortDepartments(dept.children) : [],
-        }));
-    };
-
-    return sortDepartments(rootDepartments);
+    return buildDepartmentTree(departments);
   }, [departments]);
 
   // Filter departments based on search and status
@@ -417,16 +406,6 @@ export const DepartmentTree: React.FC<DepartmentTreeProps> = ({
   }, []);
 
   const handleExpandAll = useCallback(() => {
-    const getAllNodeIds = (departments: Department[]): string[] => {
-      return departments.reduce((acc, dept) => {
-        acc.push(dept.id);
-        if (dept.children) {
-          acc.push(...getAllNodeIds(dept.children));
-        }
-        return acc;
-      }, [] as string[]);
-    };
-
     setExpandedNodes(new Set(getAllNodeIds(filteredTree)));
   }, [filteredTree]);
 

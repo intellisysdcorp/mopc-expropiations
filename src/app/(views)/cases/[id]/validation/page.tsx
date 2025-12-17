@@ -6,11 +6,6 @@ import { ValidationDashboard } from '@/components/validation/validation-dashboar
 import { Card, CardContent } from '@/components/ui/card';
 import clientLogger from '@/lib/client-logger';
 
-// Set page title dynamically
-if (typeof window !== 'undefined') {
-  document.title = 'Validation Dashboard - Loading...';
-}
-
 interface Props {
   params: Promise<{
     id: string;

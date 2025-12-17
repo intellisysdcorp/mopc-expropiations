@@ -186,7 +186,7 @@ export function ChartSkeleton({ className }: { className?: string }) {
               key={i}
               variant="rectangular"
               width={40}
-              height={50 + (1*20) % 150}
+              height={50 + (i*20) % 150}
             />
           ))}
         </div>
