@@ -1,6 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import clientLogger from '@/lib/client-logger';
 
 interface TutorialStep {
   id: string;
@@ -110,13 +111,21 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
   const [activeTutorial, setActiveTutorial] = useState<Tutorial | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [isActive, setIsActive] = useState(false);
-  const [completedTutorials, setCompletedTutorials] = useState<string[]>(() => {
+  const [completedTutorials, setCompletedTutorials] = useState<string[]>([]);
+
+  // Load completed tutorials from localStorage on client side
+  useEffect(() => {
     const stored = localStorage.getItem('completed-tutorials');
     if (stored) {
-      return JSON.parse(stored);
+      try {
+        setTimeout(() => setCompletedTutorials(JSON.parse(stored)), 0);
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          clientLogger.warn('Failed to parse completed tutorials from localStorage:', error);
+        }
+      }
     }
-    return [];
-  });
+  }, []);
 
   const startTutorial = useCallback((tutorialId: string) => {
     const tutorial = tutorials.find(t => t.id === tutorialId);
@@ -130,7 +139,13 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
   const markTutorialAsCompleted = useCallback((tutorialId: string) => {
     const newCompleted = [...completedTutorials, tutorialId];
     setCompletedTutorials(newCompleted);
-    localStorage.setItem('completed-tutorials', JSON.stringify(newCompleted));
+    try {
+      localStorage.setItem('completed-tutorials', JSON.stringify(newCompleted));
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          clientLogger.warn('Failed to save completed tutorials to localStorage:', error);
+        }
+    }
   }, [completedTutorials]);
 
   const completeTutorial = useCallback(() => {
@@ -173,7 +188,13 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
   const resetTutorial = useCallback((tutorialId: string) => {
     const newCompleted = completedTutorials.filter(id => id !== tutorialId);
     setCompletedTutorials(newCompleted);
-    localStorage.setItem('completed-tutorials', JSON.stringify(newCompleted));
+    try {
+      localStorage.setItem('completed-tutorials', JSON.stringify(newCompleted));
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        clientLogger.warn('Failed to save completed tutorials to localStorage:', error);
+      }
+    }
   }, [completedTutorials]);
 
   const getCompletedTutorials = useCallback(() => {

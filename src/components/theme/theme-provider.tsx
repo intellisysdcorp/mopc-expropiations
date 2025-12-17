@@ -21,25 +21,27 @@ export function ThemeProvider({
   defaultTheme?: Theme;
   storageKey?: string;
 }) {
-  // Initialize theme from localStorage or use default
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(storageKey) as Theme;
-      return stored || defaultTheme;
+  const [theme, setTheme] = useState<Theme>(defaultTheme);
+
+  // Initialize theme from localStorage on client side
+  useEffect(() => {
+    const stored = localStorage.getItem(storageKey) as Theme;
+    if (stored) {
+      setTheme(stored);
     }
-    return defaultTheme;
-  });
+  }, [storageKey]);
+
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
 
   // Initialize resolved theme based on current theme
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() => {
-    if (typeof window !== 'undefined') {
-      if (defaultTheme === 'system') {
-        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      }
-      return defaultTheme as 'light' | 'dark';
+  useEffect(() => {
+    if (theme === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      setResolvedTheme(mediaQuery.matches ? 'dark' : 'light');
+    } else {
+      setResolvedTheme(theme);
     }
-    return 'light';
-  });
+  }, [theme]);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -64,7 +66,11 @@ export function ThemeProvider({
   const value = {
     theme,
     setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme);
+      try {
+        localStorage.setItem(storageKey, theme);
+      } catch (error) {
+        console.warn('Failed to save theme to localStorage:', error);
+      }
       setTheme(theme);
     },
     resolvedTheme,
