@@ -129,7 +129,6 @@ export async function GET(
           [`${action}Timestamp`]: new Date().toISOString(),
           version: version || null,
           ...(action === 'download' && { format, downloadToken }),
-          userAgent: request.headers.get('user-agent'),
           ...(action === 'download' && { ipAddress: request.headers.get('x-forwarded-for') }),
         },
       },

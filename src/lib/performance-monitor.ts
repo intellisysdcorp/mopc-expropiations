@@ -208,7 +208,6 @@ class PerformanceMonitor {
     return {
       metrics: this.metrics,
       entries: this.entries.slice(-10), // Last 10 entries
-      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'server',
       url: typeof window !== 'undefined' ? window.location.href : 'server',
       timestamp: Date.now()
     }

@@ -45,7 +45,6 @@ interface DigitalSignature {
   isActive: boolean;
   createdAt: string;
   ipAddress?: string;
-  userAgent?: string;
   delegatedBy?: string;
   delegationReason?: string;
   revokedAt?: string;
@@ -333,7 +332,7 @@ export function DigitalSignature({
                   )}
 
                   <div className="mt-2 text-xs text-gray-500">
-                    IP: {signature.ipAddress} • {signature.userAgent}
+                    IP: {signature.ipAddress}
                   </div>
                 </div>
               ))}

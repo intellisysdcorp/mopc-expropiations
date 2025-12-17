@@ -517,7 +517,6 @@ model User {
   // Login tracking
   lastLoginAt          DateTime?
   lastLoginIp          String?
-  lastLoginUserAgent   String?
   loginCount           Int       @default(0)
   failedLoginAttempts  Int       @default(0)
   lockedUntil          DateTime?
@@ -667,7 +666,6 @@ model UserSession {
   sessionToken String   @unique
   userId       String
   ipAddress    String?
-  userAgent    String?
   deviceInfo   String?  // JSON with device details
   isActive     Boolean  @default(true)
   expiresAt    DateTime
@@ -691,7 +689,6 @@ model PasswordHistory {
   changedBy      String?  // ID of user who changed the password
   changeReason   String?  // admin_reset, user_change, expired, etc.
   ipAddress      String?
-  userAgent      String?
 
   // Relations
   userId String
@@ -954,7 +951,6 @@ model CaseHistory {
   notes         String?    // Additional notes
   duration      Int?       // Duration in days at previous stage (for stage changes)
   ipAddress     String?    // IP address of the user making the change
-  userAgent     String?    // User agent of the browser
 
   createdAt DateTime @default(now())
 
@@ -1431,7 +1427,6 @@ model DocumentHistory {
   // User and session information
   userId      String
   ipAddress   String?
-  userAgent   String?
   sessionId   String?
 
   // File operation details
@@ -1486,7 +1481,6 @@ model DocumentAction {
   // User information
   userId     String
   ipAddress  String?
-  userAgent  String?
 
   // Location information
   geolocation Json?           // GPS coordinates if available
@@ -1823,7 +1817,6 @@ model StageProgression {
   approvedAt     DateTime?
   duration       Int?     // Duration in days at previous stage
   ipAddress      String?
-  userAgent      String?
 
   createdAt DateTime @default(now())
 
@@ -1997,7 +1990,6 @@ model DigitalSignature {
 
   // Signature metadata
   ipAddress    String?
-  userAgent    String?
   deviceInfo   Json?        // Device and browser information
   geolocation  Json?        // GPS coordinates if available
   biometricData Json?       // Biometric verification data if used
@@ -2088,7 +2080,6 @@ model Approval {
 
   // Metadata
   ipAddress     String?
-  userAgent     String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2208,7 +2199,6 @@ model Review {
 
   // Metadata
   ipAddress      String?
-  userAgent      String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2526,7 +2516,6 @@ model SystemConfigurationHistory {
   changeReason     String?
   changedBy        String
   ipAddress        String?
-  userAgent        String?
 
   createdAt        DateTime @default(now())
 
@@ -2802,7 +2791,6 @@ model SystemLog {
   sessionId     String?  // Session ID
   requestId     String?  // Request ID for tracing
   ipAddress     String?
-  userAgent     String?
 
   // Performance data
   duration      Int?     // Duration in milliseconds

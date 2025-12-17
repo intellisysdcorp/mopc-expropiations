@@ -75,7 +75,6 @@ export async function GET(
         action: DocumentActionType.DOWNLOADED,
         userId: session.user.id,
         ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown',
         metadata: {
           fileName: document.originalFileName,
           fileSize: document.fileSize,
@@ -95,7 +94,6 @@ export async function GET(
         fileName: document.originalFileName,
         filePath: document.filePath,
         ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown',
       },
     });
 

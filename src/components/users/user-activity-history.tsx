@@ -47,14 +47,12 @@ interface ActivityStats {
     changedAt: string;
     changeReason: string;
     ipAddress: string;
-    userAgent: string;
   }>;
   securityInfo: {
     failedLoginAttempts: number;
     lockedUntil: string | null;
     lastLoginAt: string | null;
     lastLoginIp: string | null;
-    lastLoginUserAgent: string | null;
   };
 }
 

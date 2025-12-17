@@ -83,15 +83,12 @@ function getClientIdentifier(request: NextRequest): string {
   // Try to get user ID from session first
   const forwardedFor = request.headers.get('x-forwarded-for');
   const realIP = request.headers.get('x-real-ip');
-  const userAgent = request.headers.get('user-agent');
 
   // In a real implementation, you'd extract the user ID from the session token
   // For now, use IP address as fallback
-  const ip = forwardedFor?.split(',')[0]?.trim() ||
+  return forwardedFor?.split(',')[0]?.trim() ||
              realIP?.trim() ||
              'unknown';
-
-  return `${ip}:${userAgent?.substring(0, 50) || 'unknown'}`;
 }
 
 /**

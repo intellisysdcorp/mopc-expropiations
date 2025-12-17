@@ -127,7 +127,6 @@ export async function POST(request: NextRequest) {
         changeReason: 'Initial configuration created',
         changedBy: session.user.id,
         ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown'
       }
     })
 

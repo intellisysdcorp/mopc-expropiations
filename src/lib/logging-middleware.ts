@@ -10,7 +10,6 @@ interface RequestContext {
   userId?: string;
   method: string;
   url: string;
-  userAgent?: string;
   ip?: string;
 }
 
@@ -36,11 +35,6 @@ function getClientIP(req: NextRequest): string {
   return 'unknown';
 }
 
-// Extract user agent from request
-function getUserAgent(request: NextRequest): string {
-  return request.headers.get('user-agent') || 'unknown';
-}
-
 // Middleware function to wrap API routes
 export function withLogging(
   handler: (req: NextRequest, context?: any) => Promise<NextResponse>
@@ -51,7 +45,6 @@ export function withLogging(
     const method = req.method;
     const url = req.url;
     const ip = getClientIP(req);
-    const userAgent = getUserAgent(req);
 
     // Store request context
     const requestContext: RequestContext = {
@@ -60,7 +53,6 @@ export function withLogging(
       method,
       url,
       ip,
-      userAgent,
     };
 
     activeRequests.set(requestId, requestContext);
@@ -127,7 +119,6 @@ export function withAuthenticatedLogging(
     const method = req.method;
     const url = req.url;
     const ip = getClientIP(req);
-    const userAgent = getUserAgent(req);
     const userId = context.user?.id;
 
     // Store request context
@@ -138,7 +129,6 @@ export function withAuthenticatedLogging(
       method,
       url,
       ip,
-      userAgent,
     };
 
     activeRequests.set(requestId, requestContext);

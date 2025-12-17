@@ -121,7 +121,6 @@ export async function POST(request: NextRequest) {
     const encryptedSignatureData = encryptSignatureData(body.signatureData);
 
     // Get request metadata
-    const userAgent = request.headers.get('user-agent') || '';
     const ipAddress = request.headers.get('x-forwarded-for') || '';
 
     const signature: DigitalSignatureWithUser = await prisma.digitalSignature.create({
@@ -134,7 +133,6 @@ export async function POST(request: NextRequest) {
         delegatedBy: body.delegatedBy || null,
         delegationReason: body.delegationReason || null,
         ipAddress,
-        userAgent,
         deviceInfo: {
           timestamp: new Date().toISOString(),
           sessionId: session.user.id,
@@ -189,9 +187,6 @@ export async function POST(request: NextRequest) {
     // Add optional fields conditionally
     if (signature.ipAddress) {
       signatureResponse.ipAddress = signature.ipAddress;
-    }
-    if (signature.userAgent) {
-      signatureResponse.userAgent = signature.userAgent;
     }
     if (signature.delegatedBy) {
       signatureResponse.delegatedBy = signature.delegatedBy;

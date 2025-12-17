@@ -172,7 +172,6 @@ export async function GET(
         changedAt: true,
         changeReason: true,
         ipAddress: true,
-        userAgent: true,
       },
     });
 
@@ -184,7 +183,6 @@ export async function GET(
         lockedUntil: true,
         lastLoginAt: true,
         lastLoginIp: true,
-        lastLoginUserAgent: true,
       },
     });
 
