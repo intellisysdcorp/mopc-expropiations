@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +25,6 @@ import { ApprovalMatrix } from './approval-matrix';
 import { ObservationSystem } from './observation-system';
 import { ValidationEngine } from './validation-engine';
 import { RiskAssessment } from './risk-assessment';
-import clientLogger from '@/lib/client-logger';
 
 // Types
 interface CaseValidationSummary {
@@ -48,11 +47,12 @@ interface CaseValidationSummary {
 
 interface ValidationDashboardProps {
   caseId: string;
-  caseStage?: string;
+  caseStage: string | null;
   caseTitle?: string;
   editable?: boolean;
-  autoRefresh?: boolean;
   refreshInterval?: number;
+  validationSummary?: CaseValidationSummary | null;
+  onValidationComplete: () => void | Promise<void>;
 }
 
 export function ValidationDashboard({
@@ -60,36 +60,24 @@ export function ValidationDashboard({
   caseStage,
   caseTitle,
   editable = true,
-  autoRefresh = false,
-  refreshInterval = 30000
+  refreshInterval = 30000,
+  validationSummary,
+  onValidationComplete
 }: ValidationDashboardProps) {
-  const [summary, setSummary] = useState<CaseValidationSummary | null>(null);
-  const [loading, _setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [refreshing, setRefreshing] = useState(false);
   const { toast } = useToast();
 
-  // Fetch validation summary
-  const fetchSummary = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/cases/${caseId}/validation-summary`);
-      if (response.ok) {
-        const data = await response.json();
-        setSummary(data);
-      }
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        clientLogger.error('Error fetching validation summary:', error);
-      }
-    }
-  }, [caseId]);
-
   // Refresh all validation data
   const refreshAll = async () => {
     setRefreshing(true);
-    await fetchSummary();
+
+    // Call the onValidationComplete callback to refresh data in parent
+    await onValidationComplete();
+
     // Force refresh of all child components
     window.dispatchEvent(new CustomEvent('refreshValidationData'));
+
     setRefreshing(false);
     toast({
       title: 'Refreshed',
@@ -123,26 +111,14 @@ export function ValidationDashboard({
     }
   };
 
-  useEffect(() => {
-    fetchSummary();
-  }, [fetchSummary]);
-
-  useEffect(() => {
-    if (autoRefresh) {
-      const interval = setInterval(fetchSummary, refreshInterval);
-      return () => clearInterval(interval);
-    }
-    return undefined
-  }, [autoRefresh, refreshInterval, fetchSummary]);
-
-  if (loading && !summary) {
+  if (!validationSummary) {
     return (
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin h-6 w-6 mr-2" />
-            <span>Loading validation dashboard...</span>
-          </div>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin h-6 w-6 mr-2" />
+              <span>Loading validation dashboard...</span>
+            </div>
         </CardContent>
       </Card>
     );
@@ -182,57 +158,57 @@ export function ValidationDashboard({
                   </>
                 )}
               </Button>
-              {summary && (
-                <Badge className={getStatusColor(summary.status)}>
-                  {getStatusIcon(summary.status)}
-                  {summary.status}
+              {validationSummary && (
+                <Badge className={getStatusColor(validationSummary.status)}>
+                  {getStatusIcon(validationSummary.status)}
+                  {validationSummary.status}
                 </Badge>
               )}
             </div>
           </div>
         </CardHeader>
 
-        {summary && (
+        {validationSummary && (
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {/* Overall Progress */}
               <div className="text-center">
                 <div className="text-3xl font-bold mb-2">
-                  {summary.overallProgress}%
+                  {validationSummary.overallProgress}%
                 </div>
                 <div className="text-sm text-gray-500 mb-2">
                   Overall Progress
                 </div>
-                <Progress value={summary.overallProgress} className="h-2" />
+                <Progress value={validationSummary.overallProgress} className="h-2" />
               </div>
 
               {/* Risk Score */}
               <div className="text-center">
                 <div
                   className={`text-3xl font-bold mb-2 ${
-                    summary.riskScore >= 70
+                    validationSummary.riskScore >= 70
                       ? 'text-red-600'
-                      : summary.riskScore >= 40
+                      : validationSummary.riskScore >= 40
                         ? 'text-yellow-600'
                         : 'text-green-600'
                   }`}
                 >
-                  {summary.riskScore}
+                  {validationSummary.riskScore}
                 </div>
                 <div className="text-sm text-gray-500 mb-2">Risk Score</div>
                 <div className="flex justify-center">
                   <Badge
                     className={
-                      summary.riskScore >= 70
+                      validationSummary.riskScore >= 70
                         ? 'bg-red-100 text-red-800'
-                        : summary.riskScore >= 40
+                        : validationSummary.riskScore >= 40
                           ? 'bg-yellow-100 text-yellow-800'
                           : 'bg-green-100 text-green-800'
                     }
                   >
-                    {summary.riskScore >= 70
+                    {validationSummary.riskScore >= 70
                       ? 'High Risk'
-                      : summary.riskScore >= 40
+                      : validationSummary.riskScore >= 40
                         ? 'Medium Risk'
                         : 'Low Risk'}
                   </Badge>
@@ -242,19 +218,19 @@ export function ValidationDashboard({
               {/* Open Issues */}
               <div className="text-center">
                 <div className="text-3xl font-bold mb-2 text-orange-600">
-                  {summary.openObservations + summary.overdueItems}
+                  {validationSummary.openObservations + validationSummary.overdueItems}
                 </div>
                 <div className="text-sm text-gray-500 mb-2">Open Issues</div>
                 <div className="text-xs text-gray-500">
-                  {summary.openObservations} observations •{' '}
-                  {summary.overdueItems} overdue
+                  {validationSummary.openObservations} observations •{' '}
+                  {validationSummary.overdueItems} overdue
                 </div>
               </div>
 
               {/* Pending Actions */}
               <div className="text-center">
                 <div className="text-3xl font-bold mb-2 text-blue-600">
-                  {summary.pendingSignatures}
+                  {validationSummary.pendingSignatures}
                 </div>
                 <div className="text-sm text-gray-500 mb-2">
                   Pending Actions
@@ -270,45 +246,45 @@ export function ValidationDashboard({
               <div>
                 <div className="flex justify-between text-sm mb-1">
                   <span>Checklist</span>
-                  <span>{summary.checklistProgress}%</span>
+                  <span>{validationSummary.checklistProgress}%</span>
                 </div>
-                <Progress value={summary.checklistProgress} className="h-2" />
+                <Progress value={validationSummary.checklistProgress} className="h-2" />
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-1">
                   <span>Approvals</span>
-                  <span>{summary.approvalProgress}%</span>
+                  <span>{validationSummary.approvalProgress}%</span>
                 </div>
-                <Progress value={summary.approvalProgress} className="h-2" />
+                <Progress value={validationSummary.approvalProgress} className="h-2" />
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-1">
                   <span>Reviews</span>
-                  <span>{summary.reviewProgress}%</span>
+                  <span>{validationSummary.reviewProgress}%</span>
                 </div>
-                <Progress value={summary.reviewProgress} className="h-2" />
+                <Progress value={validationSummary.reviewProgress} className="h-2" />
               </div>
               <div>
                 <div className="flex justify-between text-sm mb-1">
                   <span>Validation</span>
-                  <span>{summary.validationProgress}%</span>
+                  <span>{validationSummary.validationProgress}%</span>
                 </div>
-                <Progress value={summary.validationProgress} className="h-2" />
+                <Progress value={validationSummary.validationProgress} className="h-2" />
               </div>
             </div>
 
             {/* Alerts */}
-            {(summary.openObservations > 0 ||
-              summary.overdueItems > 0 ||
-              summary.riskScore >= 70) && (
+            {(validationSummary.openObservations > 0 ||
+              validationSummary.overdueItems > 0 ||
+              validationSummary.riskScore >= 70) && (
               <Alert className="mt-4">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
-                  {summary.riskScore >= 70 && 'High risk level detected. '}
-                  {summary.overdueItems > 0 &&
-                    `${summary.overdueItems} overdue items require attention. `}
-                  {summary.openObservations > 0 &&
-                    `${summary.openObservations} observations are pending resolution. `}
+                  {validationSummary.riskScore >= 70 && 'High risk level detected. '}
+                  {validationSummary.overdueItems > 0 &&
+                    `${validationSummary.overdueItems} overdue items require attention. `}
+                  {validationSummary.openObservations > 0 &&
+                    `${validationSummary.openObservations} observations are pending resolution. `}
                   Please review the details below.
                 </AlertDescription>
               </Alert>
@@ -337,7 +313,6 @@ export function ValidationDashboard({
               <ValidationEngine
                 caseId={caseId}
                 stage={caseStage}
-                onValidationComplete={() => fetchSummary()}
               />
 
               {/* Risk Assessment Summary */}
@@ -345,7 +320,7 @@ export function ValidationDashboard({
                 caseId={caseId}
                 stage={caseStage}
                 showAnalytics={true}
-                onRiskUpdate={() => fetchSummary()}
+                onRiskUpdate={() => onValidationComplete()}
               />
             </div>
           )}
@@ -364,7 +339,7 @@ export function ValidationDashboard({
             stage={caseStage || ''}
             caseStageId={caseId} // This would normally be the case stage assignment ID
             editable={editable}
-            onComplete={() => fetchSummary()}
+            onComplete={() => onValidationComplete()}
           />
         </TabsContent>
 
@@ -373,7 +348,7 @@ export function ValidationDashboard({
             entityType="case"
             entityId={caseId}
             entityTitle={caseTitle || `Case ${caseId}`}
-            onSignatureComplete={() => fetchSummary()}
+            onSignatureComplete={() => onValidationComplete()}
             allowDelegation={editable}
           />
         </TabsContent>
@@ -391,7 +366,7 @@ export function ValidationDashboard({
               <ParallelReview
                 caseId={caseId}
                 caseStage={caseStage}
-                onReviewComplete={() => fetchSummary()}
+                onReviewComplete={() => onValidationComplete()}
               />
             </TabsContent>
 
@@ -399,7 +374,7 @@ export function ValidationDashboard({
               <ApprovalMatrix
                 caseId={caseId}
                 editable={editable}
-                onApprovalUpdate={() => fetchSummary()}
+                onApprovalUpdate={() => onValidationComplete()}
               />
             </TabsContent>
 
@@ -409,7 +384,7 @@ export function ValidationDashboard({
                 stage={caseStage}
                 allowCreate={editable}
                 allowRespond={editable}
-                onObservationUpdate={() => fetchSummary()}
+                onObservationUpdate={() => onValidationComplete()}
               />
             </TabsContent>
 
@@ -419,7 +394,7 @@ export function ValidationDashboard({
                 stage={caseStage}
                 autoAssess={false}
                 showAnalytics={true}
-                onRiskUpdate={() => fetchSummary()}
+                onRiskUpdate={() => onValidationComplete()}
               />
             </TabsContent>
           </>

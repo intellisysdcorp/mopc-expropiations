@@ -26,7 +26,6 @@ import {
 import {
   Monitor,
   Smartphone,
-  Tablet,
   Globe,
   Clock,
   AlertTriangle,
@@ -87,18 +86,6 @@ export function UserSessions({ userId }: UserSessionsProps) {
   useEffect(() => {
     fetchSessions();
   }, [fetchSessions]);
-
-  const getDeviceInfo = (session: Session) => {
-    if (session.deviceInfo) {
-      return session.deviceInfo;
-    }
-
-    // Extract info from user agent
-    let browser = 'Desconocido';
-    let os = 'Desconocido';
-
-    return { browser, os };
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('es-DO', {
@@ -298,7 +285,6 @@ export function UserSessions({ userId }: UserSessionsProps) {
                 </TableHeader>
                 <TableBody>
                   {sessions.map((session) => {
-                    const deviceInfo = getDeviceInfo(session);
                     const status = getSessionStatus(session);
 
                     return (
@@ -306,10 +292,6 @@ export function UserSessions({ userId }: UserSessionsProps) {
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <div>
-                              <div className="font-medium">{deviceInfo.browser}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {deviceInfo.os}
-                              </div>
                               {session.isCurrent && (
                                 <Badge variant="outline" className="mt-1">
                                   Sesión Actual

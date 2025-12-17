@@ -186,7 +186,7 @@ export function ChartSkeleton({ className }: { className?: string }) {
               key={i}
               variant="rectangular"
               width={40}
-              height={Math.random() * 150 + 50}
+              height={50 + (i*20) % 150}
             />
           ))}
         </div>
@@ -208,7 +208,7 @@ export function CalendarSkeleton({ className }: { className?: string }) {
             <Skeleton variant="text" width="20px" height={16} />
             <div className="mt-1 space-y-1">
               <Skeleton variant="rectangular" width="100%" height={12} />
-              {Math.random() > 0.5 && (
+              {(i % 3 === 0 || i % 5 === 1) && (
                 <Skeleton variant="rectangular" width="80%" height={12} />
               )}
             </div>

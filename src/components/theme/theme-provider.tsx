@@ -22,8 +22,8 @@ export function ThemeProvider({
   storageKey?: string;
 }) {
   const [theme, setTheme] = useState<Theme>(defaultTheme);
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
 
+  // Initialize theme from localStorage on client side
   useEffect(() => {
     const stored = localStorage.getItem(storageKey) as Theme;
     if (stored) {
@@ -31,27 +31,46 @@ export function ThemeProvider({
     }
   }, [storageKey]);
 
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
+
+  // Initialize resolved theme based on current theme
   useEffect(() => {
-    const root = window.document.documentElement;
-
-    root.classList.remove('light', 'dark');
-
     if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light';
-      root.classList.add(systemTheme);
-      setResolvedTheme(systemTheme);
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      setResolvedTheme(mediaQuery.matches ? 'dark' : 'light');
     } else {
-      root.classList.add(theme);
       setResolvedTheme(theme);
     }
+  }, [theme]);
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+
+    let newResolvedTheme: 'light' | 'dark';
+
+    if (theme === 'system') {
+      newResolvedTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light';
+    } else {
+      newResolvedTheme = theme;
+    }
+
+    root.classList.add(newResolvedTheme);
+
+    // Defer setState to avoid synchronous updates within effect
+    setTimeout(() => setResolvedTheme(newResolvedTheme), 0);
   }, [theme]);
 
   const value = {
     theme,
     setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme);
+      try {
+        localStorage.setItem(storageKey, theme);
+      } catch (error) {
+        console.warn('Failed to save theme to localStorage:', error);
+      }
       setTheme(theme);
     },
     resolvedTheme,

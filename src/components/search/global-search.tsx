@@ -39,9 +39,13 @@ export function GlobalSearch() {
 
   // Load recent searches from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('global-search-recent');
-    if (saved) {
-      setRecentSearches(JSON.parse(saved));
+    try {
+      const saved = localStorage.getItem('global-search-recent');
+      if (saved) {
+        setRecentSearches(JSON.parse(saved));
+      }
+    } catch (error) {
+      console.warn('Failed to parse recent searches from localStorage:', error);
     }
   }, []);
 
@@ -83,7 +87,11 @@ export function GlobalSearch() {
     // Add to recent searches
     const newRecent = [query, ...recentSearches.filter(s => s !== query)].slice(0, 5);
     setRecentSearches(newRecent);
-    localStorage.setItem('global-search-recent', JSON.stringify(newRecent));
+    try {
+      localStorage.setItem('global-search-recent', JSON.stringify(newRecent));
+    } catch (error) {
+      console.warn('Failed to save recent searches to localStorage:', error);
+    }
 
     // Navigate to result
     router.push(result.url);
@@ -100,7 +108,11 @@ export function GlobalSearch() {
   // Clear recent searches
   const clearRecentSearches = () => {
     setRecentSearches([]);
-    localStorage.removeItem('global-search-recent');
+    try {
+      localStorage.removeItem('global-search-recent');
+    } catch (error) {
+      console.warn('Failed to clear recent searches from localStorage:', error);
+    }
   };
 
   // Group results by type
