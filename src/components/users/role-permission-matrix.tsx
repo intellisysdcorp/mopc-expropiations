@@ -1,6 +1,6 @@
 'use client';
 
-import * as React from 'react';
+import { useEffect } from 'react';
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -93,7 +93,7 @@ export function RolePermissionMatrix({ roles, onRolesUpdate }: RolePermissionMat
   const [rolePermissions, setRolePermissions] = useState<RolePermissions>(DEFAULT_PERMISSIONS);
 
   // Initialize role permissions state
-  React.useEffect(() => {
+  useEffect(() => {
     setRolePermissions(DEFAULT_PERMISSIONS);
   }, []);
 

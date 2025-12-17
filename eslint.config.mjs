@@ -38,6 +38,14 @@ const eslintConfig = [
       'no-console': 'warn',
       eqeqeq: ['error', 'always'],
       curly: 'off',
+      // React import rules
+      'no-restricted-imports': ['error', {
+        patterns: [{
+          group: ['React'],
+          message: 'React import is not needed with the new JSX transform. Remove the import unless you need React types or hooks.',
+          importNames: ['default']
+        }]
+      }],
     },
   },
   {

@@ -4,7 +4,7 @@ import { Building, Mail } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
 
 import { Badge } from '@/components/ui/badge';

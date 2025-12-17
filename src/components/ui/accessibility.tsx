@@ -1,6 +1,16 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import {
+  ButtonHTMLAttributes,
+  cloneElement,
+  ReactElement,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from 'react';
 import { cn } from '@/lib/utils';
 
 // Skip link component for keyboard navigation
@@ -10,7 +20,7 @@ export function SkipLink({
   className,
 }: {
   href: string;
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
 }) {
   return (
@@ -34,7 +44,7 @@ export function FocusTrap({
   isActive,
   onEscape,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   isActive: boolean;
   onEscape?: () => void;
 }) {
@@ -109,7 +119,7 @@ export function LiveRegion({
   children,
 }: {
   politeness?: 'polite' | 'assertive' | 'off';
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div
@@ -125,12 +135,10 @@ export function LiveRegion({
 // Screen reader only text
 export function ScreenReaderOnly({
   children,
-  as: Component = 'span',
 }: {
-  children: React.ReactNode;
-  as?: keyof React.JSX.IntrinsicElements;
+  children: ReactNode;
 }) {
-  return <Component className="sr-only">{children}</Component>;
+  return <span className="sr-only">{children}</span>;
 }
 
 // Accessible button with loading state
@@ -142,12 +150,12 @@ export function AccessibleButton({
   className,
   ...props
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   loading?: boolean;
   loadingText?: string;
   disabled?: boolean;
   className?: string;
-} & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+} & ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
       className={cn(
@@ -189,9 +197,9 @@ export function AccessibleField({
   error?: string;
   description?: string;
   required?: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
-  const fieldId = React.useId();
+  const fieldId = useId();
   const errorId = `${fieldId}-error`;
   const descriptionId = `${fieldId}-description`;
 
@@ -208,7 +216,7 @@ export function AccessibleField({
           </span>
         )}
       </label>
-      {React.cloneElement(children as React.ReactElement<any>, {
+      {cloneElement(children as ReactElement<any>, {
         id: fieldId,
         'aria-describedby': [
           description && descriptionId,
@@ -284,8 +292,8 @@ export function AccessibleTabs({
   tabs: Array<{
     id: string;
     label: string;
-    content: React.ReactNode;
-    icon?: React.ReactNode;
+    content: ReactNode;
+    icon?: ReactNode;
   }>;
   activeTab: string;
   onTabChange: (tabId: string) => void;
@@ -293,7 +301,7 @@ export function AccessibleTabs({
 }) {
   const tabsRef = useRef<HTMLDivElement>(null);
 
-  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+  const handleKeyDown = (e: any, index: number) => {
     let newIndex = index;
 
     switch (e.key) {
@@ -386,12 +394,12 @@ export function AccessibleModal({
   onClose: () => void;
   title: string;
   description?: string;
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
 }) {
   const modalRef = useRef<HTMLDivElement>(null);
-  const titleId = React.useId();
-  const descriptionId = React.useId();
+  const titleId = useId();
+  const descriptionId = useId();
 
   useEffect(() => {
     if (!isOpen) return;
@@ -478,7 +486,7 @@ export function AccessibleTable({
     sortDirection?: 'asc' | 'desc';
     onSort?: () => void;
   }>;
-  rows: Array<Record<string, React.ReactNode>>;
+  rows: Array<Record<string, ReactNode>>;
   caption?: string;
   className?: string;
 }) {
