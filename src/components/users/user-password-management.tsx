@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -72,11 +72,11 @@ export function UserPasswordManagement({ userId, userName, userEmail }: UserPass
   };
 
   // Update password strength when password changes
-  React.useEffect(() => {
+  useEffect(() => {
     setPasswordStrength(calculatePasswordStrength(newPassword));
   }, [newPassword]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setSelfPasswordStrength(calculatePasswordStrength(newSelfPassword));
   }, [newSelfPassword]);
 
