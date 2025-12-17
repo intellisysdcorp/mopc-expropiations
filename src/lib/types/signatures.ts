@@ -43,7 +43,6 @@ export interface DigitalSignature {
 
   // Metadata
   ipAddress?: string | null;
-  userAgent?: string | null;
   deviceInfo?: any; // Json
   geolocation?: any; // Json
   biometricData?: any; // Json
@@ -82,7 +81,6 @@ export interface CreateSignatureData {
   delegatedBy?: string;
   delegationReason?: string;
   ipAddress?: string;
-  userAgent?: string;
   deviceInfo?: DeviceInfo;
 }
 
@@ -162,7 +160,6 @@ export interface SignatureCreateResponse {
   entityType: string;
   entityId: string;
   ipAddress?: string;
-  userAgent?: string;
   deviceInfo?: DeviceInfo;
   delegatedBy?: string;
   delegationReason?: string;

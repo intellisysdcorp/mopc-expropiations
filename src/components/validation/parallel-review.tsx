@@ -85,7 +85,6 @@ interface Review {
   attachments?: string[];
   reviewTime?: number;
   ipAddress?: string;
-  userAgent?: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -273,7 +273,6 @@ export async function createStageProgression(
         ipAddress: request.headers.get('x-forwarded-for') ||
                    request.headers.get('x-real-ip') ||
                    null,
-        userAgent: request.headers.get('user-agent') || null,
       }
     });
   } catch (error) {
@@ -475,7 +474,6 @@ export async function createCaseHistory(
         ipAddress: request.headers.get('x-forwarded-for') ||
                    request.headers.get('x-real-ip') ||
                    null,
-        userAgent: request.headers.get('user-agent') || null,
         duration: duration || null
       }
     });

@@ -142,7 +142,6 @@ export async function POST(
       reviewedAt: new Date(),
       responseTime,
       ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '',
-      userAgent: request.headers.get('user-agent') || '',
     };
 
     if (validatedData.comments !== undefined) {

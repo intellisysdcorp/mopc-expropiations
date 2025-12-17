@@ -34,7 +34,6 @@ export interface ReviewCreatePayload {
   conclusion: string;
   decision: 'APPROVED' | 'REJECTED' | 'CONDITIONAL' | 'NEEDS_REVISION';
   ipAddress: string;
-  userAgent: string;
   recommendations?: string | null;
   rating?: number | null;
   attachments?: Prisma.InputJsonValue;

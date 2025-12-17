@@ -66,7 +66,6 @@ export async function GET(
       createdAt: dbSession.createdAt,
       lastAccessAt: dbSession.lastAccessAt,
       ipAddress: dbSession.ipAddress,
-      userAgent: dbSession.userAgent,
       deviceInfo: dbSession.deviceInfo ? JSON.parse(dbSession.deviceInfo) : null,
       // Note: Can't compare session tokens without access to current session token
       isCurrent: false,

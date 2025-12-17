@@ -73,7 +73,7 @@ export async function logActivity({
   }
 }
 
-export async function logUserLogin(userId: string, ipAddress?: string, userAgent?: string) {
+export async function logUserLogin(userId: string, ipAddress?: string) {
   const userUpdatePayload: Prisma.UserUpdateInput = {
     lastLoginAt: new Date(),
     loginCount: { increment: 1 },
@@ -82,7 +82,6 @@ export async function logUserLogin(userId: string, ipAddress?: string, userAgent
   };
 
   if (ipAddress) userUpdatePayload.lastLoginIp = ipAddress;
-  if (userAgent) userUpdatePayload.lastLoginUserAgent = userAgent;
   await Promise.all([
     // Update user login info
     prisma.user.update({
@@ -98,7 +97,6 @@ export async function logUserLogin(userId: string, ipAddress?: string, userAgent
       description: 'Inicio de sesión',
       metadata: {
         ipAddress,
-        userAgent,
         timestamp: new Date().toISOString(),
       },
     }),
@@ -119,7 +117,7 @@ export async function logUserLogout(userId: string, sessionToken?: string) {
   });
 }
 
-export async function logFailedLogin(email: string, ipAddress?: string, userAgent?: string) {
+export async function logFailedLogin(email: string, ipAddress?: string) {
   try {
     // Find user by email
     const user = await prisma.user.findUnique({
@@ -156,7 +154,6 @@ export async function logFailedLogin(email: string, ipAddress?: string, userAgen
         metadata: {
           email,
           ipAddress,
-          userAgent,
           failedAttempts,
           lockedUntil: lockedUntil?.toISOString(),
           timestamp: new Date().toISOString(),
@@ -173,7 +170,6 @@ export async function logPasswordChange(
   changedBy: string,
   reason: string = 'user_change',
   ipAddress?: string,
-  userAgent?: string
 ) {
   await logActivity({
     userId: changedBy,
@@ -185,7 +181,6 @@ export async function logPasswordChange(
       targetUserId: userId,
       reason,
       ipAddress,
-      userAgent,
       timestamp: new Date().toISOString(),
     },
   });

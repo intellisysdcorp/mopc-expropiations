@@ -228,7 +228,6 @@ export interface DocumentHistory {
   fileName?: string;
   filePath?: string;
   ipAddress?: string;
-  userAgent?: string;
   metadata?: any;
   createdAt: Date;
   user?: {

@@ -110,7 +110,6 @@ export default async function proxy(req: NextRequest) {
       userEmail: token.email || 'unknown',
       userId: token.sub || 'unknown',
       ip,
-      userAgent: req.headers.get('user-agent') || 'unknown',
       attemptedPath: pathname,
       timestamp: new Date().toISOString(),
     });
@@ -126,7 +125,6 @@ export default async function proxy(req: NextRequest) {
       userRole,
       attemptedPath: pathname,
       ip: getClientIP(req),
-      userAgent: req.headers.get('user-agent') || 'unknown',
     });
     const response = NextResponse.redirect(new URL('/dashboard', req.url));
     return addSecurityHeaders(response, nonce);
@@ -141,7 +139,6 @@ export default async function proxy(req: NextRequest) {
       userRole,
       attemptedPath: pathname,
       ip: getClientIP(req),
-      userAgent: req.headers.get('user-agent') || 'unknown',
     });
     const response = NextResponse.redirect(new URL('/dashboard', req.url));
     return addSecurityHeaders(response, nonce);
@@ -156,7 +153,6 @@ export default async function proxy(req: NextRequest) {
       userRole,
       attemptedPath: pathname,
       ip: getClientIP(req),
-      userAgent: req.headers.get('user-agent') || 'unknown',
     });
     const response = NextResponse.redirect(new URL('/dashboard', req.url));
     return addSecurityHeaders(response, nonce);

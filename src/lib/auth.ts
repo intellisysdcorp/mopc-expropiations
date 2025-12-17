@@ -52,7 +52,6 @@ export const authOptions: NextAuthOptions = {
 
         const { email, password } = validatedCredentials.data;
         const ipAddress = req.headers?.['x-forwarded-for'] as string || req.headers?.['x-real-ip'] as string || 'unknown';
-        const userAgent = req.headers?.['user-agent'];
 
         // Find user with all necessary relations
         const user = await prisma.user.findUnique({
@@ -65,14 +64,14 @@ export const authOptions: NextAuthOptions = {
 
         if (!user) {
           // Log failed login for non-existent user
-          await logFailedLogin(email, ipAddress, userAgent);
+          await logFailedLogin(email, ipAddress);
           loggers.security.loginAttempt(email, ipAddress, false);
           return null;
         }
 
         // Check if user is active and not suspended
         if (!user.isActive || user.isSuspended) {
-          await logFailedLogin(email, ipAddress, userAgent);
+          await logFailedLogin(email, ipAddress);
           loggers.security.loginAttempt(email, ipAddress, false, user.id);
           loggers.security.suspiciousActivity('login_attempt_on_inactive_account', {
             email,
@@ -80,7 +79,6 @@ export const authOptions: NextAuthOptions = {
             isActive: user.isActive,
             isSuspended: user.isSuspended,
             ipAddress,
-            userAgent,
             timestamp: new Date().toISOString(),
           });
           return null;
@@ -89,12 +87,11 @@ export const authOptions: NextAuthOptions = {
         // Check if account is locked due to failed attempts
         if (user.lockedUntil && user.lockedUntil > new Date()) {
           // Log attempt on locked account
-          await logFailedLogin(email, ipAddress, userAgent);
+          await logFailedLogin(email, ipAddress);
           loggers.security.suspiciousActivity('login_attempt_on_locked_account', {
             email,
             userId: user.id,
             ipAddress,
-            userAgent,
             lockedUntil: user.lockedUntil.toISOString(),
             timestamp: new Date().toISOString(),
           });
@@ -118,7 +115,7 @@ export const authOptions: NextAuthOptions = {
           });
 
           // Log failed login with security context
-          await logFailedLogin(email, ipAddress, userAgent);
+          await logFailedLogin(email, ipAddress);
           loggers.security.loginAttempt(email, ipAddress, false, user.id);
 
           if (shouldLockAccount) {
@@ -126,7 +123,6 @@ export const authOptions: NextAuthOptions = {
               email,
               userId: user.id,
               ipAddress,
-              userAgent,
               failedAttempts: newFailedAttempts,
               lockoutDurationMinutes: Math.round(lockoutDuration / 60000),
               lockedUntil: new Date(Date.now() + lockoutDuration).toISOString(),
@@ -175,12 +171,11 @@ export const authOptions: NextAuthOptions = {
             lockedUntil: null,
             lastLoginAt: new Date(),
             lastLoginIp: ipAddress,
-            lastLoginUserAgent: userAgent,
             loginCount: { increment: 1 }
           }
         });
 
-        await logUserLogin(user.id, ipAddress, userAgent);
+        await logUserLogin(user.id, ipAddress);
 
         // Log successful login with security context
         loggers.security.loginAttempt(email, ipAddress, true, user.id);
@@ -192,10 +187,8 @@ export const authOptions: NextAuthOptions = {
             userId: user.id,
             sessionToken,
             ipAddress,
-            userAgent,
             deviceInfo: JSON.stringify({
               ip: ipAddress,
-              userAgent,
               timestamp: new Date().toISOString(),
             }),
             expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours

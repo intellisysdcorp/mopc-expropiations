@@ -249,7 +249,6 @@ export const auditLogger = {
     resource: string,
     details?: any,
     ipAddress?: string,
-    userAgent?: string
   ): Promise<void> => {
     const auditEntry = {
       id: crypto.randomUUID(),
@@ -258,7 +257,6 @@ export const auditLogger = {
       resource,
       details,
       ipAddress,
-      userAgent,
       timestamp: new Date().toISOString(),
     };
 
@@ -268,13 +266,11 @@ export const auditLogger = {
 
   logSecurityEvent: async (
     event: 'LOGIN_SUCCESS' | 'LOGIN_FAILURE' | 'LOGOUT' | 'PASSWORD_CHANGE' | 'ACCOUNT_LOCKED',
-    userId?: string,
     details?: any
   ): Promise<void> => {
     const securityEvent = {
       id: crypto.randomUUID(),
       type: event,
-      userId,
       details,
       timestamp: new Date().toISOString(),
       severity: event === 'ACCOUNT_LOCKED' ? 'HIGH' : 'MEDIUM',

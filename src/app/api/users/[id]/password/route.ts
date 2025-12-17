@@ -174,7 +174,6 @@ async function executePasswordChange({
         changedBy: isOwnPassword ? user.id : session.user.id,
         changeReason: isOwnPassword ? 'user_change' : 'admin_reset',
         ipAddress: request.headers.get('x-forwarded-for'),
-        userAgent: request.headers.get('user-agent'),
       },
     });
 

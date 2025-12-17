@@ -47,7 +47,6 @@ export async function POST(request: NextRequest) {
       conclusion: body.conclusion,
       decision: body.decision,
       ipAddress: request.headers.get('x-forwarded-for') || '',
-      userAgent: request.headers.get('user-agent') || '',
     };
 
     // Add optional fields conditionally

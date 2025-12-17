@@ -45,7 +45,6 @@ interface Session {
   createdAt: string;
   lastAccessAt: string;
   ipAddress?: string;
-  userAgent?: string;
   deviceInfo?: any;
   isCurrent: boolean;
 }
@@ -89,40 +88,14 @@ export function UserSessions({ userId }: UserSessionsProps) {
     fetchSessions();
   }, [fetchSessions]);
 
-  const getDeviceIcon = (userAgent?: string) => {
-    if (!userAgent) {return <Monitor className="h-4 w-4" />;}
-
-    const ua = userAgent.toLowerCase();
-    if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
-      return <Smartphone className="h-4 w-4" />;
-    }
-    if (ua.includes('tablet') || ua.includes('ipad')) {
-      return <Tablet className="h-4 w-4" />;
-    }
-    return <Monitor className="h-4 w-4" />;
-  };
-
   const getDeviceInfo = (session: Session) => {
     if (session.deviceInfo) {
       return session.deviceInfo;
     }
 
     // Extract info from user agent
-    const userAgent = session.userAgent || '';
     let browser = 'Desconocido';
     let os = 'Desconocido';
-
-    // Simple user agent parsing
-    if (userAgent.includes('Chrome')) {browser = 'Chrome';}
-    else if (userAgent.includes('Firefox')) {browser = 'Firefox';}
-    else if (userAgent.includes('Safari')) {browser = 'Safari';}
-    else if (userAgent.includes('Edge')) {browser = 'Edge';}
-
-    if (userAgent.includes('Windows')) {os = 'Windows';}
-    else if (userAgent.includes('Mac')) {os = 'macOS';}
-    else if (userAgent.includes('Linux')) {os = 'Linux';}
-    else if (userAgent.includes('Android')) {os = 'Android';}
-    else if (userAgent.includes('iOS') || userAgent.includes('iPhone') || userAgent.includes('iPad')) {os = 'iOS';}
 
     return { browser, os };
   };
@@ -232,14 +205,6 @@ export function UserSessions({ userId }: UserSessionsProps) {
             <CardTitle className="text-sm font-medium">Dispositivos</CardTitle>
             <Smartphone className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {new Set(sessions.map(s => s.userAgent)).size}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Dispositivos únicos
-            </p>
-          </CardContent>
         </Card>
 
         <Card>
@@ -340,7 +305,6 @@ export function UserSessions({ userId }: UserSessionsProps) {
                       <TableRow key={session.id}>
                         <TableCell>
                           <div className="flex items-center gap-3">
-                            {getDeviceIcon(session.userAgent)}
                             <div>
                               <div className="font-medium">{deviceInfo.browser}</div>
                               <div className="text-sm text-muted-foreground">

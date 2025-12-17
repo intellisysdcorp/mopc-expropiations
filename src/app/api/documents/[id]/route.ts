@@ -158,7 +158,6 @@ export async function GET(
         action: DocumentActionType.VIEWED,
         userId: session.user.id,
         ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown',
       },
     });
 
@@ -270,7 +269,6 @@ export async function PUT(
             description: `Updated ${field}`,
             userId: session.user.id,
             ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
-            userAgent: request.headers.get('user-agent') || 'unknown',
           },
         });
       }
@@ -303,7 +301,6 @@ export async function PUT(
         userId: session.user.id,
         metadata: { fields: Object.keys(changes) },
         ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown',
       },
     });
 
@@ -371,7 +368,6 @@ export async function DELETE(
         action: DocumentActionType.DELETED,
         userId: session.user.id,
         ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown',
       },
     });
 
@@ -383,7 +379,6 @@ export async function DELETE(
         description: 'Document deleted',
         userId: session.user.id,
         ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown',
       },
     });
 

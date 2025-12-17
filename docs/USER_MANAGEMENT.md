@@ -69,7 +69,6 @@ model User {
   // Login tracking
   lastLoginAt          DateTime?
   lastLoginIp          String?
-  lastLoginUserAgent   String?
   loginCount           Int       @default(0)
   failedLoginAttempts  Int       @default(0)
   lockedUntil          DateTime?
