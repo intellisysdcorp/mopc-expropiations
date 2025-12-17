@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useLayoutEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -254,7 +254,41 @@ export const DepartmentTree: React.FC<DepartmentTreeProps> = ({
   actions = true,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(() => {
+    // Initialize with all nodes expanded if we have initial data
+    if (departments.length > 0) {
+      const getAllNodeIds = (departments: Department[]): string[] => {
+        return departments.reduce((acc, dept) => {
+          acc.push(dept.id);
+          if (dept.children) {
+            acc.push(...getAllNodeIds(dept.children));
+          }
+          return acc;
+        }, [] as string[]);
+      };
+
+      // Build initial tree to get all node IDs
+      const deptMap = new Map<string, Department>();
+      departments.forEach(dept => {
+        deptMap.set(dept.id, { ...dept, children: [] });
+      });
+
+      const rootDepartments: Department[] = [];
+      departments.forEach(dept => {
+        const deptWithChildren = deptMap.get(dept.id)!;
+        if (dept.parentId && deptMap.has(dept.parentId)) {
+          const parent = deptMap.get(dept.parentId)!;
+          parent.children = parent.children || [];
+          parent.children.push(deptWithChildren);
+        } else {
+          rootDepartments.push(deptWithChildren);
+        }
+      });
+
+      return new Set(getAllNodeIds(rootDepartments));
+    }
+    return new Set();
+  });
   const [showInactive, setShowInactive] = useState(false);
 
   // Build tree structure from flat list
@@ -337,7 +371,7 @@ export const DepartmentTree: React.FC<DepartmentTreeProps> = ({
   }, [treeData, searchTerm, showInactive]);
 
     // Auto-expand nodes when searching
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (searchTerm) {
       const nodesToExpand = new Set<string>();
 
@@ -365,13 +399,10 @@ export const DepartmentTree: React.FC<DepartmentTreeProps> = ({
       };
 
       findMatchingNodes(filteredTree);
-      setExpandedNodes(nodesToExpand);
+      // Defer setState to avoid synchronous updates within effect
+      setTimeout(() => setExpandedNodes(nodesToExpand), 0);
     }
   }, [searchTerm, departments, filteredTree]);
-
-  useEffect(() => {
-    handleExpandAll();
-  }, []);
 
   const handleToggleExpand = useCallback((nodeId: string) => {
     setExpandedNodes(prev => {
@@ -386,8 +417,8 @@ export const DepartmentTree: React.FC<DepartmentTreeProps> = ({
   }, []);
 
   const handleExpandAll = useCallback(() => {
-    const getAllNodeIds = (depts: Department[]): string[] => {
-      return depts.reduce((acc, dept) => {
+    const getAllNodeIds = (departments: Department[]): string[] => {
+      return departments.reduce((acc, dept) => {
         acc.push(dept.id);
         if (dept.children) {
           acc.push(...getAllNodeIds(dept.children));

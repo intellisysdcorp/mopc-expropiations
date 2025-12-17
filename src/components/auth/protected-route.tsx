@@ -83,7 +83,7 @@ export function ProtectedRoute({
 
   // Show access denied if user doesn't have required role or permissions
   if (!hasRequiredRole || !hasRequiredPermissions) {
-    const AccessDenied = () => (
+    return fallback || (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="max-w-md w-full text-center p-6">
           <div className="flex justify-center mb-4">
@@ -114,8 +114,6 @@ export function ProtectedRoute({
         </div>
       </div>
     );
-
-    return fallback || <AccessDenied />;
   }
 
   // Render children if all checks pass

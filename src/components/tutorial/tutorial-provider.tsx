@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { createContext, useContext, useState, useCallback } from 'react';
 
 interface TutorialStep {
   id: string;
@@ -110,14 +110,13 @@ export function TutorialProvider({ children }: { children: React.ReactNode }) {
   const [activeTutorial, setActiveTutorial] = useState<Tutorial | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [isActive, setIsActive] = useState(false);
-  const [completedTutorials, setCompletedTutorials] = useState<string[]>([]);
-
-  useEffect(() => {
+  const [completedTutorials, setCompletedTutorials] = useState<string[]>(() => {
     const stored = localStorage.getItem('completed-tutorials');
     if (stored) {
-      setCompletedTutorials(JSON.parse(stored));
+      return JSON.parse(stored);
     }
-  }, []);
+    return [];
+  });
 
   const startTutorial = useCallback((tutorialId: string) => {
     const tutorial = tutorials.find(t => t.id === tutorialId);

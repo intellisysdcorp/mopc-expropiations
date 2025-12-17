@@ -1,31 +1,29 @@
-import { FlatCompat } from '@eslint/eslintrc';
 import typescript from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
+import nextConfig from 'eslint-config-next';
 
-const compat = new FlatCompat({
-  baseDirectory: import.meta.url,
-});
-
-const newRules = [
+const eslintConfig = [
   {
     ignores: ['node_modules/**', '.next/**', 'out/**', 'dist/**', 'build/**'],
   },
-  ...compat.extends('next/core-web-vitals'),
+  ...nextConfig,
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
       parser: typescriptParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
     },
     plugins: {
       '@typescript-eslint': typescript,
     },
     rules: {
-      'prefer-const': 'error',
-      'no-var': 'error',
-      'no-console': 'warn',
-      eqeqeq: ['error', 'always'],
-      curly: 'off',
-      'no-unused-vars': 'off',
+      // TypeScript rules
       '@typescript-eslint/no-unused-vars': ['warn',
         {
           argsIgnorePattern: '^_',
@@ -33,6 +31,13 @@ const newRules = [
           caughtErrorsIgnorePattern: '^_',
         },
       ],
+      // Override next rules
+      'no-unused-vars': 'off',
+      'prefer-const': 'error',
+      'no-var': 'error',
+      'no-console': 'warn',
+      eqeqeq: ['error', 'always'],
+      curly: 'off',
     },
   },
   {
@@ -50,4 +55,4 @@ const newRules = [
   },
 ];
 
-export default newRules;
+export default eslintConfig;

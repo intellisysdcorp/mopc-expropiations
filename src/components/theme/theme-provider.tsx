@@ -21,31 +21,44 @@ export function ThemeProvider({
   defaultTheme?: Theme;
   storageKey?: string;
 }) {
-  const [theme, setTheme] = useState<Theme>(defaultTheme);
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
-
-  useEffect(() => {
-    const stored = localStorage.getItem(storageKey) as Theme;
-    if (stored) {
-      setTheme(stored);
+  // Initialize theme from localStorage or use default
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(storageKey) as Theme;
+      return stored || defaultTheme;
     }
-  }, [storageKey]);
+    return defaultTheme;
+  });
+
+  // Initialize resolved theme based on current theme
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined') {
+      if (defaultTheme === 'system') {
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      return defaultTheme as 'light' | 'dark';
+    }
+    return 'light';
+  });
 
   useEffect(() => {
     const root = window.document.documentElement;
-
     root.classList.remove('light', 'dark');
 
+    let newResolvedTheme: 'light' | 'dark';
+
     if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
+      newResolvedTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
         ? 'dark'
         : 'light';
-      root.classList.add(systemTheme);
-      setResolvedTheme(systemTheme);
     } else {
-      root.classList.add(theme);
-      setResolvedTheme(theme);
+      newResolvedTheme = theme;
     }
+
+    root.classList.add(newResolvedTheme);
+
+    // Defer setState to avoid synchronous updates within effect
+    setTimeout(() => setResolvedTheme(newResolvedTheme), 0);
   }, [theme]);
 
   const value = {

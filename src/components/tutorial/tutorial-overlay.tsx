@@ -31,7 +31,6 @@ export function TutorialOverlay() {
 
     if (step.target) {
       const element = document.querySelector(step.target);
-      setTargetElement(element);
 
       if (element) {
         const rect = element.getBoundingClientRect();
@@ -65,7 +64,13 @@ export function TutorialOverlay() {
             break;
         }
 
-        setPosition({ top, left });
+        const newPosition = { top, left };
+
+        // Defer setState calls to avoid synchronous updates within effect
+        setTimeout(() => {
+          setTargetElement(element);
+          setPosition(newPosition);
+        }, 0);
 
         // Highlight target element
         if (element && step.position !== 'center') {
@@ -74,13 +79,25 @@ export function TutorialOverlay() {
             element.removeAttribute('data-tutorial-highlight');
           };
         }
+      } else {
+        // Defer setState calls to avoid synchronous updates within effect
+        setTimeout(() => {
+          setTargetElement(null);
+          setPosition({
+            top: window.innerHeight / 2 - 150,
+            left: window.innerWidth / 2 - 200,
+          });
+        }, 0);
       }
     } else {
-      setTargetElement(null);
-      setPosition({
-        top: window.innerHeight / 2 - 150,
-        left: window.innerWidth / 2 - 200,
-      });
+      // Defer setState calls to avoid synchronous updates within effect
+      setTimeout(() => {
+        setTargetElement(null);
+        setPosition({
+          top: window.innerHeight / 2 - 150,
+          left: window.innerWidth / 2 - 200,
+        });
+      }, 0);
     }
 
     // Execute action when step is shown
