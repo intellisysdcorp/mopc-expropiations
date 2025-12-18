@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'react-hot-toast'
 
 import { Case, CaseSearchInput } from '@/types/client'
+import { calculateProgressPercentage } from '@/lib/stage-utils'
 
 const CASE_STATUSES = [
   { value: 'PENDIENTE', label: 'Pendiente', color: 'bg-yellow-100 text-yellow-800' },
@@ -365,11 +366,11 @@ export default function CasesPage() {
                           <div className="w-full bg-secondary rounded-full h-2">
                             <div
                               className="bg-primary h-2 rounded-full transition-all"
-                              style={{ width: `${case_.progressPercentage}%` }}
+                              style={{ width: `${calculateProgressPercentage(case_.currentStage)}%` }}
                             />
                           </div>
                           <span className="text-xs text-muted-foreground">
-                            {case_.progressPercentage}%
+                            {calculateProgressPercentage(case_.currentStage)}%
                           </span>
                         </div>
                       </TableCell>

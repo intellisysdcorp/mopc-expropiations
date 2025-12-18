@@ -3,15 +3,17 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { CaseStats } from '@/components/cases/case-stats'
+import { StageProgressionControl } from '@/components/workflow/stage-progression-control'
 import { formatDate } from '@/lib/format'
 import { getUserInitials, getUserName } from '@/lib/user-utils'
 import { Case } from '@/types/client'
 
 interface OverviewTabProps {
   caseData: Case
+  onStageChange: () => void
 }
 
-export function OverviewTab({ caseData }: OverviewTabProps) {
+export function OverviewTab({ caseData, onStageChange }: OverviewTabProps) {
   return (
     <div className="grid gap-6">
       <Card>
@@ -90,6 +92,13 @@ export function OverviewTab({ caseData }: OverviewTabProps) {
           </div>
         </CardContent>
       </Card>
+
+      <StageProgressionControl
+        caseId={caseData.id}
+        currentStage={caseData.currentStage}
+        caseStatus={caseData.status}
+        onStageChange={onStageChange}
+      />
 
       <CaseStats caseData={caseData} />
     </div>

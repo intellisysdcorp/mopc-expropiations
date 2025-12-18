@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { logActivity } from '@/lib/activity-logger'
 import { CaseStageUpdateSchema } from '@/lib/validations/case'
+import { calculateProgressPercentage, isValidStageTransition } from '@/lib/stage-utils'
 
 // PUT /api/cases/[id]/stage - Update case stage
 export async function PUT(
@@ -69,68 +70,13 @@ export async function PUT(
       )
     }
 
-    // Define stage order for validation (main workflow stages only)
-    const stageOrder = [
-      'RECEPCION_SOLICITUD',
-      'VERIFICACION_REQUISITOS',
-      'CARGA_DOCUMENTOS',
-      'ASIGNACION_ANALISTA',
-      'ANALISIS_PRELIMINAR',
-      'NOTIFICACION_PROPIETARIO',
-      'PERITAJE_TECNICO',
-      'DETERMINACION_VALOR',
-      'OFERTA_COMPRA',
-      'NEGOCIACION',
-      'APROBACION_ACUERDO',
-      'ELABORACION_ESCRITURA',
-      'FIRMA_DOCUMENTOS',
-      'REGISTRO_PROPIEDAD',
-      'DESEMBOLSO_PAGO',
-      'ENTREGA_INMUEBLE',
-      'CIERRE_ARCHIVO'
-    ]
-
-    // Define special stages that aren't part of the main workflow
-    const specialStages = ['SUSPENDED', 'CANCELLED']
-
     const currentStage = existingCase.currentStage
-    const currentStageIndex = stageOrder.indexOf(currentStage)
-    const newStageIndex = stageOrder.indexOf(stage)
 
-    // Handle stage transitions based on current and target stages
-    if (specialStages.includes(stage)) {
-      // Allow transition to special stages from any stage
-    } else if (specialStages.includes(currentStage)) {
-      // Handle transitions from special stages
-      if (currentStage === 'SUSPENDED') {
-        // From suspended, only allow forward progression to main workflow stages
-        if (newStageIndex === -1 || newStageIndex <= 0) {
-          return NextResponse.json(
-            { error: 'From suspended stage, can only move forward to main workflow stages' },
-            { status: 400 }
-          )
-        }
-      } else if (currentStage === 'CANCELLED') {
-        // From cancelled, only allow moving back to initial stage
-        if (stage !== 'RECEPCION_SOLICITUD') {
-          return NextResponse.json(
-            { error: 'Cancelled cases can only be moved back to initial review stage' },
-            { status: 400 }
-          )
-        }
-      }
-    } else if (currentStage === 'CIERRE_ARCHIVO') {
-      // From completed stage, only allow moving to suspended
-      if (stage !== 'SUSPENDED') {
-        return NextResponse.json(
-          { error: 'Completed cases can only be suspended' },
-          { status: 400 }
-        )
-      }
-    } else if (newStageIndex === -1 || newStageIndex < currentStageIndex) {
-      // For main workflow stages, don't allow backwards progression
+    // Validate stage transition
+    const transitionValidation = isValidStageTransition(currentStage, stage)
+    if (!transitionValidation.valid) {
       return NextResponse.json(
-        { error: 'Cannot move backwards in workflow' },
+        { error: transitionValidation.reason || 'Invalid stage transition' },
         { status: 400 }
       )
     }
@@ -145,9 +91,7 @@ export async function PUT(
       data: {
         currentStage: stage,
         // Update progress percentage based on stage (special stages keep current progress)
-        progressPercentage: stage === 'SUSPENDED' || stage === 'CANCELLED' ?
-                           existingCase.progressPercentage :
-                           Math.round((newStageIndex / (stageOrder.length - 1)) * 100),
+        progressPercentage: calculateProgressPercentage(stage, existingCase.progressPercentage),
         // Update status based on stage
         status: stage === 'CIERRE_ARCHIVO' ? 'COMPLETADO' :
                 stage === 'SUSPENDED' ? 'SUSPENDED' :
