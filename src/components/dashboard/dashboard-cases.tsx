@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { calculateProgressPercentage } from '@/lib/stage-utils';
 import {
   Table,
   TableBody,
@@ -225,7 +226,7 @@ function CaseTableRow({ caseItem, type }: { caseItem: CaseItem; type: string }) 
             {getPriorityLabel(caseItem.priority)}
           </Badge>
           <div className="text-xs text-gray-500">
-            {caseItem.progressPercentage}% completo
+            {calculateProgressPercentage(caseItem.currentStage)}% completo
           </div>
         </div>
       </TableCell>

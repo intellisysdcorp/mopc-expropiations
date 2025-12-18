@@ -43,14 +43,20 @@ export default function CaseDetailPage() {
   const params = useParams()
   const caseId = String(params?.id)
 
-  const { case: caseData, loading, status } = useCase(caseId)
+  const { case: caseData, loading, status, refreshCase } = useCase(caseId)
   const [activeTab, setActiveTab] = useState('overview')
-  const [refreshTrigger] = useState(0)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   // Handle document selection
   const handleDocumentSelect = (_document: Document) => {
     // TODO: Implement document detail view or navigation
     // This would typically open a modal or navigate to a document detail page
+  }
+
+  // Handle stage change
+  const handleStageChange = () => {
+    refreshCase()
+    setRefreshTrigger(prev => prev + 1)
   }
 
   if (status === 'loading' || loading) {
@@ -139,7 +145,7 @@ export default function CaseDetailPage() {
         </TabsList>
 
         <TabsContent value="overview">
-          <OverviewTab caseData={caseData} />
+          <OverviewTab caseData={caseData} onStageChange={handleStageChange} />
         </TabsContent>
 
         <TabsContent value="property">

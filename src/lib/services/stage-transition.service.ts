@@ -2,6 +2,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { CaseStage, CaseStatus, Prisma } from '@/prisma/client';
+import { calculateProgressPercentage } from '@/lib/stage-utils';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import type { NextRequest } from 'next/server';
@@ -287,11 +288,24 @@ export async function updateCaseStage(
   status?: CaseStatus
 ) {
   try {
+    // Get current case to preserve progress percentage for special stages
+    const existingCase = await prisma.case.findUnique({
+      where: { id: caseId },
+      select: { progressPercentage: true }
+    });
+
+    // Calculate progress percentage based on stage position
+    const progressPercentage = calculateProgressPercentage(
+      newStage,
+      existingCase?.progressPercentage || 0
+    );
+
     return await prisma.case.update({
       where: { id: caseId },
       data: {
         currentStage: newStage,
-        status: status || CaseStatus.EN_PROGRESO
+        status: status || CaseStatus.EN_PROGRESO,
+        progressPercentage
       }
     });
   } catch (error) {

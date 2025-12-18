@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Building } from 'lucide-react'
 import { CASE_STAGES } from '@/constants/case'
+import { calculateProgressPercentage } from '@/lib/stage-utils'
 import { Case } from '@/types/client'
 
 interface CaseStatusCardsProps {
@@ -26,6 +27,9 @@ export function CaseStatusCards({
   priorityConfig
 }: CaseStatusCardsProps) {
   const StatusIcon = statusConfig.icon
+
+  // Calculate progress based on current stage
+  const progressPercentage = calculateProgressPercentage(caseData.currentStage)
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -49,10 +53,10 @@ export function CaseStatusCards({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Progreso</CardTitle>
-          <div className="text-2xl font-bold">{caseData.progressPercentage}%</div>
+          <div className="text-2xl font-bold">{progressPercentage}%</div>
         </CardHeader>
         <CardContent>
-          <Progress value={caseData.progressPercentage} className="w-full" />
+          <Progress value={progressPercentage} className="w-full" />
           <p className="text-xs text-muted-foreground mt-2">
             Etapa actual: {CASE_STAGES[caseData.currentStage as keyof typeof CASE_STAGES]}
           </p>
