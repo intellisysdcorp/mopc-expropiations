@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import { useMemo, ReactNode, Fragment } from 'react';
 import { Home, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 interface BreadcrumbItem {
   label: string;
   href?: string | undefined;
-  icon?: React.ReactNode;
+  icon?: ReactNode;
   isActive?: boolean;
   isDropdown?: boolean;
   dropdownItems?: BreadcrumbItem[];
@@ -17,7 +17,7 @@ interface BreadcrumbItem {
 
 interface EnhancedBreadcrumbsProps {
   items?: BreadcrumbItem[];
-  separator?: React.ReactNode;
+  separator?: ReactNode;
   maxItems?: number;
   showHome?: boolean;
   className?: string;
@@ -135,7 +135,7 @@ export function EnhancedBreadcrumbs({
           const isLast = index === displayItems.length - 1;
           if (item.isDropdown && item.dropdownItems) {
             return (
-              <React.Fragment key={`dropdown-${index}`}>
+              <Fragment key={`dropdown-${index}`}>
                 <BreadcrumbSeparator />
                 <li className="flex items-center">
                   <div className="group relative">
@@ -166,12 +166,12 @@ export function EnhancedBreadcrumbs({
                   </div>
                 </li>
                 {!isLast && <BreadcrumbSeparator />}
-              </React.Fragment>
+              </Fragment>
             );
           }
 
           return (
-            <React.Fragment key={index}>
+            <Fragment key={index}>
               {index > 0 && <BreadcrumbSeparator />}
               <li className="flex items-center">
                 {item.href && !item.isActive ? (
@@ -198,7 +198,7 @@ export function EnhancedBreadcrumbs({
                   </span>
                 )}
               </li>
-            </React.Fragment>
+            </Fragment>
           );
         })}
       </ol>
@@ -206,7 +206,7 @@ export function EnhancedBreadcrumbs({
   );
 }
 
-function BreadcrumbSeparator({ children }: { children?: React.ReactNode }) {
+function BreadcrumbSeparator({ children }: { children?: ReactNode }) {
   return (
     <li className="flex items-center text-muted-foreground/50" aria-hidden="true">
       {children}

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import { useState, useCallback } from "react";
 
 /**
  * Utility functions for handling select component values consistently
@@ -102,17 +102,17 @@ export function useSafeSelectValue(
   initialValue: string | null | undefined,
   emptyPlaceholder: SelectEmptyValue = SELECT_EMPTY_VALUES.NONE
 ) {
-  const [value, setValue] = React.useState(() => toSafeSelectValue(initialValue, emptyPlaceholder));
+  const [value, setValue] = useState(() => toSafeSelectValue(initialValue, emptyPlaceholder));
 
-  const handleChange = React.useCallback((newValue: string) => {
+  const handleChange = useCallback((newValue: string) => {
     setValue(newValue);
   }, []);
 
-  const getValue = React.useCallback(() => {
+  const getValue = useCallback(() => {
     return fromSafeSelectValue(value, emptyPlaceholder);
   }, [value, emptyPlaceholder]);
 
-  const reset = React.useCallback(() => {
+  const reset = useCallback(() => {
     setValue(emptyPlaceholder);
   }, [emptyPlaceholder]);
 

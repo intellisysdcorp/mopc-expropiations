@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { BarChart3 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import {

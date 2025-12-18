@@ -1,4 +1,4 @@
-import React from 'react'
+import { ReactNode, ChangeEvent } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -10,7 +10,7 @@ interface FormFieldProps {
   required?: boolean
   error?: boolean
   helperText?: string
-  children: React.ReactNode
+  children: ReactNode
 }
 
 export function FormField({ id, label, required = false, error = false, helperText, children }: FormFieldProps) {
@@ -106,7 +106,7 @@ export function NumberInput({
   error = false,
   required = false
 }: NumberInputProps) {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const numValue = e.target.value === '' ? undefined : parseFloat(e.target.value)
     if (!isNaN(numValue as number)) {
       onChange(numValue)
@@ -225,7 +225,7 @@ export function DateInput({
   error = false,
   required = false
 }: DateInputProps) {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const dateValue = e.target.value ? new Date(e.target.value) : undefined
     onChange(dateValue)
   }

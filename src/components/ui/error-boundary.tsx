@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import { ReactNode, ErrorInfo, ComponentType, Component } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
@@ -9,18 +9,18 @@ import clientLogger from '@/lib/client-logger'
 interface ErrorBoundaryState {
   hasError: boolean
   error?: Error
-  errorInfo?: React.ErrorInfo
+  errorInfo?: ErrorInfo
   retryCount: number
 }
 
 interface ErrorBoundaryProps {
-  children: React.ReactNode
-  fallback?: React.ComponentType<{ error?: Error; retry: () => void; reset: () => void }>
-  onError?: (error: Error, errorInfo: React.ErrorInfo) => void
+  children: ReactNode
+  fallback?: ComponentType<{ error?: Error; retry: () => void; reset: () => void }>
+  onError?: (error: Error, errorInfo: ErrorInfo) => void
   maxRetries?: number
 }
 
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   private retryTimeouts: NodeJS.Timeout[] = []
 
   constructor(props: ErrorBoundaryProps) {
@@ -38,7 +38,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
     }
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     clientLogger.error('Error Boundary caught an error:', error)
 
     this.setState({
@@ -180,7 +180,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 
 // HOC for wrapping components with error boundary
 export function withErrorBoundary<P extends object>(
-  Component: React.ComponentType<P>,
+  Component: ComponentType<P>,
   errorBoundaryProps?: Omit<ErrorBoundaryProps, 'children'>
 ) {
   const WrappedComponent = (props: P) => (

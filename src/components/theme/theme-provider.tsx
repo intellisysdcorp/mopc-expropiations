@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
+import clientLogger from '@/lib/client-logger'
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -27,7 +28,7 @@ export function ThemeProvider({
   useEffect(() => {
     const stored = localStorage.getItem(storageKey) as Theme;
     if (stored) {
-      setTheme(stored);
+      setTimeout(() => setTheme(stored), 0);
     }
   }, [storageKey]);
 
@@ -37,9 +38,9 @@ export function ThemeProvider({
   useEffect(() => {
     if (theme === 'system') {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      setResolvedTheme(mediaQuery.matches ? 'dark' : 'light');
+      setTimeout(() => setResolvedTheme(mediaQuery.matches ? 'dark' : 'light'), 0);
     } else {
-      setResolvedTheme(theme);
+      setTimeout(() => setResolvedTheme(theme), 0);
     }
   }, [theme]);
 
@@ -69,7 +70,7 @@ export function ThemeProvider({
       try {
         localStorage.setItem(storageKey, theme);
       } catch (error) {
-        console.warn('Failed to save theme to localStorage:', error);
+        clientLogger.warn('Failed to save theme to localStorage:', {error});
       }
       setTheme(theme);
     },

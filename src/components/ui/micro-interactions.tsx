@@ -1,9 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import {
+  ButtonHTMLAttributes,
+  Children,
+  CSSProperties,
+  ElementType,
+  HTMLAttributes,
+  ReactNode,
+  useEffect,
+  useState,
+} from 'react';
 import { cn } from '@/lib/utils';
-
-type ReactNode = React.ReactNode;
 
 // Interactive button with enhanced feedback
 export function InteractiveButton({
@@ -21,7 +28,7 @@ export function InteractiveButton({
   size?: 'default' | 'sm' | 'lg' | 'icon';
   disabled?: boolean;
   loading?: boolean;
-} & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+} & ButtonHTMLAttributes<HTMLButtonElement>) {
   const [isPressed, setIsPressed] = useState(false);
 
   const variantClasses = {
@@ -79,7 +86,7 @@ export function InteractiveCard({
   className?: string;
   hover?: boolean;
   clickable?: boolean;
-} & React.HTMLAttributes<HTMLDivElement>) {
+} & HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={cn(
@@ -108,7 +115,7 @@ export function AnimatedBadge({
   className?: string;
   variant?: 'default' | 'secondary' | 'destructive' | 'outline';
   pulse?: boolean;
-} & React.HTMLAttributes<HTMLDivElement>) {
+} & HTMLAttributes<HTMLDivElement>) {
   const variantClasses = {
     default: 'border-transparent bg-primary text-primary-foreground hover:bg-primary/80',
     secondary: 'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80',
@@ -149,7 +156,7 @@ export function AnimatedNumber({
 }) {
   const [displayValue, setDisplayValue] = useState(0);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const startTime = Date.now();
     const startValue = displayValue;
     const endValue = value;
@@ -194,7 +201,7 @@ export function FadeIn({
   delay?: number;
   duration?: number;
   className?: string;
-  as?: React.ElementType;
+  as?: ElementType;
 }) {
   return (
     <Component
@@ -231,7 +238,7 @@ export function SlideIn({
   delay?: number;
   duration?: number;
   className?: string;
-  as?: React.ElementType;
+  as?: ElementType;
 }) {
   const directionClasses = {
     up: 'slide-in-from-bottom',
@@ -269,10 +276,10 @@ export function StaggeredList({
   children: ReactNode;
   staggerDelay?: number;
   className?: string;
-} & React.HTMLAttributes<HTMLDivElement>) {
+} & HTMLAttributes<HTMLDivElement>) {
   return (
     <div className={cn('space-y-2', className)} {...props}>
-      {React.Children.map(children, (child, index) => (
+      {Children.map(children, (child, index) => (
         <FadeIn key={index} delay={index * staggerDelay}>
           {child}
         </FadeIn>
@@ -289,7 +296,7 @@ export function PulseOnHover({
 }: {
   children: ReactNode;
   className?: string;
-} & React.HTMLAttributes<HTMLDivElement>) {
+} & HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={cn(
@@ -317,7 +324,7 @@ export function GradientShift({
   from?: string;
   via?: string;
   to?: string;
-} & React.HTMLAttributes<HTMLDivElement>) {
+} & HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={cn(
@@ -345,7 +352,7 @@ export function Shimmer({
   ...props
 }: {
   className?: string;
-} & React.HTMLAttributes<HTMLDivElement>) {
+} & HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={cn(
@@ -373,7 +380,7 @@ export function Bounce({
   children: ReactNode;
   trigger?: 'hover' | 'always' | 'never';
   className?: string;
-} & React.HTMLAttributes<HTMLDivElement>) {
+} & HTMLAttributes<HTMLDivElement>) {
   const [isBouncing, setIsBouncing] = useState(trigger === 'always');
 
   const handleInteraction = () => {
@@ -416,7 +423,7 @@ export function Typewriter({
   const [displayedText, setDisplayedText] = useState('');
   const [isComplete, setIsComplete] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const timer = setTimeout(() => {
       let currentIndex = 0;
       const interval = setInterval(() => {
@@ -456,14 +463,14 @@ export function Floating({
   amplitude?: number;
   duration?: number;
   className?: string;
-} & React.HTMLAttributes<HTMLDivElement>) {
+} & HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={cn('animate-float', className)}
       style={{
         animation: `float ${duration}s ease-in-out infinite`,
         '--float-amplitude': `${amplitude}px`,
-      } as React.CSSProperties}
+      } as CSSProperties}
       {...props}
     >
       {children}
