@@ -1,7 +1,7 @@
-import { forwardRef } from 'react';
+import { forwardRef, HTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 
-interface ResponsiveContainerProps extends React.HTMLAttributes<HTMLDivElement> {
+interface ResponsiveContainerProps extends HTMLAttributes<HTMLDivElement> {
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   padding?: 'none' | 'sm' | 'md' | 'lg';
 }

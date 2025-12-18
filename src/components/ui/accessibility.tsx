@@ -3,6 +3,7 @@
 import {
   ButtonHTMLAttributes,
   cloneElement,
+  KeyboardEvent as ReactKeyboardEvent,
   ReactElement,
   ReactNode,
   useCallback,
@@ -301,7 +302,7 @@ export function AccessibleTabs({
 }) {
   const tabsRef = useRef<HTMLDivElement>(null);
 
-  const handleKeyDown = (e: any, index: number) => {
+  const handleKeyDown = (e: ReactKeyboardEvent<HTMLButtonElement>, index: number) => {
     let newIndex = index;
 
     switch (e.key) {

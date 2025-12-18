@@ -40,7 +40,7 @@ export function ThemeProvider({
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       setTimeout(() => setResolvedTheme(mediaQuery.matches ? 'dark' : 'light'), 0);
     } else {
-      setTimeout(() => setResolvedTheme(theme)), 0;
+      setTimeout(() => setResolvedTheme(theme), 0);
     }
   }, [theme]);
 
