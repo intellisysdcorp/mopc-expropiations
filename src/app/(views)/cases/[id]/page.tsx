@@ -45,7 +45,6 @@ export default function CaseDetailPage() {
 
   const { case: caseData, loading, status, refreshCase } = useCase(caseId)
   const [activeTab, setActiveTab] = useState('overview')
-  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   // Handle document selection
   const handleDocumentSelect = (_document: Document) => {
@@ -56,7 +55,6 @@ export default function CaseDetailPage() {
   // Handle stage change
   const handleStageChange = () => {
     refreshCase()
-    setRefreshTrigger(prev => prev + 1)
   }
 
   if (status === 'loading' || loading) {
@@ -164,7 +162,7 @@ export default function CaseDetailPage() {
           <DocumentList
             caseId={caseData.id}
             onDocumentSelect={handleDocumentSelect}
-            refreshTrigger={refreshTrigger}
+            key={caseData.updatedAt.toString()}
           />
         </TabsContent>
 

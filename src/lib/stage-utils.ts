@@ -103,9 +103,15 @@ export function isValidStageTransition(
     return { valid: true }
   }
 
-  // Allow backward return with justification
+  if (fromStage === 'CIERRE_ARCHIVO') {
+    // This prevents moving a completed case back into the main workflow.
+    // Transitions to special stages like 'SUSPENDED' are already handled above.
+    return { valid: false, reason: 'Completed cases cannot be moved back into the workflow.' };
+  }
+
+  // Allow backward return with justification for non-completed cases
   if (toStageIndex < fromStageIndex) {
-    return { valid: true }
+    return { valid: true };
   }
 
   // Same stage - not a transition
