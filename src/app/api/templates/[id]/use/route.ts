@@ -18,6 +18,12 @@ export async function POST(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const body = await request.json();
 
     // Check if template exists and is active

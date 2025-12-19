@@ -18,6 +18,12 @@ export async function GET(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');

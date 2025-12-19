@@ -248,6 +248,13 @@ export async function PUT(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
+
     const body = await request.json();
     const isOwnPassword = id === session.user.id;
 

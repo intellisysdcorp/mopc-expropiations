@@ -24,6 +24,13 @@ export async function POST(
   request: NextRequest,
   { params }: URLParams
 ) {
+  const { id } = await params;
+  if (!id) {
+    return NextResponse.json(
+      { error: 'Bad Request: missing key param'},
+      { status: 400 }
+    )
+  }
   try {
     const session = await getSession();
     if (!session) {
@@ -35,7 +42,7 @@ export async function POST(
 
     // Check if signature exists and user has permission
     const signature: DigitalSignature | null = await prisma.digitalSignature.findUnique({
-      where: { id: (await params).id },
+      where: { id },
     });
 
     if (!signature) {
@@ -79,7 +86,7 @@ export async function POST(
     };
 
     const revokedSignature: DigitalSignature = await prisma.digitalSignature.update({
-      where: { id: (await params).id },
+      where: { id },
       data: revokeData,
     });
 

@@ -21,6 +21,12 @@ export async function GET(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Get document with permissions check
     const document = await prisma.document.findUnique({

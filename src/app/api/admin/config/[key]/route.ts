@@ -19,6 +19,13 @@ export async function GET(
     const session = await auth()
     const key = (await params).key
 
+    if (!key) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
+
     // Only allow super admins to access system configurations
     if (!session?.user || session.user.role !== 'super_admin') {
       return NextResponse.json(
@@ -73,6 +80,13 @@ export async function PUT(
   try {
     const session = await auth()
     const key = (await params).key
+
+    if (!key) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Only allow super admins to update system configurations
     if (!session?.user || session.user.role !== 'super_admin') {
@@ -176,6 +190,13 @@ export async function DELETE(
   try {
     const session = await auth()
     const key = (await params).key
+
+    if (!key) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Only allow super admins to delete system configurations
     if (!session?.user || session.user.role !== 'super_admin') {

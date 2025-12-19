@@ -19,6 +19,12 @@ export async function GET(
     }
 
     const departmentId = (await params).id;
+    if (!departmentId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check if department exists
     const department = await prisma.department.findUnique({

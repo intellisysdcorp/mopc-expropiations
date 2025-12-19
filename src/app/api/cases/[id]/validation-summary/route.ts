@@ -17,6 +17,12 @@ export async function GET(
     }
 
     const { id: caseId } = await params;
+    if (!caseId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Get case information
     const caseInfo = await prisma.case.findUnique({

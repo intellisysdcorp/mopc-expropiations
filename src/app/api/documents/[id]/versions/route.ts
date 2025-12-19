@@ -31,6 +31,12 @@ export async function GET(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check if document exists and user has permission
     const document = await prisma.document.findUnique({
@@ -114,6 +120,12 @@ export async function POST(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const versionData = JSON.parse(formData.get('versionData') as string);

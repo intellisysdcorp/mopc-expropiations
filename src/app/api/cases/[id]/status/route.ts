@@ -19,6 +19,13 @@ export async function PUT(
     }
 
     const { id: caseId } = await params
+    if (!caseId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
+
     const body = await request.json()
     const validationResult = CaseStatusUpdateSchema.safeParse(body)
 

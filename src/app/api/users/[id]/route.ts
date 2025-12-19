@@ -14,6 +14,12 @@ export async function GET(
   { params }: URLParams
 ) {
   const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -86,6 +92,12 @@ export async function PUT(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const body = await request.json();
 
     // Check if user exists
@@ -246,6 +258,12 @@ export async function DELETE(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check if user exists
     const user = await prisma.user.findUnique({

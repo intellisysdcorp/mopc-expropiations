@@ -20,6 +20,12 @@ export async function PUT(
     }
 
     const departmentId = (await params).id;
+    if (!departmentId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const stage = (await params).stage as CaseStage;
 
     // Validate stage
@@ -147,6 +153,12 @@ export async function DELETE(
     }
 
     const departmentId = (await params).id;
+    if (!departmentId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const stage = (await params).stage as CaseStage;
 
     // Validate stage

@@ -58,7 +58,9 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "target": "ES2023"
+    "target": "ES2023",
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
   },
   "include": [
     "next-env.d.ts",

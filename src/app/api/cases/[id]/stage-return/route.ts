@@ -40,6 +40,12 @@ export async function GET(
 ) {
   try {
     const { id: caseId } = await params;
+    if (!caseId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Authenticate user
     const user = await authenticateUser();
@@ -79,6 +85,13 @@ export async function POST(
 ) {
   try {
     const { id: caseId } = await params;
+    if (!caseId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
+
     const body = await request.json();
 
     // Validate request body

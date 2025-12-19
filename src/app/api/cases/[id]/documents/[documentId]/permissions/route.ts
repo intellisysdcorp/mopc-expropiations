@@ -38,6 +38,12 @@ export async function GET(
     }
 
     const { id: caseId, documentId } = await params;
+    if (!caseId || !documentId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Verify case and document exist and user has access
     const [case_, document] = await Promise.all([
@@ -180,6 +186,12 @@ export async function POST(
     }
 
     const { id: caseId, documentId } = await params;
+    if (!caseId || !documentId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const body = await request.json();
     const { action } = body;
 
@@ -411,6 +423,12 @@ export async function DELETE(
     }
 
     const { id: caseId, documentId } = await params;
+    if (!caseId || !documentId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Verify case and document exist and user has access
     const [case_, document] = await Promise.all([

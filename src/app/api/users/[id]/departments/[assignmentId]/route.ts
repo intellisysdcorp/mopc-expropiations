@@ -19,6 +19,12 @@ export async function DELETE(
     }
 
     const { id, assignmentId } = await params;
+    if (!id || !assignmentId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check permissions
     const currentUser = await prisma.user.findUnique({
@@ -122,6 +128,12 @@ export async function PUT(
     }
 
     const { id, assignmentId } = await params;
+    if (!id || !assignmentId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check permissions
     const currentUser = await prisma.user.findUnique({

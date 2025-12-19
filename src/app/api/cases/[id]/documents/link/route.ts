@@ -23,6 +23,12 @@ export async function POST(
     }
 
     const { id: caseId } = await params
+    if (!caseId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const body = await request.json()
     const { documentId } = LinkDocumentSchema.parse(body)
 

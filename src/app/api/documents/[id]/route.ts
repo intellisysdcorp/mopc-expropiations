@@ -45,6 +45,12 @@ export async function GET(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Get document with permissions check
     const document = await prisma.document.findUnique({
@@ -187,6 +193,13 @@ export async function PUT(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
+
     const body = await request.json();
     const validatedData = updateDocumentSchema.parse(body);
 
@@ -338,6 +351,12 @@ export async function DELETE(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check if document exists and user has permission
     const existingDocument = await prisma.document.findUnique({

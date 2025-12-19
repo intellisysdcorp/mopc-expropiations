@@ -66,9 +66,15 @@ export async function GET(
   _request: NextRequest,
   { params }: URLParams
 ) {
-  try {
-    const { id: caseId } = await params;
+  const { id: caseId } = await params;
+  if (!caseId) {
+    return NextResponse.json(
+      { error: 'Bad Request: missing key param'},
+      { status: 400 }
+    )
+  }
 
+  try {
     // Get case with current stage
     const currentCase = await prisma.case.findUnique({
       where: { id: caseId },
@@ -129,8 +135,15 @@ export async function POST(
   request: NextRequest,
   { params }: URLParams
 ) {
+  const { id: caseId } = await params;
+  if (!caseId) {
+    return NextResponse.json(
+      { error: 'Bad Request: missing key param'},
+      { status: 400 }
+    )
+  }
+
   try {
-    const { id: caseId } = await params;
     const body = await request.json();
 
     // Validate request body

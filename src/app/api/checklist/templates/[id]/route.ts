@@ -43,6 +43,13 @@ export async function GET(
   _request: NextRequest,
   { params }: URLParams
 ) {
+  const { id } = await params;
+  if (!id) {
+    return NextResponse.json(
+      { error: 'Bad Request: missing key param'},
+      { status: 400 }
+    )
+  }
   try {
     const session = await getSession();
     if (!session) {
@@ -50,7 +57,7 @@ export async function GET(
     }
 
     const template = await prisma.checklistTemplate.findUnique({
-      where: { id: (await params).id },
+      where: { id },
       include: {
         checklistItems: {
           orderBy: { sequence: 'asc' },
@@ -80,6 +87,13 @@ export async function PUT(
   request: NextRequest,
   { params }: URLParams
 ) {
+  const { id } = await params;
+  if (!id) {
+    return NextResponse.json(
+      { error: 'Bad Request: missing key param'},
+      { status: 400 }
+    )
+  }
   try {
     const session = await getSession();
     if (!session) {
@@ -91,7 +105,7 @@ export async function PUT(
 
     // Check if template exists
     const existingTemplate = await prisma.checklistTemplate.findUnique({
-      where: { id: (await params).id },
+      where: { id },
     });
 
     if (!existingTemplate) {
@@ -105,7 +119,7 @@ export async function PUT(
     const updateData = createUpdateData(validatedData);
 
     const template = await prisma.checklistTemplate.update({
-      where: { id: (await params).id },
+      where: { id },
       data: updateData,
       include: {
         checklistItems: {
@@ -147,6 +161,13 @@ export async function DELETE(
   _request: NextRequest,
   { params }: URLParams
 ) {
+  const { id } = await params;
+  if (!id) {
+    return NextResponse.json(
+      { error: 'Bad Request: missing key param'},
+      { status: 400 }
+    )
+  }
   try {
     const session = await getSession();
     if (!session) {
@@ -154,7 +175,7 @@ export async function DELETE(
     }
 
     const template = await prisma.checklistTemplate.findUnique({
-      where: { id: (await params).id },
+      where: { id },
     });
 
     if (!template) {
@@ -165,7 +186,7 @@ export async function DELETE(
     }
 
     await prisma.checklistTemplate.delete({
-      where: { id: (await params).id },
+      where: { id },
     });
 
     // Log activity
@@ -173,7 +194,7 @@ export async function DELETE(
       data: {
         action: ActivityType.DELETED,
         entityType: 'checklist_template',
-        entityId: (await params).id,
+        entityId: id,
         description: `Deleted checklist template: ${template.name}`,
         userId: session.user.id,
       },

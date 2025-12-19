@@ -26,6 +26,12 @@ export async function PUT(
     }
 
     const { id: departmentId, permissionId } = await params;
+    if (!departmentId || !permissionId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const body = await request.json();
     const { isGranted, expiresAt } = permissionUpdateSchema.parse(body);
 
@@ -153,6 +159,12 @@ export async function DELETE(
     }
 
     const { id: departmentId, permissionId } = await params;
+    if (!departmentId || !permissionId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check if department exists
     const department = await prisma.department.findUnique({

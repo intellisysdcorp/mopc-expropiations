@@ -205,6 +205,12 @@ export async function GET(
     }
 
     const { id: caseId } = await params;
+    if (!caseId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const { searchParams } = new URL(request.url);
     const documentType = searchParams.get('documentType');
 
@@ -307,6 +313,13 @@ export async function POST(
     }
 
     const { id: caseId } = await params;
+    if (!caseId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
+
     const { templateId, templateData, customizations } = await request.json();
 
     if (!templateId || !templateData) {

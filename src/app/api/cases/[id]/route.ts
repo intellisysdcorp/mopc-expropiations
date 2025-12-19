@@ -19,6 +19,12 @@ export async function GET(
     }
 
     const { id: caseId } = await params
+    if (!caseId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Get user to check permissions
     const user = await prisma.user.findUnique({
@@ -187,6 +193,13 @@ export async function PUT(
     }
 
     const { id: caseId } = await params
+    if (!caseId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
+
     const body = await request.json()
     const validationResult = UpdateCaseSchema.safeParse(body)
 
@@ -394,6 +407,12 @@ export async function DELETE(
     }
 
     const { id: caseId } = await params
+    if (!caseId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Get user to check permissions
     const user = await prisma.user.findUnique({

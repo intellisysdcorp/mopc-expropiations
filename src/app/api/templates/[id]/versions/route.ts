@@ -26,6 +26,12 @@ export async function POST(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const body = await request.json();
 
     // Check if template exists and user has permission
@@ -110,6 +116,12 @@ export async function GET(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check if template exists and user has permission
     const existingTemplate = await prisma.documentTemplate.findUnique({

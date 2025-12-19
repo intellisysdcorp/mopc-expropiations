@@ -12,6 +12,13 @@ export async function GET(
     const session = await auth()
     const key = (await params).key
 
+    if (!key) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
+
     // Only allow super admins to access configuration history
     if (!session?.user || session.user.role !== 'super_admin') {
       return NextResponse.json(

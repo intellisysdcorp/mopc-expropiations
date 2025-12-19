@@ -35,6 +35,12 @@ export async function GET(
     }
 
     const { id: caseId } = await params;
+    if (!caseId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const { searchParams } = new URL(request.url);
     const stage = searchParams.get('stage');
 
@@ -160,6 +166,12 @@ export async function POST(
     }
 
     const { id: caseId } = await params;
+    if (!caseId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const body = await request.json();
 
     // Validate request body
@@ -259,6 +271,12 @@ export async function PUT(
     }
 
     const { id: caseId } = await params;
+    if (!caseId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const body = await request.json();
 
     // Validate request body

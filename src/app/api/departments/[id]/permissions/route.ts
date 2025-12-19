@@ -12,7 +12,7 @@ import { URLParams } from '@/types';
 const permissionAssignmentSchema = z.object({
   permissionIds: z.array(z.string()).min(1, 'Selecciona al menos un permiso'),
   isGranted: z.boolean().default(true),
-  expiresAt: z.string().datetime().optional(),
+  expiresAt: z.iso.datetime().optional(),
 });
 
 // GET /api/departments/[id]/permissions - Get department permissions
@@ -20,6 +20,13 @@ export async function GET(
   _request: NextRequest,
   { params }: URLParams
 ) {
+  const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -28,7 +35,7 @@ export async function GET(
 
     // Check if department exists
     const department = await prisma.department.findUnique({
-      where: { id: (await params).id },
+      where: { id },
       select: { id: true, name: true, code: true, parentId: true },
     });
 
@@ -48,7 +55,7 @@ export async function GET(
     // Get department-specific permissions
     const departmentPermissions = await prisma.departmentPermission.findMany({
       where: {
-        departmentId: (await params).id,
+        departmentId: id,
       },
       include: {
         permission: true,
@@ -57,10 +64,10 @@ export async function GET(
     });
 
     // Get inherited permissions from parent departments
-    const inheritedPermissions = await getInheritedPermissions((await params).id);
+    const inheritedPermissions = await getInheritedPermissions(id);
 
     // Get permissions through user roles
-    const roleBasedPermissions = await getRoleBasedPermissions((await params).id);
+    const roleBasedPermissions = await getRoleBasedPermissions(id);
 
     return NextResponse.json({
       department,
@@ -90,6 +97,13 @@ export async function POST(
   request: NextRequest,
   { params }: URLParams
 ) {
+  const { id } = await params;
+  if (!id) {
+    return NextResponse.json(
+      { error: 'Bad Request: missing key param'},
+      { status: 400 }
+    )
+  }
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -110,7 +124,7 @@ export async function POST(
 
     // Check if department exists
     const department = await prisma.department.findUnique({
-      where: { id: (await params).id },
+      where: { id },
       select: { id: true, name: true, code: true },
     });
 
@@ -143,7 +157,7 @@ export async function POST(
         const existing = await prisma.departmentPermission.findUnique({
           where: {
             departmentId_permissionId: {
-              departmentId: (await params).id,
+              departmentId: id,
               permissionId,
             },
           },
@@ -154,7 +168,7 @@ export async function POST(
           return await prisma.departmentPermission.update({
             where: {
               departmentId_permissionId: {
-                departmentId: (await params).id,
+                departmentId: id,
                 permissionId,
               },
             },
@@ -168,7 +182,7 @@ export async function POST(
           // Create new assignment
           return await prisma.departmentPermission.create({
             data: {
-              departmentId: (await params).id,
+              departmentId: id,
               permissionId,
               isGranted,
               expiresAt: expiresAt ? new Date(expiresAt) : null,
@@ -184,7 +198,7 @@ export async function POST(
       userId: session.user.id,
       action: 'UPDATED',
       entityType: 'department',
-      entityId: (await params).id,
+      entityId: id,
       description: `Permisos ${isGranted ? 'otorgados' : 'revocados'} al departamento: ${department.name}`,
       metadata: {
         departmentName: department.name,

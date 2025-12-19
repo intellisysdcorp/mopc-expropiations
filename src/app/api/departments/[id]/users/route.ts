@@ -43,6 +43,12 @@ export async function GET(
     const sortOrder = searchParams.get('sortOrder') || 'asc';
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check if department exists
     const department = await prisma.department.findUnique({
@@ -174,6 +180,12 @@ export async function POST(
     const validatedData = transferUserSchema.parse(body);
 
     const { id: sourceDepartmentId } = await params;
+    if (!sourceDepartmentId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const { destinationDepartmentId, userIds, transferType, reason, scheduledFor, notes } = validatedData;
 
     // Validate source department

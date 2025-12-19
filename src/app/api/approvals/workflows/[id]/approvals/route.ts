@@ -19,6 +19,15 @@ export async function GET(
   _request: NextRequest,
   { params }: URLParams
 ) {
+  const { id } = await params;
+
+  if (!id) {
+    return NextResponse.json(
+      { error: 'Bad Request: missing key param'},
+      { status: 400 }
+    )
+  }
+
   try {
     const session = await getSession();
     if (!session) {
@@ -27,7 +36,7 @@ export async function GET(
 
     // Check if workflow exists and user has access
     const workflow = await prisma.approvalWorkflow.findUnique({
-      where: { id: (await params).id },
+      where: { id},
       include: {
         approvals: {
           include: {
@@ -93,6 +102,13 @@ export async function POST(
     const body = await request.json();
     const validatedData = updateApprovalSchema.parse(body);
     const id = (await params).id
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check if workflow exists and is pending
     const workflow = await prisma.approvalWorkflow.findUnique({
@@ -175,7 +191,7 @@ export async function POST(
 
     // Check if workflow can be completed
     const allApprovals = await prisma.approval.findMany({
-      where: { workflowId: (await params).id },
+      where: { workflowId: id },
     });
 
     const approvedCount = allApprovals.filter(a => a.decision === ApprovalStatus.APPROVED).length;

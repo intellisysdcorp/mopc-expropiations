@@ -27,6 +27,12 @@ export async function GET(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Get template with full details
     const template = await prisma.documentTemplate.findUnique({
@@ -141,6 +147,12 @@ export async function PUT(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const body = await request.json();
 
     // Check if template exists and user has permission
@@ -256,6 +268,12 @@ export async function DELETE(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check if template exists and user has permission
     const existingTemplate = await prisma.documentTemplate.findUnique({

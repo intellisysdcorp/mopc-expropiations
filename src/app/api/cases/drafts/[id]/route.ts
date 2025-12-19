@@ -19,6 +19,12 @@ export async function PUT(
     }
 
     const { id: draftId } = await params
+    if (!draftId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const body = await request.json()
     const { convertToComplete, ...requestData } = body
 
@@ -250,6 +256,12 @@ export async function DELETE(
     }
 
     const { id: draftId } = await params
+    if (!draftId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Get user to check permissions
     const user = await prisma.user.findUnique({

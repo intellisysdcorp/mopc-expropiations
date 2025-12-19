@@ -35,6 +35,12 @@ export async function GET(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const { searchParams } = new URL(request.url);
     const query = queryHistorySchema.parse(Object.fromEntries(searchParams));
 
@@ -174,6 +180,12 @@ export async function POST(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const body = await request.json();
     const { format = 'json', includeDetails = true, filters = {} } = body;
 

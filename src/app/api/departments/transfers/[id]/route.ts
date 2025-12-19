@@ -38,6 +38,13 @@ export async function POST(
   request: NextRequest,
   { params }: URLParams
 ) {
+  const { id } = await params;
+  if (!id) {
+    return NextResponse.json(
+      { error: 'Bad Request: missing key param'},
+      { status: 400 }
+    )
+  }
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -58,7 +65,7 @@ export async function POST(
 
     // Find transfer
     const transfer = await prisma.departmentTransfer.findUnique({
-      where: { id: (await params).id },
+      where: { id },
       include: {
         user: {
           select: {
@@ -115,7 +122,7 @@ export async function POST(
 
       // Update transfer
       updatedTransfer = await prisma.departmentTransfer.update({
-        where: { id: (await params).id },
+        where: { id },
         data: {
           status: 'COMPLETED',
           completedAt: new Date(),
@@ -155,7 +162,7 @@ export async function POST(
     } else {
       // Reject transfer
       updatedTransfer = await prisma.departmentTransfer.update({
-        where: { id: (await params).id },
+        where: { id },
         data: {
           status: 'CANCELLED',
           notes: notes || transfer.notes,
@@ -226,6 +233,13 @@ export async function PUT(
   request: NextRequest,
   { params }: URLParams
 ) {
+  const { id } = await params;
+  if (!id) {
+    return NextResponse.json(
+      { error: 'Bad Request: missing key param'},
+      { status: 400 }
+    )
+  }
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -246,7 +260,7 @@ export async function PUT(
 
     // Find transfer
     const transfer = await prisma.departmentTransfer.findUnique({
-      where: { id: (await params).id },
+      where: { id },
       include: {
         user: {
           select: {
@@ -296,7 +310,7 @@ export async function PUT(
 
     // Update transfer
     const updatedTransfer = await prisma.departmentTransfer.update({
-      where: { id: (await params).id },
+      where: { id },
       data: updateData,
       include: {
         user: {
@@ -359,6 +373,13 @@ export async function DELETE(
   _request: NextRequest,
   { params }: URLParams
 ) {
+  const { id } = await params;
+  if (!id) {
+    return NextResponse.json(
+      { error: 'Bad Request: missing key param'},
+      { status: 400 }
+    )
+  }
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -376,7 +397,7 @@ export async function DELETE(
 
     // Find transfer
     const transfer = await prisma.departmentTransfer.findUnique({
-      where: { id: (await params).id },
+      where: { id },
       include: {
         user: {
           select: {
@@ -411,7 +432,7 @@ export async function DELETE(
 
     // Cancel transfer
     await prisma.departmentTransfer.update({
-      where: { id: (await params).id },
+      where: { id },
       data: {
         status: 'CANCELLED',
         metadata: {

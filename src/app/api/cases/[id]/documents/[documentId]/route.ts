@@ -41,6 +41,12 @@ export async function GET(
     }
 
     const { id: caseId, documentId } = await params;
+    if (!caseId || !documentId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const { searchParams } = new URL(request.url);
     const version = searchParams.get('version'); // Optional version parameter
     const action = searchParams.get('action') || 'preview'; // preview or download
