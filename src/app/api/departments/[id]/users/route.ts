@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // Type for the user where clause
 type UserWhereClause = {
@@ -24,7 +25,7 @@ type UserWhereClause = {
 // GET /api/departments/[id]/users - Get users in a department
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -152,7 +153,7 @@ const transferUserSchema = z.object({
 // POST /api/departments/[id]/users - Transfer users to another department
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);

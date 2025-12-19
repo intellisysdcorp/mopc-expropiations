@@ -6,11 +6,12 @@ import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { logActivity } from '@/lib/activity-logger';
 import type { Prisma } from '@/prisma/client';
+import { URLParams } from '@/types';
 
 // GET /api/users/[id] - Get a specific user
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   const { id } = await params;
   try {
@@ -76,7 +77,7 @@ export async function GET(
 // PUT /api/users/[id] - Update a user
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -236,7 +237,7 @@ export async function PUT(
 // DELETE /api/users/[id] - Soft delete a user
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);

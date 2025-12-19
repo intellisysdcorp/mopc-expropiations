@@ -9,6 +9,7 @@ import path from 'path';
 import crypto from 'crypto';
 import { DocumentActionType } from '@/prisma/client';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // Validation schemas
 const createVersionSchema = z.object({
@@ -21,7 +22,7 @@ const createVersionSchema = z.object({
 // GET /api/documents/[id]/versions - Get document versions
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -104,7 +105,7 @@ export async function GET(
 // POST /api/documents/[id]/versions - Create new document version
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);

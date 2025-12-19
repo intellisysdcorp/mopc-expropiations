@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // Schema for permission assignment
 const permissionAssignmentSchema = z.object({
@@ -17,7 +18,7 @@ const permissionAssignmentSchema = z.object({
 // GET /api/departments/[id]/permissions - Get department permissions
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -87,7 +88,7 @@ export async function GET(
 // POST /api/departments/[id]/permissions - Assign permissions to department
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);

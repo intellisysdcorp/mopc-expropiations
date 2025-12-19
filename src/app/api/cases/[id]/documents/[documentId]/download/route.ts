@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import logger from '@/lib/logger';
+import { URLParams } from '@/types';
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string; documentId: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await auth()

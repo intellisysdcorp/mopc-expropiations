@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createDocumentWithFile } from '@/lib/documents';
 import type { DocumentFormData } from '@/types/client';
+import { URLParams } from '@/types';
 
 // Validation schemas
 const createCaseDocumentSchema = z.object({
@@ -33,7 +34,7 @@ const createCaseDocumentSchema = z.object({
 // GET /api/cases/[id]/documents - List documents for a specific case
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -186,7 +187,7 @@ export async function GET(
 // POST /api/cases/[id]/documents - Upload document to specific case
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);

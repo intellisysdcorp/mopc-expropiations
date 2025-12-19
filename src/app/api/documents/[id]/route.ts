@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { DocumentStatus, DocumentSecurityLevel, DocumentActionType } from '@/prisma/client';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // Types
 interface DocumentTag {
@@ -35,7 +36,7 @@ const updateDocumentSchema = z.object({
 // GET /api/documents/[id] - Get a specific document
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -177,7 +178,7 @@ export async function GET(
 // PUT /api/documents/[id] - Update document metadata
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -328,7 +329,7 @@ export async function PUT(
 // DELETE /api/documents/[id] - Delete a document
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);

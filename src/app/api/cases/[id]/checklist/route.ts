@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 const checklistItemSchema = z.object({
   title: z.string().min(1, 'El título es requerido'),
@@ -25,7 +26,7 @@ const checklistCompletionSchema = z.object({
 // Get checklist items for a case's current stage
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -150,7 +151,7 @@ export async function GET(
 // Add new checklist item to a stage (admin function)
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -249,7 +250,7 @@ export async function POST(
 // Update checklist completion status
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);

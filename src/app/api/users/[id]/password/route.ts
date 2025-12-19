@@ -9,6 +9,7 @@ import { logActivity } from '@/lib/activity-logger';
 import { logger } from '@/lib/logger';
 import type { Session } from 'next-auth';
 import type { User, Role } from '@/prisma/client';
+import { URLParams } from '@/types';
 
 // Type definitions
 interface ChangePasswordData {
@@ -238,7 +239,7 @@ async function executePasswordChange({
 // PUT /api/users/[id]/password - Change user password
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);

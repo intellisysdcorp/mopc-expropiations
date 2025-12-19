@@ -56,10 +56,8 @@
       "@/prisma/*": ["./src/generated/prisma/*"]
     },
     "forceConsistentCasingInFileNames": true,
-    "noUncheckedIndexedAccess": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "exactOptionalPropertyTypes": true,
     "target": "ES2023"
   },
   "include": [

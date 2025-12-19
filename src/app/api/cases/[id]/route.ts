@@ -5,11 +5,12 @@ import { prisma } from '@/lib/prisma'
 import { logActivity } from '@/lib/activity-logger'
 import { logger } from '@/lib/logger'
 import { UpdateCaseSchema } from '@/lib/validations/case'
+import { URLParams } from '@/types'
 
 // GET /api/cases/[id] - Get a specific case
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -177,7 +178,7 @@ export async function GET(
 // PUT /api/cases/[id] - Update a case
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -384,7 +385,7 @@ export async function PUT(
 // DELETE /api/cases/[id] - Soft delete a case
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions)

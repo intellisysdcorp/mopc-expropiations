@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // Type for transfer metadata
 type TransferMetadata = {
@@ -35,7 +36,7 @@ const transferActionSchema = z.object({
 // POST /api/departments/transfers/[id]/action - Approve or reject transfer
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -223,7 +224,7 @@ export async function POST(
 // PUT /api/departments/transfers/[id] - Update transfer
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -356,7 +357,7 @@ export async function PUT(
 // DELETE /api/departments/transfers/[id] - Cancel transfer
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);

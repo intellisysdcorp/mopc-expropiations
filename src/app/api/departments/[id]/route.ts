@@ -8,11 +8,12 @@ import { prisma } from '@/lib/prisma';
 import { logActivity } from '@/lib/activity-logger';
 import { updateDepartmentSchema } from '@/lib/validators/department-validator';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // GET /api/departments/[id] - Get specific department
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -90,7 +91,7 @@ export async function GET(
 // PUT /api/departments/[id] - Update department
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -262,7 +263,7 @@ export async function PUT(
 // DELETE /api/departments/[id] - Delete department
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);

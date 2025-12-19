@@ -19,6 +19,7 @@ import {
   handleApiError,
   type StageTransitionData
 } from '@/lib/services/stage-transition.service';
+import { URLParams } from '@/types';
 
 const progressionSchema = z.object({
   toStage: z.enum(CaseStage),
@@ -63,7 +64,7 @@ function convertToStageTransitionData(
 // Get stage progression history for a case
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const { id: caseId } = await params;
@@ -126,7 +127,7 @@ export async function GET(
 // Progress case to next stage or return to previous stage
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const { id: caseId } = await params;

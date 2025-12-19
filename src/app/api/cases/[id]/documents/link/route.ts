@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { logActivity } from '@/lib/activity-logger'
 import { z } from 'zod'
+import { URLParams } from '@/types';
 
 const LinkDocumentSchema = z.object({
   documentId: z.string().min(1, 'Document ID is required')
@@ -13,7 +14,7 @@ const LinkDocumentSchema = z.object({
 // POST /api/cases/[id]/documents/link - Link existing document to case
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions)

@@ -20,6 +20,7 @@ import {
   type StageTransitionData,
   type CaseWithAssignments
 } from '@/lib/services/stage-transition.service';
+import { URLParams } from '@/types';
 
 const stageReturnSchema = z.object({
   toStage: z.enum(CaseStage),
@@ -35,7 +36,7 @@ const stageReturnSchema = z.object({
 // Get available stages for return
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const { id: caseId } = await params;
@@ -74,7 +75,7 @@ export async function GET(
 // Process stage return
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const { id: caseId } = await params;

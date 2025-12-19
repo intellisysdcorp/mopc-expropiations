@@ -9,6 +9,7 @@ import archiver from 'archiver';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 type DocumentInfo = {
   id: string;
@@ -31,7 +32,7 @@ type DocumentInfo = {
 // GET /api/cases/[id]/documents/[documentId] - Unified document endpoint
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string; documentId: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);

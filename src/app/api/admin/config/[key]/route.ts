@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
+import { URLParams } from '@/types'
 
 const updateConfigSchema = z.object({
   value: z.any(),
@@ -11,8 +12,8 @@ const updateConfigSchema = z.object({
 })
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ key: string }> }
+  _request: NextRequest,
+  { params }: URLParams
 ) {
   try {
     const session = await auth()
@@ -67,7 +68,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ key: string }> }
+  { params }: URLParams 
 ) {
   try {
     const session = await auth()
@@ -169,8 +170,8 @@ export async function PUT(
 }
 
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ key: string }> }
+  _request: NextRequest,
+  { params }: URLParams 
 ) {
   try {
     const session = await auth()

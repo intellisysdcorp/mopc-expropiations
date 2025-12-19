@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { DocumentActionType } from '@/prisma/client';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 const documentActionEnum = Object.values(DocumentActionType) as [string, ...string[]];
 
@@ -25,7 +26,7 @@ const queryHistorySchema = z.object({
 // GET /api/documents/[id]/history - Get document history/audit trail
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -164,7 +165,7 @@ export async function GET(
 // POST /api/documents/[id]/history - Export document history
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);

@@ -8,6 +8,7 @@ import path from 'path';
 import sharp from 'sharp';
 import { DocumentActionType } from '@/prisma/client';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // Supported preview types and their processing
 const PREVIEW_CONFIG = {
@@ -33,7 +34,7 @@ const PREVIEW_CONFIG = {
 // GET /api/documents/[id]/preview - Generate document preview
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -174,7 +175,7 @@ async function generateImagePreview(
 
 // Generate PDF preview (placeholder implementation)
 async function generatePdfPreview(
-  filePath: string,
+  _filePath: string,
   document: any,
   page: number,
   size: string,

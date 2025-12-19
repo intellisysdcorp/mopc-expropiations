@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 import { CaseStage } from '@/prisma/client';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // Schema for stage assignment
 const stageAssignmentSchema = z.object({
@@ -15,8 +16,8 @@ const stageAssignmentSchema = z.object({
 
 // GET /api/departments/[id]/stages - Get department stage assignments
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  _request: NextRequest,
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -95,7 +96,7 @@ export async function GET(
 // POST /api/departments/[id]/stages - Assign stages to department
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);

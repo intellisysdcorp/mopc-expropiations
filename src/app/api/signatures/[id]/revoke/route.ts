@@ -13,6 +13,7 @@ import type {
   ActivityMetadata,
   SignatureRevokeResponse
 } from '@/lib/types/signatures';
+import { URLParams } from '@/types';
 
 const revokeSignatureSchema = z.object({
   reason: z.string().min(1, 'Revocation reason is required'),
@@ -21,7 +22,7 @@ const revokeSignatureSchema = z.object({
 // POST /api/signatures/[id]/revoke - Revoke a digital signature
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getSession();

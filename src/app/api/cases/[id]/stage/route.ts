@@ -6,11 +6,12 @@ import { prisma } from '@/lib/prisma'
 import { logActivity } from '@/lib/activity-logger'
 import { CaseStageUpdateSchema } from '@/lib/validations/case'
 import { calculateProgressPercentage, isValidStageTransition } from '@/lib/stage-utils'
+import { URLParams } from '@/types';
 
 // PUT /api/cases/[id]/stage - Update case stage
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions)

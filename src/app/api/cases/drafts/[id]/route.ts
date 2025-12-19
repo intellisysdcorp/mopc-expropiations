@@ -5,11 +5,12 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { logActivity } from '@/lib/activity-logger'
 import { CreateCaseSchema } from '@/lib/validations/case'
+import { URLParams } from '@/types';
 
 // PUT /api/cases/drafts/[id] - Update a draft or convert it to a complete case
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -240,7 +241,7 @@ export async function PUT(
 // DELETE /api/cases/drafts/[id] - Delete a draft case
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions)

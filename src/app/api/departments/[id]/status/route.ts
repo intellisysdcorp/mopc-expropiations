@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // Type definitions for department status updates
 interface DepartmentStatusUpdate {
@@ -34,7 +35,7 @@ const statusChangeSchema = z.object({
 // PATCH /api/departments/[id]/status - Update department status
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -182,7 +183,7 @@ export async function PATCH(
 // GET /api/departments/[id]/status - Get department status history
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);

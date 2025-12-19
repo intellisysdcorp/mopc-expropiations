@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { ActivityType } from '@/prisma/client';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 const updateChecklistTemplateSchema = z.object({
   name: z.string().min(1).optional(),
@@ -40,7 +41,7 @@ function createUpdateData(validatedData: UpdateChecklistTemplateData): Record<st
 // GET /api/checklist/templates/[id] - Get specific template
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getSession();
@@ -77,7 +78,7 @@ export async function GET(
 // PUT /api/checklist/templates/[id] - Update template
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getSession();
@@ -144,7 +145,7 @@ export async function PUT(
 // DELETE /api/checklist/templates/[id] - Delete template
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getSession();
