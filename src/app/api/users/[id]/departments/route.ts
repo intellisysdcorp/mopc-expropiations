@@ -5,11 +5,12 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { logActivity } from '@/lib/activity-logger';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // GET /api/users/[id]/departments - Get user department assignments
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  _request: NextRequest,
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -18,6 +19,12 @@ export async function GET(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check permissions
     if (id !== session.user.id) {
@@ -61,7 +68,7 @@ export async function GET(
 // POST /api/users/[id]/departments - Assign department to user
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -70,6 +77,13 @@ export async function POST(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
+
     const body = await request.json();
     const { departmentId, isPrimary = false } = body;
 

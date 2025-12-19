@@ -7,6 +7,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { createDocumentVersion } from '@/lib/documents';
+import { URLParams } from '@/types';
 
 // Validation schemas
 const createVersionSchema = z.object({
@@ -20,7 +21,7 @@ const createVersionSchema = z.object({
 // GET /api/cases/[id]/documents/[documentId]/versions - Get document versions
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string; documentId: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -29,6 +30,12 @@ export async function GET(
     }
 
     const { id: caseId, documentId } = await params;
+    if (!caseId || !documentId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Verify case and document exist and user has access
     const [case_, document] = await Promise.all([
@@ -151,7 +158,7 @@ export async function GET(
 // POST /api/cases/[id]/documents/[documentId]/versions - Create new version
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string; documentId: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -160,6 +167,12 @@ export async function POST(
     }
 
     const { id: caseId, documentId } = await params;
+    if (!caseId || !documentId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Parse form data (file upload) or JSON (metadata update)
     const contentType = request.headers.get('content-type');

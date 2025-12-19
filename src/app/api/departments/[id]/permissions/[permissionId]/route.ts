@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // Schema for permission update
 const permissionUpdateSchema = z.object({
@@ -16,7 +17,7 @@ const permissionUpdateSchema = z.object({
 // PUT /api/departments/[id]/permissions/[permissionId] - Update specific permission
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string; permissionId: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -25,6 +26,12 @@ export async function PUT(
     }
 
     const { id: departmentId, permissionId } = await params;
+    if (!departmentId || !permissionId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const body = await request.json();
     const { isGranted, expiresAt } = permissionUpdateSchema.parse(body);
 
@@ -142,8 +149,8 @@ export async function PUT(
 
 // DELETE /api/departments/[id]/permissions/[permissionId] - Remove permission assignment
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string; permissionId: string }> }
+  _request: NextRequest,
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -152,6 +159,12 @@ export async function DELETE(
     }
 
     const { id: departmentId, permissionId } = await params;
+    if (!departmentId || !permissionId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check if department exists
     const department = await prisma.department.findUnique({

@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { CaseStage } from '@/prisma/client';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 interface TimelineEvent {
   id: string;
@@ -74,7 +75,7 @@ interface TimelineResponse {
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -83,6 +84,12 @@ export async function GET(
     }
 
     const { id: caseId } = await params;
+    if (!caseId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Get comprehensive case data
     const caseData = await prisma.case.findUnique({

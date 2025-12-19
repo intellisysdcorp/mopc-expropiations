@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { DocumentStatus, DocumentSecurityLevel, DocumentActionType } from '@/prisma/client';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // Types
 interface DocumentTag {
@@ -35,7 +36,7 @@ const updateDocumentSchema = z.object({
 // GET /api/documents/[id] - Get a specific document
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -44,6 +45,12 @@ export async function GET(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Get document with permissions check
     const document = await prisma.document.findUnique({
@@ -177,7 +184,7 @@ export async function GET(
 // PUT /api/documents/[id] - Update document metadata
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -186,6 +193,13 @@ export async function PUT(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
+
     const body = await request.json();
     const validatedData = updateDocumentSchema.parse(body);
 
@@ -328,7 +342,7 @@ export async function PUT(
 // DELETE /api/documents/[id] - Delete a document
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -337,6 +351,12 @@ export async function DELETE(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check if document exists and user has permission
     const existingDocument = await prisma.document.findUnique({

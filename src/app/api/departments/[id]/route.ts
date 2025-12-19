@@ -8,12 +8,20 @@ import { prisma } from '@/lib/prisma';
 import { logActivity } from '@/lib/activity-logger';
 import { updateDepartmentSchema } from '@/lib/validators/department-validator';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // GET /api/departments/[id] - Get specific department
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
+  const { id } = await params;
+  if (!id) {
+    return NextResponse.json(
+      { error: 'Bad Request: missing key param'},
+      { status: 400 }
+    )
+  }
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -21,7 +29,7 @@ export async function GET(
     }
 
     const department = await prisma.department.findUnique({
-      where: { id: (await params).id },
+      where: { id },
       include: {
         parent: {
           select: { id: true, name: true, code: true },
@@ -90,8 +98,15 @@ export async function GET(
 // PUT /api/departments/[id] - Update department
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
+  const { id } = await params;
+  if (!id) {
+    return NextResponse.json(
+      { error: 'Bad Request: missing key param'},
+      { status: 400 }
+    )
+  }
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -110,7 +125,7 @@ export async function PUT(
     
     // Check if department exists
     const existingDept = await prisma.department.findUnique({
-      where: { id: (await params).id },
+      where: { id },
     });
     
     if (!existingDept) {
@@ -151,7 +166,7 @@ export async function PUT(
       }
 
       // Prevent circular reference
-      if (validatedData.parentId === (await params).id) {
+      if (validatedData.parentId === id) {
         return NextResponse.json(
           { error: 'Un departamento no puede ser su propio padre' },
           { status: 400 }
@@ -159,7 +174,7 @@ export async function PUT(
       }
 
       // Prevent creating cycles in hierarchy
-      const isDescendant = await checkIsDescendant(validatedData.parentId, (await params).id);
+      const isDescendant = await checkIsDescendant(validatedData.parentId, id);
       if (isDescendant) {
         return NextResponse.json(
           { error: 'No se puede establecer un departamento hijo como padre' },
@@ -196,7 +211,7 @@ export async function PUT(
 
     // Update department
     const department = await prisma.department.update({
-      where: { id: (await params).id },
+      where: { id },
       data: updateData,
       include: {
         parent: {
@@ -262,8 +277,15 @@ export async function PUT(
 // DELETE /api/departments/[id] - Delete department
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
+  const { id } = await params;
+  if (!id) {
+    return NextResponse.json(
+      { error: 'Bad Request: missing key param'},
+      { status: 400 }
+    )
+  }
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -281,7 +303,7 @@ export async function DELETE(
 
     // Check if department exists
     const department = await prisma.department.findUnique({
-      where: { id: (await params).id },
+      where: { id },
       include: {
         _count: {
           select: {
@@ -328,7 +350,7 @@ export async function DELETE(
 
     // Delete department
     await prisma.department.delete({
-      where: { id: (await params).id },
+      where: { id },
     });
 
     // Log activity
@@ -336,7 +358,7 @@ export async function DELETE(
       userId: session.user.id,
       action: 'DELETED',
       entityType: 'department',
-      entityId: (await params).id,
+      entityId: id,
       description: `Departamento eliminado: ${department.name}`,
       metadata: {
         departmentName: department.name,

@@ -6,11 +6,12 @@ import { prisma } from '@/lib/prisma';
 import { logActivity } from '@/lib/activity-logger';
 import { CaseStage } from '@/prisma/client';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // PUT /api/departments/[id]/stages/[stage] - Update specific stage assignment
 export async function PUT(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string; stage: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -19,6 +20,12 @@ export async function PUT(
     }
 
     const departmentId = (await params).id;
+    if (!departmentId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const stage = (await params).stage as CaseStage;
 
     // Validate stage
@@ -136,8 +143,8 @@ export async function PUT(
 
 // DELETE /api/departments/[id]/stages/[stage] - Remove stage assignment
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string; stage: string }> }
+  _request: NextRequest,
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -146,6 +153,12 @@ export async function DELETE(
     }
 
     const departmentId = (await params).id;
+    if (!departmentId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const stage = (await params).stage as CaseStage;
 
     // Validate stage

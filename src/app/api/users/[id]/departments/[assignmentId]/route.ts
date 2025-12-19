@@ -5,11 +5,12 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { logActivity } from '@/lib/activity-logger';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // DELETE /api/users/[id]/departments/[assignmentId] - Remove department assignment
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string; assignmentId: string }> }
+  _request: NextRequest,
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -18,6 +19,12 @@ export async function DELETE(
     }
 
     const { id, assignmentId } = await params;
+    if (!id || !assignmentId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check permissions
     const currentUser = await prisma.user.findUnique({
@@ -111,8 +118,8 @@ export async function DELETE(
 
 // PUT /api/users/[id]/departments/[assignmentId]/primary - Set as primary department
 export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string; assignmentId: string }> }
+  _request: NextRequest,
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -121,6 +128,12 @@ export async function PUT(
     }
 
     const { id, assignmentId } = await params;
+    if (!id || !assignmentId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check permissions
     const currentUser = await prisma.user.findUnique({

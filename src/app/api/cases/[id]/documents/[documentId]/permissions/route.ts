@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // Validation schemas
 const updatePermissionSchema = z.object({
@@ -28,7 +29,7 @@ const shareSchema = z.object({
 // GET /api/cases/[id]/documents/[documentId]/permissions - Get document permissions
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string; documentId: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -37,6 +38,12 @@ export async function GET(
     }
 
     const { id: caseId, documentId } = await params;
+    if (!caseId || !documentId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Verify case and document exist and user has access
     const [case_, document] = await Promise.all([
@@ -170,7 +177,7 @@ export async function GET(
 // POST /api/cases/[id]/documents/[documentId]/permissions - Update document permissions
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string; documentId: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -179,6 +186,12 @@ export async function POST(
     }
 
     const { id: caseId, documentId } = await params;
+    if (!caseId || !documentId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const body = await request.json();
     const { action } = body;
 
@@ -401,7 +414,7 @@ export async function POST(
 // DELETE /api/cases/[id]/documents/[documentId]/permissions - Remove all custom permissions
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string; documentId: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -410,6 +423,12 @@ export async function DELETE(
     }
 
     const { id: caseId, documentId } = await params;
+    if (!caseId || !documentId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Verify case and document exist and user has access
     const [case_, document] = await Promise.all([

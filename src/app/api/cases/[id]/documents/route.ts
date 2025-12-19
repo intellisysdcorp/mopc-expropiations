@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { createDocumentWithFile } from '@/lib/documents';
 import type { DocumentFormData } from '@/types/client';
+import { URLParams } from '@/types';
 
 // Validation schemas
 const createCaseDocumentSchema = z.object({
@@ -33,7 +34,7 @@ const createCaseDocumentSchema = z.object({
 // GET /api/cases/[id]/documents - List documents for a specific case
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -42,6 +43,12 @@ export async function GET(
     }
 
     const { id: caseId } = await params;
+    if (!caseId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const { searchParams } = new URL(request.url);
 
     // Verify case exists and user has access
@@ -186,7 +193,7 @@ export async function GET(
 // POST /api/cases/[id]/documents - Upload document to specific case
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -195,6 +202,12 @@ export async function POST(
     }
 
     const { id: caseId } = await params;
+    if (!caseId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Verify case exists and user has access
     const case_ = await prisma.case.findUnique({

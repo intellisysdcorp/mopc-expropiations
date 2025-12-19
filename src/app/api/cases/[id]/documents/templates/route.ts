@@ -7,6 +7,7 @@ import path from 'path';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // Define document templates for different stages and document types
 const DOCUMENT_TEMPLATES = {
@@ -195,7 +196,7 @@ Tasador Profesional Mat. [MATRICULA_TASADOR]
 // GET /api/cases/[id]/documents/templates - Get available templates for case stage
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -204,6 +205,12 @@ export async function GET(
     }
 
     const { id: caseId } = await params;
+    if (!caseId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const { searchParams } = new URL(request.url);
     const documentType = searchParams.get('documentType');
 
@@ -297,7 +304,7 @@ export async function GET(
 // POST /api/cases/[id]/documents/templates - Create document from template
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -306,6 +313,13 @@ export async function POST(
     }
 
     const { id: caseId } = await params;
+    if (!caseId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
+
     const { templateId, templateData, customizations } = await request.json();
 
     if (!templateId || !templateData) {

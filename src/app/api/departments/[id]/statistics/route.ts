@@ -5,11 +5,12 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { CaseStatus } from '@/prisma/client';
+import { URLParams } from '@/types';
 
 // GET /api/departments/[id]/statistics - Get department statistics
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -18,6 +19,12 @@ export async function GET(
     }
 
     const departmentId = (await params).id;
+    if (!departmentId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check if department exists
     const department = await prisma.department.findUnique({

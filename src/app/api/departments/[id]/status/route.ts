@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // Type definitions for department status updates
 interface DepartmentStatusUpdate {
@@ -34,8 +35,15 @@ const statusChangeSchema = z.object({
 // PATCH /api/departments/[id]/status - Update department status
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
+  const { id } = await params;
+  if (!id) {
+    return NextResponse.json(
+      { error: 'Bad Request: missing key param'},
+      { status: 400 }
+    )
+  }
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -56,7 +64,7 @@ export async function PATCH(
 
     // Check if department exists
     const department = await prisma.department.findUnique({
-      where: { id: (await params).id },
+      where: { id },
       include: {
         _count: {
           select: {
@@ -109,7 +117,7 @@ export async function PATCH(
 
     // Update department status
     const updatedDepartment = await prisma.department.update({
-      where: { id: (await params).id },
+      where: { id },
       data: updateData,
       include: {
         parent: {
@@ -133,7 +141,7 @@ export async function PATCH(
       userId: session.user.id,
       action: 'UPDATED',
       entityType: 'department',
-      entityId: (await params).id,
+      entityId: id,
       description: `Estado del departamento actualizado: ${department.name}`,
       metadata: {
         departmentName: department.name,
@@ -182,8 +190,15 @@ export async function PATCH(
 // GET /api/departments/[id]/status - Get department status history
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
+  const { id } = await params;
+  if (!id) {
+    return NextResponse.json(
+      { error: 'Bad Request: missing key param'},
+      { status: 400 }
+    )
+  }
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -196,7 +211,7 @@ export async function GET(
 
     // Check if department exists
     const department = await prisma.department.findUnique({
-      where: { id: (await params).id },
+      where: { id },
       select: { id: true, name: true, code: true, isActive: true },
     });
 
@@ -210,7 +225,7 @@ export async function GET(
     const activities = await prisma.activity.findMany({
       where: {
         entityType: 'department',
-        entityId: (await params).id,
+        entityId: id,
         action: 'UPDATED',
       },
       include: {

@@ -56,11 +56,11 @@
       "@/prisma/*": ["./src/generated/prisma/*"]
     },
     "forceConsistentCasingInFileNames": true,
-    "noUncheckedIndexedAccess": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
+    "target": "ES2023",
+    "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
-    "target": "ES2023"
   },
   "include": [
     "next-env.d.ts",

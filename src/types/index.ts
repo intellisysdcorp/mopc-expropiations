@@ -191,3 +191,9 @@ export type {
 } from './observation';
 
 export type { ObservationPriority, ObservationStatus } from './observation';
+
+export interface URLParams {
+  params: Promise<
+    Record<string, string>
+  >
+}

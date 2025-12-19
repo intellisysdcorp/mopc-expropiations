@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { DocumentActionType } from '@/prisma/client';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // Type for permission with includes
 type PermissionWithIncludes = {
@@ -65,7 +66,7 @@ const createPermissionSchema = z.object({
 // GET /api/documents/[id]/permissions - Get document permissions
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -74,6 +75,12 @@ export async function GET(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check if document exists and user has permission to view permissions
     const document = await prisma.document.findUnique({
@@ -159,7 +166,7 @@ export async function GET(
 // POST /api/documents/[id]/permissions - Create new permission
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -168,6 +175,13 @@ export async function POST(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
+
     const body = await request.json();
     const validatedData = createPermissionSchema.parse(body);
 

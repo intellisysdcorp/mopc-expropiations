@@ -5,11 +5,12 @@ import { prisma } from '@/lib/prisma'
 import { logActivity } from '@/lib/activity-logger'
 import { CaseAssignmentSchema } from '@/lib/validations/case'
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types'
 
 // PUT /api/cases/[id]/assign - Assign or reassign a case
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -18,6 +19,13 @@ export async function PUT(
     }
 
     const { id: caseId } = await params
+    if (!caseId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
+
     const body = await request.json()
     const validationResult = CaseAssignmentSchema.safeParse(body)
 

@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { logger } from '@/lib/logger'
+import { URLParams } from '@/types'
 
 const updateConfigSchema = z.object({
   value: z.any(),
@@ -11,12 +12,19 @@ const updateConfigSchema = z.object({
 })
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ key: string }> }
+  _request: NextRequest,
+  { params }: URLParams
 ) {
   try {
     const session = await auth()
     const key = (await params).key
+
+    if (!key) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Only allow super admins to access system configurations
     if (!session?.user || session.user.role !== 'super_admin') {
@@ -67,11 +75,18 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ key: string }> }
+  { params }: URLParams 
 ) {
   try {
     const session = await auth()
     const key = (await params).key
+
+    if (!key) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Only allow super admins to update system configurations
     if (!session?.user || session.user.role !== 'super_admin') {
@@ -169,12 +184,19 @@ export async function PUT(
 }
 
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ key: string }> }
+  _request: NextRequest,
+  { params }: URLParams 
 ) {
   try {
     const session = await auth()
     const key = (await params).key
+
+    if (!key) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Only allow super admins to delete system configurations
     if (!session?.user || session.user.role !== 'super_admin') {

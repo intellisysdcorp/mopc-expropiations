@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // Type for the user where clause
 type UserWhereClause = {
@@ -24,7 +25,7 @@ type UserWhereClause = {
 // GET /api/departments/[id]/users - Get users in a department
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -42,6 +43,12 @@ export async function GET(
     const sortOrder = searchParams.get('sortOrder') || 'asc';
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check if department exists
     const department = await prisma.department.findUnique({
@@ -152,7 +159,7 @@ const transferUserSchema = z.object({
 // POST /api/departments/[id]/users - Transfer users to another department
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -173,6 +180,12 @@ export async function POST(
     const validatedData = transferUserSchema.parse(body);
 
     const { id: sourceDepartmentId } = await params;
+    if (!sourceDepartmentId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const { destinationDepartmentId, userIds, transferType, reason, scheduledFor, notes } = validatedData;
 
     // Validate source department

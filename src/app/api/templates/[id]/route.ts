@@ -5,6 +5,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import type { Prisma } from '@/prisma/client';
+import { URLParams } from '@/types';
 
 // Helper function to add fullName to objects with firstName and lastName
 function withFullName<T extends { firstName: string; lastName: string }>(obj: T): T & { fullName: string } {
@@ -17,7 +18,7 @@ function withFullName<T extends { firstName: string; lastName: string }>(obj: T)
 // GET /api/templates/[id] - Get a specific template
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -26,6 +27,12 @@ export async function GET(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Get template with full details
     const template = await prisma.documentTemplate.findUnique({
@@ -131,7 +138,7 @@ export async function GET(
 // PUT /api/templates/[id] - Update template
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -140,6 +147,12 @@ export async function PUT(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const body = await request.json();
 
     // Check if template exists and user has permission
@@ -246,7 +259,7 @@ export async function PUT(
 // DELETE /api/templates/[id] - Delete template
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -255,6 +268,12 @@ export async function DELETE(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check if template exists and user has permission
     const existingTemplate = await prisma.documentTemplate.findUnique({

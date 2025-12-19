@@ -5,11 +5,12 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { logActivity } from '@/lib/activity-logger'
 import { CaseStatusUpdateSchema } from '@/lib/validations/case'
+import { URLParams } from '@/types';
 
 // PUT /api/cases/[id]/status - Update case status
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -18,6 +19,13 @@ export async function PUT(
     }
 
     const { id: caseId } = await params
+    if (!caseId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
+
     const body = await request.json()
     const validationResult = CaseStatusUpdateSchema.safeParse(body)
 

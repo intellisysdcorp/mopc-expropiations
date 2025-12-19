@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // Helper function to add fullName to objects with firstName and lastName
 function withFullName<T extends { firstName: string; lastName: string }>(obj: T): T & { fullName: string } {
@@ -16,7 +17,7 @@ function withFullName<T extends { firstName: string; lastName: string }>(obj: T)
 // POST /api/templates/[id]/versions - Create new template version
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -25,6 +26,12 @@ export async function POST(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const body = await request.json();
 
     // Check if template exists and user has permission
@@ -100,7 +107,7 @@ export async function POST(
 // GET /api/templates/[id]/versions - Get all versions of a template
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -109,6 +116,12 @@ export async function GET(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check if template exists and user has permission
     const existingTemplate = await prisma.documentTemplate.findUnique({

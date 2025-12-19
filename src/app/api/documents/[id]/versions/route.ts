@@ -9,6 +9,7 @@ import path from 'path';
 import crypto from 'crypto';
 import { DocumentActionType } from '@/prisma/client';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // Validation schemas
 const createVersionSchema = z.object({
@@ -21,7 +22,7 @@ const createVersionSchema = z.object({
 // GET /api/documents/[id]/versions - Get document versions
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -30,6 +31,12 @@ export async function GET(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check if document exists and user has permission
     const document = await prisma.document.findUnique({
@@ -104,7 +111,7 @@ export async function GET(
 // POST /api/documents/[id]/versions - Create new document version
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -113,6 +120,12 @@ export async function POST(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const versionData = JSON.parse(formData.get('versionData') as string);

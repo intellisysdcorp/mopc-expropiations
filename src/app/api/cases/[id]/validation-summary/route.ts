@@ -3,11 +3,12 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // GET /api/cases/[id]/validation-summary - Get comprehensive validation summary
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  _request: NextRequest,
+  { params }: URLParams
 ) {
   try {
     const session = await getSession();
@@ -16,6 +17,12 @@ export async function GET(
     }
 
     const { id: caseId } = await params;
+    if (!caseId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Get case information
     const caseInfo = await prisma.case.findUnique({

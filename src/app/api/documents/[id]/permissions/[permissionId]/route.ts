@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { DocumentActionType, type Prisma } from '@/prisma/client';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // Validation schemas
 const updatePermissionSchema = z.object({
@@ -23,7 +24,7 @@ const updatePermissionSchema = z.object({
 // PUT /api/documents/[id]/permissions/[permissionId] - Update permission
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string; permissionId: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -32,6 +33,12 @@ export async function PUT(
     }
 
     const { id, permissionId } = await params;
+    if (!id || !permissionId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const body = await request.json();
     const validatedData = updatePermissionSchema.parse(body);
 
@@ -183,7 +190,7 @@ export async function PUT(
 // DELETE /api/documents/[id]/permissions/[permissionId] - Delete permission
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string; permissionId: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -192,6 +199,12 @@ export async function DELETE(
     }
 
     const { id, permissionId } = await params;
+    if (!id || !permissionId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check if document exists and user has permission to manage permissions
     const document = await prisma.document.findUnique({

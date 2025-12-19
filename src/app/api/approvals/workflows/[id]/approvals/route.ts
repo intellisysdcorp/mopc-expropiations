@@ -5,9 +5,10 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { ActivityType, ApprovalStatus } from '@/prisma/client';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 const updateApprovalSchema = z.object({
-  decision: z.nativeEnum(ApprovalStatus),
+  decision: z.enum(ApprovalStatus),
   comments: z.string().optional(),
   conditions: z.array(z.string()).optional(),
   delegationTo: z.string().optional(),
@@ -15,9 +16,18 @@ const updateApprovalSchema = z.object({
 
 // GET /api/approvals/workflows/[id]/approvals - Get workflow approvals
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  _request: NextRequest,
+  { params }: URLParams
 ) {
+  const { id } = await params;
+
+  if (!id) {
+    return NextResponse.json(
+      { error: 'Bad Request: missing key param'},
+      { status: 400 }
+    )
+  }
+
   try {
     const session = await getSession();
     if (!session) {
@@ -26,7 +36,7 @@ export async function GET(
 
     // Check if workflow exists and user has access
     const workflow = await prisma.approvalWorkflow.findUnique({
-      where: { id: (await params).id },
+      where: { id},
       include: {
         approvals: {
           include: {
@@ -81,7 +91,7 @@ export async function GET(
 // POST /api/approvals/workflows/[id]/approvals - Submit approval decision
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getSession();
@@ -91,10 +101,18 @@ export async function POST(
 
     const body = await request.json();
     const validatedData = updateApprovalSchema.parse(body);
+    const id = (await params).id
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Check if workflow exists and is pending
     const workflow = await prisma.approvalWorkflow.findUnique({
-      where: { id: (await params).id },
+      where: { id },
       include: {
         approvals: true,
         case: true,
@@ -119,7 +137,7 @@ export async function POST(
     let approval = await prisma.approval.findUnique({
       where: {
         workflowId_userId: {
-          workflowId: (await params).id,
+          workflowId: id,
           userId: session.user.id,
         },
       },
@@ -173,7 +191,7 @@ export async function POST(
 
     // Check if workflow can be completed
     const allApprovals = await prisma.approval.findMany({
-      where: { workflowId: (await params).id },
+      where: { workflowId: id },
     });
 
     const approvedCount = allApprovals.filter(a => a.decision === ApprovalStatus.APPROVED).length;
@@ -199,7 +217,7 @@ export async function POST(
     // Update workflow status if changed
     if (workflowStatus !== workflow.status) {
       await prisma.approvalWorkflow.update({
-        where: { id: (await params).id },
+        where: { id },
         data: {
           status: workflowStatus,
           completedAt,

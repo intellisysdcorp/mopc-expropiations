@@ -19,6 +19,7 @@ import {
   handleApiError,
   type StageTransitionData
 } from '@/lib/services/stage-transition.service';
+import { URLParams } from '@/types';
 
 const progressionSchema = z.object({
   toStage: z.enum(CaseStage),
@@ -63,11 +64,17 @@ function convertToStageTransitionData(
 // Get stage progression history for a case
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
-  try {
-    const { id: caseId } = await params;
+  const { id: caseId } = await params;
+  if (!caseId) {
+    return NextResponse.json(
+      { error: 'Bad Request: missing key param'},
+      { status: 400 }
+    )
+  }
 
+  try {
     // Get case with current stage
     const currentCase = await prisma.case.findUnique({
       where: { id: caseId },
@@ -126,10 +133,17 @@ export async function GET(
 // Progress case to next stage or return to previous stage
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
+  const { id: caseId } = await params;
+  if (!caseId) {
+    return NextResponse.json(
+      { error: 'Bad Request: missing key param'},
+      { status: 400 }
+    )
+  }
+
   try {
-    const { id: caseId } = await params;
     const body = await request.json();
 
     // Validate request body

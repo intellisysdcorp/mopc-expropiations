@@ -7,11 +7,12 @@ import fs from 'fs/promises';
 import path from 'path';
 import { DocumentActionType } from '@/prisma/client';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // GET /api/documents/[id]/download - Download a document
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -20,6 +21,12 @@ export async function GET(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Get document with permissions check
     const document = await prisma.document.findUnique({

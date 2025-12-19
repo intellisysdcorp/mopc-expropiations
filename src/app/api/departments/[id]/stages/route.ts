@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { logActivity } from '@/lib/activity-logger';
 import { CaseStage } from '@/prisma/client';
 import { logger } from '@/lib/logger';
+import { URLParams } from '@/types';
 
 // Schema for stage assignment
 const stageAssignmentSchema = z.object({
@@ -15,9 +16,16 @@ const stageAssignmentSchema = z.object({
 
 // GET /api/departments/[id]/stages - Get department stage assignments
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  _request: NextRequest,
+  { params }: URLParams
 ) {
+  const { id  } = await params;
+  if (!id) {
+    return NextResponse.json(
+      { error: 'Bad Request: missing key param'},
+      { status: 400 }
+    )
+  }
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -26,7 +34,7 @@ export async function GET(
 
     // Check if department exists
     const department = await prisma.department.findUnique({
-      where: { id: (await params).id },
+      where: { id },
       select: { id: true, name: true, code: true },
     });
 
@@ -40,7 +48,7 @@ export async function GET(
     // Get current stage assignments
     const assignments = await prisma.departmentStageAssignment.findMany({
       where: {
-        departmentId: (await params).id,
+        departmentId: id,
         isActive: true,
       },
       include: {
@@ -59,7 +67,7 @@ export async function GET(
       allStages.map(async (stage) => {
         const count = await prisma.case.count({
           where: {
-            departmentId: (await params).id,
+            departmentId: id,
             currentStage: stage,
           },
         });
@@ -95,7 +103,7 @@ export async function GET(
 // POST /api/departments/[id]/stages - Assign stages to department
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -113,6 +121,12 @@ export async function POST(
     }
 
     const { id } = await params;
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
     const body = await request.json();
     const { stages } = stageAssignmentSchema.parse(body);
 
@@ -166,7 +180,7 @@ export async function POST(
         assignedStages: stages,
         previousAssignments: await prisma.departmentStageAssignment.findMany({
           where: {
-            departmentId: (await params).id,
+            departmentId: id,
             isActive: false,
           },
           select: { stage: true, assignedAt: true },

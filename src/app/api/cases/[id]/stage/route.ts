@@ -6,11 +6,12 @@ import { prisma } from '@/lib/prisma'
 import { logActivity } from '@/lib/activity-logger'
 import { CaseStageUpdateSchema } from '@/lib/validations/case'
 import { calculateProgressPercentage, isValidStageTransition } from '@/lib/stage-utils'
+import { URLParams } from '@/types';
 
 // PUT /api/cases/[id]/stage - Update case stage
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -19,6 +20,13 @@ export async function PUT(
     }
 
     const { id: caseId } = await params
+    if (!caseId) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
+
     const body = await request.json()
     const validationResult = CaseStageUpdateSchema.safeParse(body)
 

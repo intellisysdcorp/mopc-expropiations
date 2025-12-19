@@ -2,14 +2,22 @@ import { logger } from '@/lib/logger';
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { URLParams } from '@/types';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ key: string }> }
+  { params }: URLParams
 ) {
   try {
     const session = await auth()
     const key = (await params).key
+
+    if (!key) {
+      return NextResponse.json(
+        { error: 'Bad Request: missing key param'},
+        { status: 400 }
+      )
+    }
 
     // Only allow super admins to access configuration history
     if (!session?.user || session.user.role !== 'super_admin') {

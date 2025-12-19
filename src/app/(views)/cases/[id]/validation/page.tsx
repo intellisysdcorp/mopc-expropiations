@@ -5,12 +5,7 @@ import { notFound } from 'next/navigation';
 import { ValidationDashboard } from '@/components/validation/validation-dashboard';
 import { Card, CardContent } from '@/components/ui/card';
 import clientLogger from '@/lib/client-logger';
-
-interface Props {
-  params: Promise<{
-    id: string;
-  }>;
-}
+import { URLParams } from '@/types';
 
 interface CaseInfo {
   id: string;
@@ -39,7 +34,7 @@ interface CaseValidationSummary {
   status: 'COMPLIANT' | 'WARNING' | 'CRITICAL' | 'BLOCKED';
 }
 
-export default function ValidationPage({ params }: Props) {
+export default function ValidationPage({ params }: URLParams) {
   const [caseInfo, setCaseInfo] = useState<CaseInfo | null>(null);
   const [validationSummary, setValidationSummary] = useState<CaseValidationSummary | null>(null);
   const [loading, setLoading] = useState(true);
