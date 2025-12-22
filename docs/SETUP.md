@@ -86,10 +86,10 @@ sudo mysql_secure_installation
 **macOS (usando Homebrew):**
 ```bash
 # Instalar MariaDB
-brew install mysql
+brew install mariadb
 
 # Iniciar MariaDB
-brew services start mysql
+brew services start mariadb
 
 # Asegurar instalación
 mysql_secure_installation
