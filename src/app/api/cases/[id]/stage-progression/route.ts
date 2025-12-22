@@ -231,7 +231,7 @@ export async function POST(
     const updatedCase = await updateCaseStage(
       caseId,
       validatedData.toStage,
-      validatedData.toStage === CaseStage.CIERRE_ARCHIVO ? 'COMPLETADO' : 'EN_PROGRESO'
+      validatedData.toStage === CaseStage.ENTREGA_CHEQUE ? 'COMPLETADO' : 'EN_PROGRESO'
     );
 
     // Deactivate current stage assignment

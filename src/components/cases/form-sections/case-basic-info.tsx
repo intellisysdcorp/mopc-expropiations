@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import clientLogger from '@/lib/client-logger'
 import { useEnhancedToast } from '@/components/ui/enhanced-toast-provider'
+import { CASE_STAGES } from '@/constants/stages'
 
 interface FormSectionProps {
   register: UseFormRegister<any>
@@ -41,26 +42,6 @@ const STATUSES = [
   { value: 'ARCHIVED', label: 'Archivado', color: 'bg-gray-100 text-gray-800' },
   { value: 'SUSPENDED', label: 'Suspendido', color: 'bg-orange-100 text-orange-800' },
   { value: 'CANCELLED', label: 'Cancelado', color: 'bg-red-100 text-red-800' },
-]
-
-const STAGES = [
-  { value: 'RECEPCION_SOLICITUD', label: 'Recepción de Solicitud' },
-  { value: 'VERIFICACION_REQUISITOS', label: 'Verificación de Requisitos' },
-  { value: 'CARGA_DOCUMENTOS', label: 'Carga de Documentos' },
-  { value: 'ASIGNACION_ANALISTA', label: 'Asignación de Analista' },
-  { value: 'ANALISIS_PRELIMINAR', label: 'Análisis Preliminar' },
-  { value: 'NOTIFICACION_PROPIETARIO', label: 'Notificación al Propietario' },
-  { value: 'PERITAJE_TECNICO', label: 'Peritaje Técnico' },
-  { value: 'DETERMINACION_VALOR', label: 'Determinación de Valor' },
-  { value: 'OFERTA_COMPRA', label: 'Oferta de Compra' },
-  { value: 'NEGOCIACION', label: 'Negociación' },
-  { value: 'APROBACION_ACUERDO', label: 'Aprobación de Acuerdo' },
-  { value: 'ELABORACION_ESCRITURA', label: 'Elaboración de Escritura' },
-  { value: 'FIRMA_DOCUMENTOS', label: 'Firma de Documentos' },
-  { value: 'REGISTRO_PROPIEDAD', label: 'Registro de Propiedad' },
-  { value: 'DESEMBOLSO_PAGO', label: 'Desembolso y Pago' },
-  { value: 'ENTREGA_INMUEBLE', label: 'Entrega del Inmueble' },
-  { value: 'CIERRE_ARCHIVO', label: 'Cierre de Archivo' },
 ]
 
 export function CaseBasicInfo({ register, errors, setValue, watch }: FormSectionProps) {
@@ -256,7 +237,7 @@ export function CaseBasicInfo({ register, errors, setValue, watch }: FormSection
                 <SelectValue placeholder="Seleccionar etapa" />
               </SelectTrigger>
               <SelectContent>
-                {STAGES.map(stage => (
+                {CASE_STAGES.map(stage => (
                   <SelectItem key={stage.value} value={stage.value}>
                     {stage.label}
                   </SelectItem>

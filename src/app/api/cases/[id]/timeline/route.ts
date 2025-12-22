@@ -432,7 +432,7 @@ function buildTimeline(caseData: any, allStages: any[]): TimelineResponse {
   allEvents.push({
     id: 'case-created',
     type: 'stage_start',
-    stage: CaseStage.RECEPCION_SOLICITUD,
+    stage: CaseStage.AVALUO,
     stageName: 'Recepción de Solicitud',
     title: 'Caso creado',
     description: `Caso ${caseData.fileNumber} ha sido creado`,

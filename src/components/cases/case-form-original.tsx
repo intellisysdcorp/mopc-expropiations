@@ -29,23 +29,19 @@ import { DocumentList } from '@/components/cases/document-list'
 
 // Updated enums to match database schema
 const CASE_STAGES = [
-  { value: 'RECEPCION_SOLICITUD', label: 'Recepción de Solicitud' },
-  { value: 'VERIFICACION_REQUISITOS', label: 'Verificación de Requisitos' },
-  { value: 'CARGA_DOCUMENTOS', label: 'Carga de Documentos' },
-  { value: 'ASIGNACION_ANALISTA', label: 'Asignación de Analista' },
-  { value: 'ANALISIS_PRELIMINAR', label: 'Análisis Preliminar' },
-  { value: 'NOTIFICACION_PROPIETARIO', label: 'Notificación al Propietario' },
-  { value: 'PERITAJE_TECNICO', label: 'Peritaje Técnico' },
-  { value: 'DETERMINACION_VALOR', label: 'Determinación de Valor' },
-  { value: 'OFERTA_COMPRA', label: 'Oferta de Compra' },
-  { value: 'NEGOCIACION', label: 'Negociación' },
-  { value: 'APROBACION_ACUERDO', label: 'Aprobación de Acuerdo' },
-  { value: 'ELABORACION_ESCRITURA', label: 'Elaboración de Escritura' },
-  { value: 'FIRMA_DOCUMENTOS', label: 'Firma de Documentos' },
-  { value: 'REGISTRO_PROPIEDAD', label: 'Registro de Propiedad' },
-  { value: 'DESEMBOLSO_PAGO', label: 'Desembolso y Pago' },
-  { value: 'ENTREGA_INMUEBLE', label: 'Entrega del Inmueble' },
-  { value: 'CIERRE_ARCHIVO', label: 'Cierre de Archivo' },
+  { value: 'AVALUO', label: 'Avalúo' },
+  { value: 'REVISION_LEGAL', label: 'Revisión Legal' },
+  { value: 'CUMPLIMIENTO_NORMATIVO', label: 'Cumplimiento Normativo' },
+  { value: 'VALIDACION_TECNICA', label: 'Validación Técnica' },
+  { value: 'VALIDACION_ADMINISTRATIVA', label: 'Validación Administrativa' },
+  { value: 'SANCION_INICIAL_MINISTRO', label: 'Sanción Inicial de Ministro' },
+  { value: 'PROGRAMACION_PAGO', label: 'Programación de Pago' },
+  { value: 'REVISION_LEGAL_FINAL', label: 'Revisión Legal Final' },
+  { value: 'CERTIFICACION_CONTRATO', label: 'Certificación de Contrato' },
+  { value: 'AUTORIZACION_PAGO', label: 'Autorización de Pago' },
+  { value: 'REVISION_LIBRAMIENTO', label: 'Revisión de Libramiento' },
+  { value: 'EMISION_PAGO', label: 'Emisión de Pago' },
+  { value: 'ENTREGA_CHEQUE', label: 'Entrega de Cheque' },
   { value: 'SUSPENDED', label: 'Suspendido' },
   { value: 'CANCELLED', label: 'Cancelado' }
 ]
@@ -199,7 +195,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
       title: '',
       description: '',
       priority: 'MEDIUM',
-      currentStage: 'RECEPCION_SOLICITUD',
+      currentStage: 'AVALUO',
       propertyAddress: '',
       propertyCity: '',
       propertyProvince: '',
@@ -1126,7 +1122,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
                   <div className="space-y-2">
                     <Label htmlFor="currentStage">Etapa Actual</Label>
                     <Select
-                      value={formData.currentStage || 'RECEPCION_SOLICITUD'}
+                      value={formData.currentStage || 'AVALUO'}
                       onValueChange={(value) => handleInputChange('currentStage', value)}
                     >
                       <SelectTrigger>
@@ -1642,7 +1638,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
                 {/* Document Upload Section */}
                 <DocumentUpload
                   caseId={caseId!}
-                  currentStage={formData.currentStage || 'RECEPCION_SOLICITUD'}
+                  currentStage={formData.currentStage || 'AVALUO'}
                   onUploadComplete={handleDocumentUploadComplete}
                 />
 

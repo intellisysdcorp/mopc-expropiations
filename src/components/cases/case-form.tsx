@@ -517,7 +517,7 @@ export function CaseForm({ mode, caseId, initialData }: CaseFormProps) {
               <div className="space-y-6">
                 <DocumentUpload
                   caseId={caseId!}
-                  currentStage={formData.currentStage || 'RECEPCION_SOLICITUD'}
+                  currentStage={formData.currentStage || 'AVALUO'}
                   onUploadComplete={handleDocumentUploadComplete}
                 />
 

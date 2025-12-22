@@ -14,23 +14,19 @@ const ExpropriationReasonEnum = z.enum([
 ])
 const UrgencyLevelEnum = z.enum(['normal', 'urgente', 'inmediata'])
 const CaseStageEnum = z.enum([
-  'RECEPCION_SOLICITUD',
-  'VERIFICACION_REQUISITOS',
-  'CARGA_DOCUMENTOS',
-  'ASIGNACION_ANALISTA',
-  'ANALISIS_PRELIMINAR',
-  'NOTIFICACION_PROPIETARIO',
-  'PERITAJE_TECNICO',
-  'DETERMINACION_VALOR',
-  'OFERTA_COMPRA',
-  'NEGOCIACION',
-  'APROBACION_ACUERDO',
-  'ELABORACION_ESCRITURA',
-  'FIRMA_DOCUMENTOS',
-  'REGISTRO_PROPIEDAD',
-  'DESEMBOLSO_PAGO',
-  'ENTREGA_INMUEBLE',
-  'CIERRE_ARCHIVO',
+  'AVALUO',
+  'REVISION_LEGAL',
+  'CUMPLIMIENTO_NORMATIVO',
+  'VALIDACION_TECNICA',
+  'VALIDACION_ADMINISTRATIVA',
+  'SANCION_INICIAL_MINISTRO',
+  'PROGRAMACION_PAGO',
+  'REVISION_LEGAL_FINAL',
+  'CERTIFICACION_CONTRATO',
+  'AUTORIZACION_PAGO',
+  'REVISION_LIBRAMIENTO',
+  'EMISION_PAGO',
+  'ENTREGA_CHEQUE',
   'SUSPENDED',
   'CANCELLED'
 ])
@@ -51,7 +47,7 @@ export const CaseSchema = z.object({
 
   priority: PriorityEnum.default('MEDIUM'),
   status: CaseStatusEnum.default('PENDIENTE'),
-  currentStage: CaseStageEnum.default('RECEPCION_SOLICITUD'),
+  currentStage: CaseStageEnum.default('AVALUO'),
 
   // Dates
   startDate: z.coerce.date().optional(),

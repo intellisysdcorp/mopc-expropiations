@@ -6,6 +6,9 @@ import fs from 'fs/promises';
 import { DocumentFormData } from '@/types/client';
 import { logger } from '@/lib/logger';
 
+// Re-export for backward compatibility
+export { STAGE_DOCUMENT_TYPES } from '@/constants/stages';
+
 // File upload configuration
 export const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 export const ALLOWED_MIME_TYPES = [
@@ -35,20 +38,6 @@ export const ALLOWED_MIME_TYPES = [
 
 // Storage configuration
 const UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'documents');
-
-// Document type configurations based on case stages
-export const STAGE_DOCUMENT_TYPES = {
-  'RECEPCION_SOLICITUD': ['LEGAL', 'ADMINISTRATIVE', 'CORRESPONDENCE'],
-  'VALIDACION_PRELIMINAR': ['LEGAL', 'ADMINISTRATIVE', 'EVIDENCE'],
-  'EVALUACION_TECNICA': ['TECHNICAL', 'PLAN', 'EVIDENCE', 'PHOTO'],
-  'DICTAMEN_JURIDICO': ['LEGAL', 'REPORT', 'APPRAISAL'],
-  'TASACION': ['APPRAISAL', 'FINANCIAL', 'PLAN', 'PHOTO'],
-  'NEGOCIACION': ['CORRESPONDENCE', 'FINANCIAL', 'CONTRACT'],
-  'DOCUMENTACION_LEGAL': ['LEGAL', 'PERMIT', 'CONTRACT', 'ADMINISTRATIVE'],
-  'PAGO': ['FINANCIAL', 'CONTRACT', 'CORRESPONDENCE'],
-  'ENTREGA': ['ADMINISTRATIVE', 'LEGAL', 'PHOTO'],
-  'CIERRE': ['REPORT', 'ADMINISTRATIVE', 'LEGAL'],
-};
 
 // Ensure upload directory exists
 async function ensureUploadDir() {

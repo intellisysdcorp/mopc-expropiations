@@ -137,10 +137,10 @@ export function BasicInfoSection({
           >
             <SelectInput
               id="currentStage"
-              value={formData.currentStage || 'RECEPCION_SOLICITUD'}
+              value={formData.currentStage || 'AVALUO'}
               onChange={(value) => onInputChange('currentStage', value)}
               placeholder="Seleccionar etapa"
-              options={CASE_STAGES}
+              options={[...CASE_STAGES]}
             />
           </FormField>
 

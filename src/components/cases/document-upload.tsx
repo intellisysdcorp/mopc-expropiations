@@ -30,7 +30,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Document, DocumentFormData } from '@/types/client'
-import clientLogger from '@/lib/client-logger';
+import clientLogger from '@/lib/client-logger'
+import { STAGE_DOCUMENT_TYPES } from '@/constants/stages';
 
 interface DocumentUploadProps {
   caseId: string
@@ -83,28 +84,7 @@ const SECURITY_LEVELS = [
   { value: 'INTERNAL', label: 'Interno' },
   { value: 'CONFIDENTIAL', label: 'Confidencial' },
   { value: 'RESTRICTED', label: 'Restringido' },
-]           
-
-// Document type configurations based on case stages
-const STAGE_DOCUMENT_TYPES = {
-  'RECEPCION_SOLICITUD': ['LEGAL', 'ADMINISTRATIVE', 'CORRESPONDENCE'],
-  'VALIDACION_PRELIMINAR': ['LEGAL', 'ADMINISTRATIVE', 'EVIDENCE'],
-  'EVALUACION_TECNICA': ['TECHNICAL', 'PLAN', 'EVIDENCE', 'PHOTO'],
-  'DICTAMEN_JURIDICO': ['LEGAL', 'REPORT', 'APPRAISAL'],
-  'TASACION': ['APPRAISAL', 'FINANCIAL', 'PLAN', 'PHOTO'],
-  'NEGOCIACION': ['CORRESPONDENCE', 'FINANCIAL', 'CONTRACT'],
-  'DOCUMENTACION_LEGAL': ['LEGAL', 'PERMIT', 'CONTRACT', 'ADMINISTRATIVE'],
-  'PAGO': ['FINANCIAL', 'CONTRACT', 'CORRESPONDENCE'],
-  'ENTREGA': ['ADMINISTRATIVE', 'LEGAL', 'PHOTO'],
-  'CIERRE': ['REPORT', 'ADMINISTRATIVE', 'LEGAL'],
-};
-
-// Get suggested document types for a case stage
-function getSuggestedDocumentTypes(stage: string): string[] {
-  return STAGE_DOCUMENT_TYPES[stage as keyof typeof STAGE_DOCUMENT_TYPES] || [
-    'LEGAL', 'ADMINISTRATIVE', 'TECHNICAL', 'OTHER'
-  ];
-}
+]
 
 export function DocumentUpload({
   caseId,
@@ -125,7 +105,7 @@ export function DocumentUpload({
     tags: '',
   })
 
-  const suggestedTypes = getSuggestedDocumentTypes(currentStage)
+  const suggestedTypes = STAGE_DOCUMENT_TYPES[currentStage as keyof typeof STAGE_DOCUMENT_TYPES]
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (disabled) return

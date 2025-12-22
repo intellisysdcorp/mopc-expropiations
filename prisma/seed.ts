@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { CaseStage } from '@/prisma/client';
 import bcrypt from 'bcryptjs';
 import { logger } from '@/lib/logger';
@@ -7,7 +8,7 @@ async function main() {
   logger.info('🌱 Starting database seeding...');
 
   // Create roles
-const superAdminRole = await prisma.role.upsert({
+  const superAdminRole = await prisma.role.upsert({
     where: { name: 'super_admin' },
     update: {},
     create: {
@@ -26,7 +27,7 @@ const superAdminRole = await prisma.role.upsert({
     },
   });
 
-const deptAdminRole = await prisma.role.upsert({
+  const deptAdminRole = await prisma.role.upsert({
     where: { name: 'department_admin' },
     update: {},
     create: {
@@ -45,7 +46,7 @@ const deptAdminRole = await prisma.role.upsert({
     },
   });
 
-const analystRole = await prisma.role.upsert({
+  const analystRole = await prisma.role.upsert({
     where: { name: 'analyst' },
     update: {},
     create: {
@@ -64,7 +65,7 @@ const analystRole = await prisma.role.upsert({
     },
   });
 
-await prisma.role.upsert({
+  await prisma.role.upsert({
     where: { name: 'supervisor' },
     update: {},
     create: {
@@ -83,7 +84,7 @@ await prisma.role.upsert({
     },
   });
 
-await prisma.role.upsert({
+  await prisma.role.upsert({
     where: { name: 'observer' },
     update: {},
     create: {
@@ -103,7 +104,7 @@ await prisma.role.upsert({
   });
 
   // Create departments
-const mainDepartment = await prisma.department.upsert({
+  const mainDepartment = await prisma.department.upsert({
     where: { code: 'MOPC' },
     update: {},
     create: {
@@ -113,7 +114,7 @@ const mainDepartment = await prisma.department.upsert({
     },
   });
 
-const legalDepartment = await prisma.department.upsert({
+  const legalDepartment = await prisma.department.upsert({
     where: { code: 'LEGAL' },
     update: {},
     create: {
@@ -124,7 +125,7 @@ const legalDepartment = await prisma.department.upsert({
     },
   });
 
-await prisma.department.upsert({
+  await prisma.department.upsert({
     where: { code: 'TECHNICAL' },
     update: {},
     create: {
@@ -135,9 +136,109 @@ await prisma.department.upsert({
     },
   });
 
-// Create users
-const hashedPassword = await bcrypt.hash('admin123', 12);
-await prisma.user.upsert({
+  // Create departments for the new workflow stages
+  await prisma.department.upsert({
+    where: { code: 'AVALUOS' },
+    update: {},
+    create: {
+      name: 'Departamento de Avalúos',
+      code: 'AVALUOS',
+      parentId: mainDepartment.id,
+      isActive: true,
+    },
+  });
+
+  await prisma.department.upsert({
+    where: { code: 'CONTROL_INTERNO' },
+    update: {},
+    create: {
+      name: 'Departamento de Control Interno',
+      code: 'CONTROL_INTERNO',
+      parentId: mainDepartment.id,
+      isActive: true,
+    },
+  });
+
+  await prisma.department.upsert({
+    where: { code: 'REVISION_ANALISIS' },
+    update: {},
+    create: {
+      name: 'Departamento de Revisión y Análisis',
+      code: 'REVISION_ANALISIS',
+      parentId: mainDepartment.id,
+      isActive: true,
+    },
+  });
+
+  await prisma.department.upsert({
+    where: { code: 'DIRECCION_GENERAL' },
+    update: {},
+    create: {
+      name: 'Dirección General Administrativa y Financiera',
+      code: 'DIRECCION_GENERAL',
+      parentId: mainDepartment.id,
+      isActive: true,
+    },
+  });
+
+  await prisma.department.upsert({
+    where: { code: 'FINANCIERO' },
+    update: {},
+    create: {
+      name: 'Departamento Financiero',
+      code: 'FINANCIERO',
+      parentId: mainDepartment.id,
+      isActive: true,
+    },
+  });
+
+  await prisma.department.upsert({
+    where: { code: 'CONTRALORIA' },
+    update: {},
+    create: {
+      name: 'Contraloría General de la República',
+      code: 'CONTRALORIA',
+      parentId: mainDepartment.id,
+      isActive: true,
+    },
+  });
+
+  await prisma.department.upsert({
+    where: { code: 'AUDITORIA_INTERNA' },
+    update: {},
+    create: {
+      name: 'Unidad de Auditoría Interna',
+      code: 'AUDITORIA_INTERNA',
+      parentId: mainDepartment.id,
+      isActive: true,
+    },
+  });
+
+  await prisma.department.upsert({
+    where: { code: 'TESORERIA' },
+    update: {},
+    create: {
+      name: 'Tesorería Nacional',
+      code: 'TESORERIA',
+      parentId: mainDepartment.id,
+      isActive: true,
+    },
+  });
+
+  await prisma.department.upsert({
+    where: { code: 'SECCION_PAGOS' },
+    update: {},
+    create: {
+      name: 'Sección de Pagos del MOPC',
+      code: 'SECCION_PAGOS',
+      parentId: mainDepartment.id,
+      isActive: true,
+    },
+  });
+
+  // Create users
+  const hashedPassword = await bcrypt.hash('admin123', 12);
+  await prisma.user.upsert({
     where: { email: 'admin@mopc.gob.do' },
     update: {},
     create: {
@@ -153,7 +254,7 @@ await prisma.user.upsert({
     },
   });
 
-await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { email: 'dept.admin@mopc.gob.do' },
     update: {},
     create: {
@@ -169,7 +270,7 @@ await prisma.user.upsert({
     },
   });
 
-await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { email: 'analyst@mopc.gob.do' },
     update: {},
     create: {
@@ -222,195 +323,237 @@ await prisma.user.upsert({
     },
   });
 
-  // Create the 17 workflow stages
+  // Create the 13 workflow stages
   const stages = [
     {
-      stage: CaseStage.RECEPCION_SOLICITUD,
-      name: 'Recepción de Solicitud',
-      description: 'Recepción inicial de la solicitud de expropiación y verificación básica',
+      stage: CaseStage.AVALUO,
+      name: 'Avalúo',
+      description: 'Confirma existencia de título y evalúa valor de inmueble',
       sequenceOrder: 1,
-      responsibleDepartment: 'MOPC',
-      estimatedDuration: 2,
-      requiredDocuments: ['solicitud_formal', 'identificacion_solicitante', 'poder_notarial'],
-      validationRules: { requiresValidRequest: true, requiresApplicantId: true },
-      autoAssignmentRules: { assignToDepartment: 'MOPC', assignByRole: 'department_admin' }
+      responsibleDepartment: 'AVALUOS',
+      estimatedDuration: 10,
+      requiredDocuments: ['titulo_propiedad', 'certificado_registro', 'planos'],
+      validationRules: {
+        requiresTitleConfirmation: true,
+        requiresValuation: true,
+      },
+      autoAssignmentRules: {
+        assignToDepartment: 'AVALUOS',
+        assignByRole: 'analyst',
+      },
     },
     {
-      stage: CaseStage.VERIFICACION_REQUISITOS,
-      name: 'Verificación de Requisitos',
-      description: 'Verificación completa de todos los requisitos legales y técnicos',
+      stage: CaseStage.REVISION_LEGAL,
+      name: 'Revisión Legal',
+      description: 'Revisa la legalidad del expediente',
       sequenceOrder: 2,
       responsibleDepartment: 'LEGAL',
-      estimatedDuration: 5,
-      requiredDocuments: ['titulo_propiedad', 'certificado_registro', 'planos'],
-      validationRules: { requiresAllDocuments: true, requiresLegalReview: true },
-      autoAssignmentRules: { assignToDepartment: 'LEGAL', assignByRole: 'analyst' }
+      estimatedDuration: 7,
+      requiredDocuments: ['informe_legal', 'documentacion_legal'],
+      validationRules: { requiresLegalReview: true, requiresLegalReport: true },
+      autoAssignmentRules: {
+        assignToDepartment: 'LEGAL',
+        assignByRole: 'analyst',
+      },
     },
     {
-      stage: CaseStage.CARGA_DOCUMENTOS,
-      name: 'Carga Inicial de Documentos',
-      description: 'Carga y verificación de todos los documentos requeridos',
+      stage: CaseStage.CUMPLIMIENTO_NORMATIVO,
+      name: 'Cumplimiento Normativo',
+      description: 'Verificación de cumplimiento normativo y documentación',
       sequenceOrder: 3,
-      responsibleDepartment: 'MOPC',
-      estimatedDuration: 3,
-      requiredDocuments: ['documentacion_completa', 'fotos_propiedad', 'valor_catastral'],
-      validationRules: { requiresDocumentUpload: true, requiresValidation: true },
-      autoAssignmentRules: { assignToDepartment: 'MOPC', assignByRole: 'analyst' }
+      responsibleDepartment: 'CONTROL_INTERNO',
+      estimatedDuration: 5,
+      requiredDocuments: ['checklist_normativo', 'informe_cumplimiento'],
+      validationRules: {
+        requiresComplianceCheck: true,
+        requiresDocumentation: true,
+      },
+      autoAssignmentRules: {
+        assignToDepartment: 'CONTROL_INTERNO',
+        assignByRole: 'analyst',
+      },
     },
     {
-      stage: CaseStage.ASIGNACION_ANALISTA,
-      name: 'Asignación de Analista',
-      description: 'Asignación del analista principal que manejará el caso',
+      stage: CaseStage.VALIDACION_TECNICA,
+      name: 'Validación Técnica',
+      description:
+        'Analiza expediente y validación técnica, emite informe favorable',
       sequenceOrder: 4,
-      responsibleDepartment: 'LEGAL',
-      estimatedDuration: 1,
-      requiredDocuments: ['expedido_caso'],
-      validationRules: { requiresAvailableAnalyst: true },
-      autoAssignmentRules: { assignToDepartment: 'LEGAL', assignByRole: 'department_admin', autoAssign: true }
+      responsibleDepartment: 'REVISION_ANALISIS',
+      estimatedDuration: 8,
+      requiredDocuments: ['informe_tecnico', 'validacion_expedito'],
+      validationRules: {
+        requiresTechnicalValidation: true,
+        requiresFavorableReport: true,
+      },
+      autoAssignmentRules: {
+        assignToDepartment: 'REVISION_ANALISIS',
+        assignByRole: 'supervisor',
+      },
     },
     {
-      stage: CaseStage.ANALISIS_PRELIMINAR,
-      name: 'Análisis Preliminar',
-      description: 'Análisis inicial del caso y evaluación de viabilidad',
+      stage: CaseStage.VALIDACION_ADMINISTRATIVA,
+      name: 'Validación Administrativa y Autorización de Ministro',
+      description:
+        'La Dirección General valida los aspectos financieros, coordina con el departamento correspondiente y escala la solicitud',
       sequenceOrder: 5,
-      responsibleDepartment: 'LEGAL',
-      estimatedDuration: 7,
-      requiredDocuments: ['informe_preliminar'],
-      validationRules: { requiresAnalysisReport: true, requiresLegalCheck: true },
-      autoAssignmentRules: { assignToDepartment: 'LEGAL', assignByRole: 'analyst' }
+      responsibleDepartment: 'DIRECCION_GENERAL',
+      estimatedDuration: 10,
+      requiredDocuments: [
+        'validacion_financiera',
+        'coordinacion_interna',
+        'solicitud_ministro',
+      ],
+      validationRules: {
+        requiresFinancialValidation: true,
+        requiresCoordination: true,
+        requiresMinisterialRequest: true,
+      },
+      autoAssignmentRules: {
+        assignToDepartment: 'DIRECCION_GENERAL',
+        assignByRole: 'department_admin',
+      },
     },
     {
-      stage: CaseStage.NOTIFICACION_PROPIETARIO,
-      name: 'Notificación al Propietario',
-      description: 'Notificación oficial al propietario sobre el proceso de expropiación',
+      stage: CaseStage.SANCION_INICIAL_MINISTRO,
+      name: 'Sanción Inicial de Ministro',
+      description:
+        'El Ministro revisa el expediente, firma la autorización y lo remite nuevamente al Departamento Financiero',
       sequenceOrder: 6,
-      responsibleDepartment: 'LEGAL',
-      estimatedDuration: 10,
-      requiredDocuments: ['notificacion_oficial', 'acuse_recibo'],
-      validationRules: { requiresOfficialNotification: true, requiresProofDelivery: true },
-      autoAssignmentRules: { assignToDepartment: 'LEGAL', assignByRole: 'analyst' }
+      responsibleDepartment: 'DIRECCION_GENERAL',
+      estimatedDuration: 5,
+      requiredDocuments: ['resolucion_ministro', 'firma_autorizacion'],
+      validationRules: {
+        requiresMinisterReview: true,
+        requiresSignature: true,
+      },
+      autoAssignmentRules: {
+        assignToDepartment: 'DIRECCION_GENERAL',
+        assignByRole: 'super_admin',
+      },
     },
     {
-      stage: CaseStage.PERITAJE_TECNICO,
-      name: 'Peritaje Técnico',
-      description: 'Evaluación técnica completa de la propiedad y sus características',
+      stage: CaseStage.PROGRAMACION_PAGO,
+      name: 'Programación de Pago',
+      description: 'Programa pago y prepara documentación financiera',
       sequenceOrder: 7,
-      responsibleDepartment: 'TECHNICAL',
-      estimatedDuration: 15,
-      requiredDocuments: ['informe_pericial', 'fotos_tecnicas', 'mediciones'],
-      validationRules: { requiresTechnicalReport: true, requiresExpertSignature: true },
-      autoAssignmentRules: { assignToDepartment: 'TECHNICAL', assignByRole: 'analyst' }
-    },
-    {
-      stage: CaseStage.DETERMINACION_VALOR,
-      name: 'Determinación de Valor',
-      description: 'Determinación del valor justo de compensación',
-      sequenceOrder: 8,
-      responsibleDepartment: 'TECHNICAL',
-      estimatedDuration: 10,
-      requiredDocuments: ['valoracion_completa', 'comparativo_mercado'],
-      validationRules: { requiresValuationReport: true, requiresMarketAnalysis: true },
-      autoAssignmentRules: { assignToDepartment: 'TECHNICAL', assignByRole: 'supervisor' }
-    },
-    {
-      stage: CaseStage.OFERTA_COMPRA,
-      name: 'Oferta de Compra',
-      description: 'Elaboración y presentación de la oferta de compra',
-      sequenceOrder: 9,
-      responsibleDepartment: 'LEGAL',
-      estimatedDuration: 5,
-      requiredDocuments: ['oferta_compra', 'justificacion_valor'],
-      validationRules: { requiresOfferDocument: true, requiresManagementApproval: true },
-      autoAssignmentRules: { assignToDepartment: 'LEGAL', assignByRole: 'department_admin' }
-    },
-    {
-      stage: CaseStage.NEGOCIACION,
-      name: 'Negociación',
-      description: 'Proceso de negociación con el propietario',
-      sequenceOrder: 10,
-      responsibleDepartment: 'LEGAL',
-      estimatedDuration: 20,
-      requiredDocuments: ['actas_negociacion', 'contrapropuestas'],
-      validationRules: { requiresNegotiationRecord: true, requiresMinOneMeeting: true },
-      autoAssignmentRules: { assignToDepartment: 'LEGAL', assignByRole: 'supervisor' }
-    },
-    {
-      stage: CaseStage.APROBACION_ACUERDO,
-      name: 'Aprobación de Acuerdo',
-      description: 'Aprobación final del acuerdo de compensación',
-      sequenceOrder: 11,
-      responsibleDepartment: 'MOPC',
+      responsibleDepartment: 'FINANCIERO',
       estimatedDuration: 7,
-      requiredDocuments: ['acuerdo_firmado', 'aprobacion_superior'],
-      validationRules: { requiresSignedAgreement: true, requiresHighLevelApproval: true },
-      autoAssignmentRules: { assignToDepartment: 'MOPC', assignByRole: 'super_admin' }
+      requiredDocuments: ['programacion_pago', 'documentacion_financiera'],
+      validationRules: {
+        requiresPaymentSchedule: true,
+        requiresFinancialDocumentation: true,
+      },
+      autoAssignmentRules: {
+        assignToDepartment: 'FINANCIERO',
+        assignByRole: 'analyst',
+      },
     },
     {
-      stage: CaseStage.ELABORACION_ESCRITURA,
-      name: 'Elaboración de Escritura',
-      description: 'Elaboración de la escritura de traspaso',
-      sequenceOrder: 12,
+      stage: CaseStage.REVISION_LEGAL_FINAL,
+      name: 'Revisión Legal Final',
+      description: 'Revisión legal final y redacción/revisión de contrato',
+      sequenceOrder: 8,
       responsibleDepartment: 'LEGAL',
       estimatedDuration: 10,
-      requiredDocuments: ['escritura_borrador', 'revision_legal'],
-      validationRules: { requiresDraftDeed: true, requiresLegalReview: true },
-      autoAssignmentRules: { assignToDepartment: 'LEGAL', assignByRole: 'analyst' }
+      requiredDocuments: ['informe_legal_final', 'contrato_borrador'],
+      validationRules: {
+        requiresFinalLegalReview: true,
+        requiresContractDraft: true,
+      },
+      autoAssignmentRules: {
+        assignToDepartment: 'LEGAL',
+        assignByRole: 'supervisor',
+      },
     },
     {
-      stage: CaseStage.FIRMA_DOCUMENTOS,
-      name: 'Firma de Documentos',
-      description: 'Firma oficial de todos los documentos legales',
-      sequenceOrder: 13,
-      responsibleDepartment: 'LEGAL',
-      estimatedDuration: 5,
-      requiredDocuments: ['escritura_firmada', 'testimonios'],
-      validationRules: { requiresSignedDocuments: true, requiresNotarySignature: true },
-      autoAssignmentRules: { assignToDepartment: 'LEGAL', assignByRole: 'department_admin' }
-    },
-    {
-      stage: CaseStage.REGISTRO_PROPIEDAD,
-      name: 'Registro de Propiedad',
-      description: 'Registro del cambio de propiedad en el Registro de Títulos',
-      sequenceOrder: 14,
-      responsibleDepartment: 'LEGAL',
+      stage: CaseStage.CERTIFICACION_CONTRATO,
+      name: 'Certificación de Contrato',
+      description: 'Certifica contrato o expediente',
+      sequenceOrder: 9,
+      responsibleDepartment: 'CONTRALORIA',
       estimatedDuration: 15,
-      requiredDocuments: ['certificado_registro', 'nuevo_titulo'],
-      validationRules: { requiresRegistryCertificate: true, requiresNewTitle: true },
-      autoAssignmentRules: { assignToDepartment: 'LEGAL', assignByRole: 'analyst' }
+      requiredDocuments: ['contrato_firmado', 'certificacion_contraloria'],
+      validationRules: {
+        requiresSignedContract: true,
+        requiresContraloriaCertification: true,
+      },
+      autoAssignmentRules: {
+        assignToDepartment: 'CONTRALORIA',
+        assignByRole: 'analyst',
+      },
     },
     {
-      stage: CaseStage.DESEMBOLSO_PAGO,
-      name: 'Desembolso de Pago',
-      description: 'Procesamiento y desembolso del pago de compensación',
-      sequenceOrder: 15,
-      responsibleDepartment: 'MOPC',
-      estimatedDuration: 10,
-      requiredDocuments: ['orden_pago', 'comprobante_pago'],
-      validationRules: { requiresPaymentOrder: true, requiresPaymentProof: true },
-      autoAssignmentRules: { assignToDepartment: 'MOPC', assignByRole: 'department_admin' }
-    },
-    {
-      stage: CaseStage.ENTREGA_INMUEBLE,
-      name: 'Entrega de Inmueble',
-      description: 'Entrega física del inmueble y acta de recepción',
-      sequenceOrder: 16,
-      responsibleDepartment: 'TECHNICAL',
-      estimatedDuration: 3,
-      requiredDocuments: ['acta_entrega', 'fotos_entrega'],
-      validationRules: { requiresDeliveryAct: true, requiresPropertyInspection: true },
-      autoAssignmentRules: { assignToDepartment: 'TECHNICAL', assignByRole: 'analyst' }
-    },
-    {
-      stage: CaseStage.CIERRE_ARCHIVO,
-      name: 'Cierre y Archivo',
-      description: 'Cierre final del caso y archivo documental',
-      sequenceOrder: 17,
-      responsibleDepartment: 'MOPC',
+      stage: CaseStage.AUTORIZACION_PAGO,
+      name: 'Autorización de Pago',
+      description:
+        'Revisa expediente certificado y elabora libramiento de pago',
+      sequenceOrder: 10,
+      responsibleDepartment: 'FINANCIERO',
       estimatedDuration: 5,
-      requiredDocuments: ['resumen_final', 'documentacion_archivada'],
-      validationRules: { requiresFinalSummary: true, requiresCompleteArchive: true },
-      autoAssignmentRules: { assignToDepartment: 'MOPC', assignByRole: 'department_admin' }
-    }
+      requiredDocuments: ['expediente_certificado', 'libramiento_pago'],
+      validationRules: {
+        requiresCertifiedFile: true,
+        requiresPaymentOrder: true,
+      },
+      autoAssignmentRules: {
+        assignToDepartment: 'FINANCIERO',
+        assignByRole: 'department_admin',
+      },
+    },
+    {
+      stage: CaseStage.REVISION_LIBRAMIENTO,
+      name: 'Revisión de Libramiento',
+      description: 'Revisa y valida libramiento de pago',
+      sequenceOrder: 11,
+      responsibleDepartment: 'AUDITORIA_INTERNA',
+      estimatedDuration: 7,
+      requiredDocuments: ['libramiento_revisado', 'informe_auditoria'],
+      validationRules: {
+        requiresPaymentOrderReview: true,
+        requiresAuditReport: true,
+      },
+      autoAssignmentRules: {
+        assignToDepartment: 'AUDITORIA_INTERNA',
+        assignByRole: 'analyst',
+      },
+    },
+    {
+      stage: CaseStage.EMISION_PAGO,
+      name: 'Emisión de Pago',
+      description:
+        'Emisión de cheque a beneficiario y envío de cheque a Sección de Pagos del MOPC',
+      sequenceOrder: 12,
+      responsibleDepartment: 'TESORERIA',
+      estimatedDuration: 3,
+      requiredDocuments: ['cheque_emitido', 'comprobante_emision'],
+      validationRules: {
+        requiresCheckIssued: true,
+        requiresEmissionProof: true,
+      },
+      autoAssignmentRules: {
+        assignToDepartment: 'TESORERIA',
+        assignByRole: 'analyst',
+      },
+    },
+    {
+      stage: CaseStage.ENTREGA_CHEQUE,
+      name: 'Entrega de Cheque',
+      description:
+        'Custodia y entrega el cheque, recoge acuse de recibo y remite expediente al Departamento de Avalúos',
+      sequenceOrder: 13,
+      responsibleDepartment: 'SECCION_PAGOS',
+      estimatedDuration: 2,
+      requiredDocuments: ['acuse_recibo', 'expediente_cerrado'],
+      validationRules: {
+        requiresReceiptProof: true,
+        requiresFileClosure: true,
+      },
+      autoAssignmentRules: {
+        assignToDepartment: 'SECCION_PAGOS',
+        assignByRole: 'analyst',
+      },
+    },
   ];
 
   for (const stageConfig of stages) {
@@ -442,22 +585,229 @@ await prisma.user.upsert({
 
   // Create checklists for each stage
   const checklistItems = [
-    // Recepción de Solicitud
-    { stage: CaseStage.RECEPCION_SOLICITUD, title: 'Verificar solicitud formal', itemType: 'DOCUMENT', sequence: 1 },
-    { stage: CaseStage.RECEPCION_SOLICITUD, title: 'Validar identificación del solicitante', itemType: 'VERIFICATION', sequence: 2 },
-    { stage: CaseStage.RECEPCION_SOLICITUD, title: 'Revisar poder notarial', itemType: 'DOCUMENT', sequence: 3 },
+    // Avalúo
+    {
+      stage: CaseStage.AVALUO,
+      title: 'Confirmar existencia de título',
+      itemType: 'VERIFICATION',
+      sequence: 1,
+    },
+    {
+      stage: CaseStage.AVALUO,
+      title: 'Evaluar valor de inmueble',
+      itemType: 'DOCUMENT',
+      sequence: 2,
+    },
+    {
+      stage: CaseStage.AVALUO,
+      title: 'Elaborar informe de avalúo',
+      itemType: 'DOCUMENT',
+      sequence: 3,
+    },
 
-    // Verificación de Requisitos
-    { stage: CaseStage.VERIFICACION_REQUISITOS, title: 'Verificar título de propiedad', itemType: 'DOCUMENT', sequence: 1 },
-    { stage: CaseStage.VERIFICACION_REQUISITOS, title: 'Validar certificado de registro', itemType: 'DOCUMENT', sequence: 2 },
-    { stage: CaseStage.VERIFICACION_REQUISITOS, title: 'Revisar planos actualizados', itemType: 'DOCUMENT', sequence: 3 },
+    // Revisión Legal
+    {
+      stage: CaseStage.REVISION_LEGAL,
+      title: 'Revisar legalidad del expediente',
+      itemType: 'VERIFICATION',
+      sequence: 1,
+    },
+    {
+      stage: CaseStage.REVISION_LEGAL,
+      title: 'Validar documentación legal',
+      itemType: 'DOCUMENT',
+      sequence: 2,
+    },
 
-    // Carga de Documentos
-    { stage: CaseStage.CARGA_DOCUMENTOS, title: 'Subir documentación completa', itemType: 'DOCUMENT', sequence: 1 },
-    { stage: CaseStage.CARGA_DOCUMENTOS, title: 'Adjuntar fotos de la propiedad', itemType: 'DOCUMENT', sequence: 2 },
-    { stage: CaseStage.CARGA_DOCUMENTOS, title: 'Incluir valor catastral', itemType: 'DOCUMENT', sequence: 3 },
+    // Cumplimiento Normativo
+    {
+      stage: CaseStage.CUMPLIMIENTO_NORMATIVO,
+      title: 'Verificar cumplimiento normativo',
+      itemType: 'VERIFICATION',
+      sequence: 1,
+    },
+    {
+      stage: CaseStage.CUMPLIMIENTO_NORMATIVO,
+      title: 'Validar documentación requerida',
+      itemType: 'DOCUMENT',
+      sequence: 2,
+    },
 
-    // ... Add more checklist items for other stages
+    // Validación Técnica
+    {
+      stage: CaseStage.VALIDACION_TECNICA,
+      title: 'Analizar expediente técnico',
+      itemType: 'VERIFICATION',
+      sequence: 1,
+    },
+    {
+      stage: CaseStage.VALIDACION_TECNICA,
+      title: 'Realizar validación técnica',
+      itemType: 'VERIFICATION',
+      sequence: 2,
+    },
+    {
+      stage: CaseStage.VALIDACION_TECNICA,
+      title: 'Emitir informe favorable',
+      itemType: 'DOCUMENT',
+      sequence: 3,
+    },
+
+    // Validación Administrativa y Autorización de Ministro
+    {
+      stage: CaseStage.VALIDACION_ADMINISTRATIVA,
+      title: 'Validar aspectos financieros',
+      itemType: 'VERIFICATION',
+      sequence: 1,
+    },
+    {
+      stage: CaseStage.VALIDACION_ADMINISTRATIVA,
+      title: 'Coordinar con departamento correspondiente',
+      itemType: 'TASK',
+      sequence: 2,
+    },
+    {
+      stage: CaseStage.VALIDACION_ADMINISTRATIVA,
+      title: 'Escalar solicitud a ministro',
+      itemType: 'DOCUMENT',
+      sequence: 3,
+    },
+
+    // Sanción Inicial de Ministro
+    {
+      stage: CaseStage.SANCION_INICIAL_MINISTRO,
+      title: 'Revisar expediente completo',
+      itemType: 'VERIFICATION',
+      sequence: 1,
+    },
+    {
+      stage: CaseStage.SANCION_INICIAL_MINISTRO,
+      title: 'Firmar autorización ministerial',
+      itemType: 'DOCUMENT',
+      sequence: 2,
+    },
+    {
+      stage: CaseStage.SANCION_INICIAL_MINISTRO,
+      title: 'Remitir al Departamento Financiero',
+      itemType: 'TASK',
+      sequence: 3,
+    },
+
+    // Programación de Pago
+    {
+      stage: CaseStage.PROGRAMACION_PAGO,
+      title: 'Programar fecha de pago',
+      itemType: 'TASK',
+      sequence: 1,
+    },
+    {
+      stage: CaseStage.PROGRAMACION_PAGO,
+      title: 'Preparar documentación financiera',
+      itemType: 'DOCUMENT',
+      sequence: 2,
+    },
+
+    // Revisión Legal Final
+    {
+      stage: CaseStage.REVISION_LEGAL_FINAL,
+      title: 'Realizar revisión legal final',
+      itemType: 'VERIFICATION',
+      sequence: 1,
+    },
+    {
+      stage: CaseStage.REVISION_LEGAL_FINAL,
+      title: 'Redactar contrato',
+      itemType: 'DOCUMENT',
+      sequence: 2,
+    },
+    {
+      stage: CaseStage.REVISION_LEGAL_FINAL,
+      title: 'Revisar contrato',
+      itemType: 'VERIFICATION',
+      sequence: 3,
+    },
+
+    // Certificación de Contrato
+    {
+      stage: CaseStage.CERTIFICACION_CONTRATO,
+      title: 'Certificar contrato',
+      itemType: 'VERIFICATION',
+      sequence: 1,
+    },
+    {
+      stage: CaseStage.CERTIFICACION_CONTRATO,
+      title: 'Certificar expediente completo',
+      itemType: 'DOCUMENT',
+      sequence: 2,
+    },
+
+    // Autorización de Pago
+    {
+      stage: CaseStage.AUTORIZACION_PAGO,
+      title: 'Revisar expediente certificado',
+      itemType: 'VERIFICATION',
+      sequence: 1,
+    },
+    {
+      stage: CaseStage.AUTORIZACION_PAGO,
+      title: 'Elaborar libramiento de pago',
+      itemType: 'DOCUMENT',
+      sequence: 2,
+    },
+
+    // Revisión de Libramiento
+    {
+      stage: CaseStage.REVISION_LIBRAMIENTO,
+      title: 'Revisar libramiento de pago',
+      itemType: 'VERIFICATION',
+      sequence: 1,
+    },
+    {
+      stage: CaseStage.REVISION_LIBRAMIENTO,
+      title: 'Validar libramiento',
+      itemType: 'VERIFICATION',
+      sequence: 2,
+    },
+
+    // Emisión de Pago
+    {
+      stage: CaseStage.EMISION_PAGO,
+      title: 'Emitir cheque a beneficiario',
+      itemType: 'DOCUMENT',
+      sequence: 1,
+    },
+    {
+      stage: CaseStage.EMISION_PAGO,
+      title: 'Enviar cheque a Sección de Pagos',
+      itemType: 'TASK',
+      sequence: 2,
+    },
+
+    // Entrega de Cheque
+    {
+      stage: CaseStage.ENTREGA_CHEQUE,
+      title: 'Custodiar cheque',
+      itemType: 'TASK',
+      sequence: 1,
+    },
+    {
+      stage: CaseStage.ENTREGA_CHEQUE,
+      title: 'Entregar cheque',
+      itemType: 'VERIFICATION',
+      sequence: 2,
+    },
+    {
+      stage: CaseStage.ENTREGA_CHEQUE,
+      title: 'Recoger acuse de recibo',
+      itemType: 'DOCUMENT',
+      sequence: 3,
+    },
+    {
+      stage: CaseStage.ENTREGA_CHEQUE,
+      title: 'Remitir expediente al Departamento de Avalúos',
+      itemType: 'TASK',
+      sequence: 4,
+    },
   ];
 
   for (const item of checklistItems) {
@@ -465,8 +815,8 @@ await prisma.user.upsert({
       where: {
         stage_sequence: {
           stage: item.stage,
-          sequence: item.sequence!
-        }
+          sequence: item.sequence!,
+        },
       },
       update: {
         title: item.title,

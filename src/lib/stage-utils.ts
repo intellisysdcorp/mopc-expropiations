@@ -1,28 +1,9 @@
-import { CaseStage } from './validations/case'
+// Import centralized stage definitions
+import { STAGE_ORDER, SPECIAL_STAGES } from '@/constants/stages'
+import type { CaseStage } from './validations/case'
 
-// Define the main workflow stage order
-export const STAGE_ORDER = [
-  'RECEPCION_SOLICITUD',           // 1
-  'VERIFICACION_REQUISITOS',       // 2
-  'CARGA_DOCUMENTOS',             // 3
-  'ASIGNACION_ANALISTA',          // 4
-  'ANALISIS_PRELIMINAR',          // 5
-  'NOTIFICACION_PROPIETARIO',     // 6
-  'PERITAJE_TECNICO',             // 7
-  'DETERMINACION_VALOR',          // 8
-  'OFERTA_COMPRA',               // 9
-  'NEGOCIACION',                 // 10
-  'APROBACION_ACUERDO',          // 11
-  'ELABORACION_ESCRITURA',        // 12
-  'FIRMA_DOCUMENTOS',             // 13
-  'REGISTRO_PROPIEDAD',          // 14
-  'DESEMBOLSO_PAGO',             // 15
-  'ENTREGA_INMUEBLE',            // 16
-  'CIERRE_ARCHIVO'               // 17
-] as const
-
-// Define special stages that aren't part of the main workflow
-export const SPECIAL_STAGES = ['SUSPENDED', 'CANCELLED'] as const
+// Re-export for backward compatibility
+export { STAGE_ORDER, SPECIAL_STAGES } from '@/constants/stages'
 
 export type MainWorkflowStage = typeof STAGE_ORDER[number]
 export type SpecialStage = typeof SPECIAL_STAGES[number]
@@ -80,7 +61,7 @@ export function isValidStageTransition(
       }
     } else if (fromStage === 'CANCELLED') {
       // From cancelled, only allow moving back to initial stage
-      if (toStage !== 'RECEPCION_SOLICITUD') {
+      if (toStage !== 'AVALUO') {
         return {
           valid: false,
           reason: 'Cancelled cases can only be moved back to initial review stage'
@@ -103,7 +84,7 @@ export function isValidStageTransition(
     return { valid: true }
   }
 
-  if (fromStage === 'CIERRE_ARCHIVO') {
+  if (fromStage === 'ENTREGA_CHEQUE') {
     // This prevents moving a completed case back into the main workflow.
     // Transitions to special stages like 'SUSPENDED' are already handled above.
     return { valid: false, reason: 'Completed cases cannot be moved back into the workflow.' };
