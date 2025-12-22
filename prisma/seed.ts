@@ -125,6 +125,7 @@ async function main() {
     { code: 'AUDITORIA_INTERNA', name: 'Unidad de Auditoría Interna' },
     { code: 'TESORERIA', name: 'Tesorería Nacional' },
     { code: 'SECCION_PAGOS', name: 'Sección de Pagos del MOPC' },
+    { code: 'JURIDICO', name: 'Departamento Jurídico'}
   ];
 
   for (const dept of newDepartments) {
@@ -251,12 +252,12 @@ async function main() {
       name: 'Revisión Legal',
       description: 'Revisa la legalidad del expediente',
       sequenceOrder: 2,
-      responsibleDepartment: 'LEGAL',
+      responsibleDepartment: 'JURIDICO',
       estimatedDuration: 7,
       requiredDocuments: ['informe_legal', 'documentacion_legal'],
       validationRules: { requiresLegalReview: true, requiresLegalReport: true },
       autoAssignmentRules: {
-        assignToDepartment: 'LEGAL',
+        assignToDepartment: 'JURIDICO',
         assignByRole: 'analyst',
       },
     },
@@ -358,7 +359,7 @@ async function main() {
       name: 'Revisión Legal Final',
       description: 'Revisión legal final y redacción/revisión de contrato',
       sequenceOrder: 8,
-      responsibleDepartment: 'LEGAL',
+      responsibleDepartment: 'JURIDICO',
       estimatedDuration: 10,
       requiredDocuments: ['informe_legal_final', 'contrato_borrador'],
       validationRules: {
@@ -366,7 +367,7 @@ async function main() {
         requiresContractDraft: true,
       },
       autoAssignmentRules: {
-        assignToDepartment: 'LEGAL',
+        assignToDepartment: 'JURIDICO',
         assignByRole: 'supervisor',
       },
     },
@@ -750,8 +751,16 @@ async function main() {
 
 🏢 Created departments:
    - MOPC (Main)
-   - LEGAL (Child of MOPC)
-   - TECHNICAL (Child of MOPC)
+   - AVALUOS (Child of MOPC)
+   - CONTROL_INTERNO (Child of MOPC)
+   - REVISION_ANALISIS (Child of MOPC)
+   - DIRECCION_GENERAL (Child of MOPC)
+   - FINANCIERO (Child of MOPC)
+   - CONTRALORIA (Child of MOPC)
+   - AUDITORIA_INTERNA (Child of MOPC)
+   - TESORERIA (Child of MOPC)
+   - SECCION_PAGOS (Child of MOPC)
+   - JURIDICO (Child of MOPC)
 
 ⚙️ Created system configuration
 📋 Sample cases will be created later`);
