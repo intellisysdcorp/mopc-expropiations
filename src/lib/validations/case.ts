@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { STAGE_ORDER, SPECIAL_STAGES } from '@/constants/stages'
 
 // Enums for validation
 const CaseStatusEnum = z.enum(['PENDIENTE', 'EN_PROGRESO', 'COMPLETADO', 'ARCHIVED', 'SUSPENDED', 'CANCELLED'])
@@ -13,23 +14,7 @@ const ExpropriationReasonEnum = z.enum([
   'otro'
 ])
 const UrgencyLevelEnum = z.enum(['normal', 'urgente', 'inmediata'])
-const CaseStageEnum = z.enum([
-  'AVALUO',
-  'REVISION_LEGAL',
-  'CUMPLIMIENTO_NORMATIVO',
-  'VALIDACION_TECNICA',
-  'VALIDACION_ADMINISTRATIVA',
-  'SANCION_INICIAL_MINISTRO',
-  'PROGRAMACION_PAGO',
-  'REVISION_LEGAL_FINAL',
-  'CERTIFICACION_CONTRATO',
-  'AUTORIZACION_PAGO',
-  'REVISION_LIBRAMIENTO',
-  'EMISION_PAGO',
-  'ENTREGA_CHEQUE',
-  'SUSPENDED',
-  'CANCELLED'
-])
+const CaseStageEnum = z.enum([...STAGE_ORDER, ...SPECIAL_STAGES])
 
 // Base case schema
 export const CaseSchema = z.object({

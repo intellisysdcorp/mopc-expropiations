@@ -114,127 +114,31 @@ async function main() {
     },
   });
 
-  const legalDepartment = await prisma.department.upsert({
-    where: { code: 'LEGAL' },
-    update: {},
-    create: {
-      name: 'Departamento Jurídico',
-      code: 'LEGAL',
-      parentId: mainDepartment.id,
-      isActive: true,
-    },
-  });
-
-  await prisma.department.upsert({
-    where: { code: 'TECHNICAL' },
-    update: {},
-    create: {
-      name: 'Departamento Técnico',
-      code: 'TECHNICAL',
-      parentId: mainDepartment.id,
-      isActive: true,
-    },
-  });
-
   // Create departments for the new workflow stages
-  await prisma.department.upsert({
-    where: { code: 'AVALUOS' },
-    update: {},
-    create: {
-      name: 'Departamento de Avalúos',
-      code: 'AVALUOS',
-      parentId: mainDepartment.id,
-      isActive: true,
-    },
-  });
+  const newDepartments = [
+    { code: 'AVALUOS', name: 'Departamento de Avalúos' },
+    { code: 'CONTROL_INTERNO', name: 'Departamento de Control Interno' },
+    { code: 'REVISION_ANALISIS', name: 'Departamento de Revisión y Análisis' },
+    { code: 'DIRECCION_GENERAL', name: 'Dirección General Administrativa y Financiera' },
+    { code: 'FINANCIERO', name: 'Departamento Financiero' },
+    { code: 'CONTRALORIA', name: 'Contraloría General de la República' },
+    { code: 'AUDITORIA_INTERNA', name: 'Unidad de Auditoría Interna' },
+    { code: 'TESORERIA', name: 'Tesorería Nacional' },
+    { code: 'SECCION_PAGOS', name: 'Sección de Pagos del MOPC' },
+  ];
 
-  await prisma.department.upsert({
-    where: { code: 'CONTROL_INTERNO' },
-    update: {},
-    create: {
-      name: 'Departamento de Control Interno',
-      code: 'CONTROL_INTERNO',
-      parentId: mainDepartment.id,
-      isActive: true,
-    },
-  });
-
-  await prisma.department.upsert({
-    where: { code: 'REVISION_ANALISIS' },
-    update: {},
-    create: {
-      name: 'Departamento de Revisión y Análisis',
-      code: 'REVISION_ANALISIS',
-      parentId: mainDepartment.id,
-      isActive: true,
-    },
-  });
-
-  await prisma.department.upsert({
-    where: { code: 'DIRECCION_GENERAL' },
-    update: {},
-    create: {
-      name: 'Dirección General Administrativa y Financiera',
-      code: 'DIRECCION_GENERAL',
-      parentId: mainDepartment.id,
-      isActive: true,
-    },
-  });
-
-  await prisma.department.upsert({
-    where: { code: 'FINANCIERO' },
-    update: {},
-    create: {
-      name: 'Departamento Financiero',
-      code: 'FINANCIERO',
-      parentId: mainDepartment.id,
-      isActive: true,
-    },
-  });
-
-  await prisma.department.upsert({
-    where: { code: 'CONTRALORIA' },
-    update: {},
-    create: {
-      name: 'Contraloría General de la República',
-      code: 'CONTRALORIA',
-      parentId: mainDepartment.id,
-      isActive: true,
-    },
-  });
-
-  await prisma.department.upsert({
-    where: { code: 'AUDITORIA_INTERNA' },
-    update: {},
-    create: {
-      name: 'Unidad de Auditoría Interna',
-      code: 'AUDITORIA_INTERNA',
-      parentId: mainDepartment.id,
-      isActive: true,
-    },
-  });
-
-  await prisma.department.upsert({
-    where: { code: 'TESORERIA' },
-    update: {},
-    create: {
-      name: 'Tesorería Nacional',
-      code: 'TESORERIA',
-      parentId: mainDepartment.id,
-      isActive: true,
-    },
-  });
-
-  await prisma.department.upsert({
-    where: { code: 'SECCION_PAGOS' },
-    update: {},
-    create: {
-      name: 'Sección de Pagos del MOPC',
-      code: 'SECCION_PAGOS',
-      parentId: mainDepartment.id,
-      isActive: true,
-    },
-  });
+  for (const dept of newDepartments) {
+    await prisma.department.upsert({
+      where: { code: dept.code },
+      update: {},
+      create: {
+        name: dept.name,
+        code: dept.code,
+        parentId: mainDepartment.id,
+        isActive: true,
+      },
+    });
+  }
 
   // Create users
   const hashedPassword = await bcrypt.hash('admin123', 12);
@@ -264,7 +168,7 @@ async function main() {
       firstName: 'Dept',
       lastName: 'Admin',
       phone: '809-555-0101',
-      departmentId: legalDepartment.id,
+      departmentId: mainDepartment.id,
       roleId: deptAdminRole.id,
       isActive: true,
     },
@@ -280,7 +184,7 @@ async function main() {
       firstName: 'Juan',
       lastName: 'Analista',
       phone: '809-555-0102',
-      departmentId: legalDepartment.id,
+      departmentId: mainDepartment.id,
       roleId: analystRole.id,
       isActive: true,
     },

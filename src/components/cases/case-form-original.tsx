@@ -26,25 +26,7 @@ import clientLogger from '@/lib/client-logger'
 import { CaseCreationDocuments } from '@/components/cases/case-creation-documents'
 import { DocumentUpload } from '@/components/cases/document-upload'
 import { DocumentList } from '@/components/cases/document-list'
-
-// Updated enums to match database schema
-const CASE_STAGES = [
-  { value: 'AVALUO', label: 'Avalúo' },
-  { value: 'REVISION_LEGAL', label: 'Revisión Legal' },
-  { value: 'CUMPLIMIENTO_NORMATIVO', label: 'Cumplimiento Normativo' },
-  { value: 'VALIDACION_TECNICA', label: 'Validación Técnica' },
-  { value: 'VALIDACION_ADMINISTRATIVA', label: 'Validación Administrativa' },
-  { value: 'SANCION_INICIAL_MINISTRO', label: 'Sanción Inicial de Ministro' },
-  { value: 'PROGRAMACION_PAGO', label: 'Programación de Pago' },
-  { value: 'REVISION_LEGAL_FINAL', label: 'Revisión Legal Final' },
-  { value: 'CERTIFICACION_CONTRATO', label: 'Certificación de Contrato' },
-  { value: 'AUTORIZACION_PAGO', label: 'Autorización de Pago' },
-  { value: 'REVISION_LIBRAMIENTO', label: 'Revisión de Libramiento' },
-  { value: 'EMISION_PAGO', label: 'Emisión de Pago' },
-  { value: 'ENTREGA_CHEQUE', label: 'Entrega de Cheque' },
-  { value: 'SUSPENDED', label: 'Suspendido' },
-  { value: 'CANCELLED', label: 'Cancelado' }
-]
+import { CASE_STAGES } from '@/constants/stages'
 
 const CASE_STATUSES = [
   { value: 'PENDIENTE', label: 'Pendiente' },
