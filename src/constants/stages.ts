@@ -3,7 +3,7 @@
  * Single source of truth for all case stage properties
  */
 
-import { CaseStage } from '@/generated/prisma/enums'
+import { CaseStage, DocumentType } from '@/generated/prisma/enums'
 
 // Individual stage configuration interface
 export interface StageConfig {
@@ -14,7 +14,7 @@ export interface StageConfig {
   color: string
   icon: string
   order: number
-  documentTypes: string[]
+  documentTypes: DocumentType[]
   estimatedDays: number
   isSpecial?: boolean
 }
@@ -29,7 +29,7 @@ export const STAGE_CONFIG: Readonly<Record<CaseStage, StageConfig>> = {
     color: '#3b82f6',
     icon: 'Search',
     order: 1,
-    documentTypes: ['LEGAL', 'ADMINISTRATIVE', 'PHOTO', 'APPRAISAL'],
+    documentTypes: [DocumentType.LEGAL_DOCUMENT, DocumentType.OTHER, DocumentType.PHOTOGRAPH, DocumentType.PROPERTY_DOCUMENT],
     estimatedDays: 10,
   },
   REVISION_LEGAL: {
@@ -40,7 +40,7 @@ export const STAGE_CONFIG: Readonly<Record<CaseStage, StageConfig>> = {
     color: '#6366f1',
     icon: 'FileText',
     order: 2,
-    documentTypes: ['LEGAL', 'ADMINISTRATIVE', 'REPORT', 'EVIDENCE'],
+    documentTypes: [DocumentType.LEGAL_DOCUMENT, DocumentType.OTHER, DocumentType.TECHNICAL_REPORT, DocumentType.PROPERTY_DOCUMENT],
     estimatedDays: 7,
   },
   CUMPLIMIENTO_NORMATIVO: {
@@ -51,7 +51,7 @@ export const STAGE_CONFIG: Readonly<Record<CaseStage, StageConfig>> = {
     color: '#8b5cf6',
     icon: 'CheckCircle',
     order: 3,
-    documentTypes: ['LEGAL', 'ADMINISTRATIVE', 'PERMIT'],
+    documentTypes: [DocumentType.LEGAL_DOCUMENT, DocumentType.OTHER, DocumentType.PROPERTY_DOCUMENT],
     estimatedDays: 5,
   },
   VALIDACION_TECNICA: {
@@ -62,7 +62,7 @@ export const STAGE_CONFIG: Readonly<Record<CaseStage, StageConfig>> = {
     color: '#a855f7',
     icon: 'BarChart3',
     order: 4,
-    documentTypes: ['TECHNICAL', 'PLAN', 'EVIDENCE', 'PHOTO', 'REPORT'],
+    documentTypes: [DocumentType.TECHNICAL_REPORT, DocumentType.PROPERTY_DOCUMENT, DocumentType.PHOTOGRAPH],
     estimatedDays: 8,
   },
   VALIDACION_ADMINISTRATIVA: {
@@ -73,7 +73,7 @@ export const STAGE_CONFIG: Readonly<Record<CaseStage, StageConfig>> = {
     color: '#d946ef',
     icon: 'Users',
     order: 5,
-    documentTypes: ['ADMINISTRATIVE', 'FINANCIAL', 'LEGAL'],
+    documentTypes: [DocumentType.OTHER, DocumentType.FINANCIAL_RECORD, DocumentType.LEGAL_DOCUMENT],
     estimatedDays: 10,
   },
   SANCION_INICIAL_MINISTRO: {
@@ -84,7 +84,7 @@ export const STAGE_CONFIG: Readonly<Record<CaseStage, StageConfig>> = {
     color: '#ec4899',
     icon: 'Stamp',
     order: 6,
-    documentTypes: ['LEGAL', 'ADMINISTRATIVE', 'REPORT'],
+    documentTypes: [DocumentType.LEGAL_DOCUMENT, DocumentType.OTHER, DocumentType.TECHNICAL_REPORT],
     estimatedDays: 5,
   },
   PROGRAMACION_PAGO: {
@@ -95,7 +95,7 @@ export const STAGE_CONFIG: Readonly<Record<CaseStage, StageConfig>> = {
     color: '#f43f5e',
     icon: 'Calendar',
     order: 7,
-    documentTypes: ['FINANCIAL', 'ADMINISTRATIVE', 'PLAN'],
+    documentTypes: [DocumentType.FINANCIAL_RECORD, DocumentType.OTHER, DocumentType.PROPERTY_DOCUMENT],
     estimatedDays: 7,
   },
   REVISION_LEGAL_FINAL: {
@@ -106,7 +106,7 @@ export const STAGE_CONFIG: Readonly<Record<CaseStage, StageConfig>> = {
     color: '#ef4444',
     icon: 'FileCheck',
     order: 8,
-    documentTypes: ['LEGAL', 'CONTRACT', 'REPORT'],
+    documentTypes: [DocumentType.LEGAL_DOCUMENT, DocumentType.CONTRACT_DOCUMENT, DocumentType.TECHNICAL_REPORT],
     estimatedDays: 10,
   },
   CERTIFICACION_CONTRATO: {
@@ -117,7 +117,7 @@ export const STAGE_CONFIG: Readonly<Record<CaseStage, StageConfig>> = {
     color: '#f97316',
     icon: 'Award',
     order: 9,
-    documentTypes: ['LEGAL', 'CONTRACT', 'PERMIT', 'ADMINISTRATIVE'],
+    documentTypes: [DocumentType.LEGAL_DOCUMENT, DocumentType.CONTRACT_DOCUMENT, DocumentType.PROPERTY_DOCUMENT, DocumentType.OTHER],
     estimatedDays: 15,
   },
   AUTORIZACION_PAGO: {
@@ -128,7 +128,7 @@ export const STAGE_CONFIG: Readonly<Record<CaseStage, StageConfig>> = {
     color: '#fb923c',
     icon: 'DollarSign',
     order: 10,
-    documentTypes: ['FINANCIAL', 'ADMINISTRATIVE', 'LEGAL'],
+    documentTypes: [DocumentType.FINANCIAL_RECORD, DocumentType.OTHER, DocumentType.LEGAL_DOCUMENT],
     estimatedDays: 5,
   },
   REVISION_LIBRAMIENTO: {
@@ -139,7 +139,7 @@ export const STAGE_CONFIG: Readonly<Record<CaseStage, StageConfig>> = {
     color: '#fbbf24',
     icon: 'FileSearch',
     order: 11,
-    documentTypes: ['FINANCIAL', 'ADMINISTRATIVE', 'REPORT'],
+    documentTypes: [DocumentType.FINANCIAL_RECORD, DocumentType.OTHER, DocumentType.TECHNICAL_REPORT],
     estimatedDays: 7,
   },
   EMISION_PAGO: {
@@ -150,7 +150,7 @@ export const STAGE_CONFIG: Readonly<Record<CaseStage, StageConfig>> = {
     color: '#facc15',
     icon: 'CreditCard',
     order: 12,
-    documentTypes: ['FINANCIAL', 'ADMINISTRATIVE', 'LEGAL'],
+    documentTypes: [DocumentType.FINANCIAL_RECORD, DocumentType.OTHER, DocumentType.LEGAL_DOCUMENT],
     estimatedDays: 3,
   },
   ENTREGA_CHEQUE: {
@@ -161,7 +161,7 @@ export const STAGE_CONFIG: Readonly<Record<CaseStage, StageConfig>> = {
     color: '#84cc16',
     icon: 'CheckCircle2',
     order: 13,
-    documentTypes: ['ADMINISTRATIVE', 'LEGAL', 'PHOTO'],
+    documentTypes: [DocumentType.OTHER, DocumentType.LEGAL_DOCUMENT, DocumentType.PHOTOGRAPH],
     estimatedDays: 2,
   },
   SUSPENDED: {
@@ -222,9 +222,9 @@ export const STAGE_COLORS: Readonly<Record<CaseStage, string>> = Object.fromEntr
 ) as Readonly<Record<CaseStage, string>>
 
 // STAGE_DOCUMENT_TYPES: Document types allowed per stage
-export const STAGE_DOCUMENT_TYPES: Readonly<Record<CaseStage, readonly string[]>> = Object.fromEntries(
-  Object.entries(STAGE_CONFIG).map(([key, config]): [string, readonly string[]] => [key, config.documentTypes])
-) as Readonly<Record<CaseStage, readonly string[]>>
+export const STAGE_DOCUMENT_TYPES: Readonly<Record<CaseStage, readonly DocumentType[]>> = Object.fromEntries(
+  Object.entries(STAGE_CONFIG).map(([key, config]): [string, readonly DocumentType[]] => [key, config.documentTypes])
+) as Readonly<Record<CaseStage, readonly DocumentType[]>>
 
 // STAGE_DEADLINES: Estimated days for each stage
 export const STAGE_DEADLINES: Readonly<Record<CaseStage, number>> = Object.fromEntries(

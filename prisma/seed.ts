@@ -567,7 +567,7 @@ async function main() {
     {
       stage: CaseStage.VALIDACION_ADMINISTRATIVA,
       title: 'Coordinar con departamento correspondiente',
-      itemType: 'TASK',
+      itemType: 'ACTION',
       sequence: 2,
     },
     {
@@ -593,7 +593,7 @@ async function main() {
     {
       stage: CaseStage.SANCION_INICIAL_MINISTRO,
       title: 'Remitir al Departamento Financiero',
-      itemType: 'TASK',
+      itemType: 'ACTION',
       sequence: 3,
     },
 
@@ -601,7 +601,7 @@ async function main() {
     {
       stage: CaseStage.PROGRAMACION_PAGO,
       title: 'Programar fecha de pago',
-      itemType: 'TASK',
+      itemType: 'ACTION',
       sequence: 1,
     },
     {
@@ -683,7 +683,7 @@ async function main() {
     {
       stage: CaseStage.EMISION_PAGO,
       title: 'Enviar cheque a Sección de Pagos',
-      itemType: 'TASK',
+      itemType: 'ACTION',
       sequence: 2,
     },
 
@@ -691,7 +691,7 @@ async function main() {
     {
       stage: CaseStage.ENTREGA_CHEQUE,
       title: 'Custodiar cheque',
-      itemType: 'TASK',
+      itemType: 'ACTION',
       sequence: 1,
     },
     {
@@ -709,7 +709,7 @@ async function main() {
     {
       stage: CaseStage.ENTREGA_CHEQUE,
       title: 'Remitir expediente al Departamento de Avalúos',
-      itemType: 'TASK',
+      itemType: 'ACTION',
       sequence: 4,
     },
   ];
