@@ -6,6 +6,8 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { isAfter } from 'date-fns';
 import { logger } from '@/lib/logger';
+// Import centralized stage definitions
+import { STAGE_DEADLINES } from '@/constants/stages';
 
 const calendarSchema = z.object({
   start: z.iso.datetime(),
@@ -48,31 +50,11 @@ function calculateStageDeadlines(currentCase: any): CalendarEvent[] {
   const events: CalendarEvent[] = [];
   const now = new Date();
 
-  // Calculate expected deadlines for each stage (simplified logic)
-  const stageDeadlines: Record<string, number> = {
-    'RECEPCION_SOLICITUD': 1, // 1 day
-    'VERIFICACION_REQUISITOS': 3, // 3 days
-    'CARGA_DOCUMENTOS': 5, // 5 days
-    'ASIGNACION_ANALISTA': 2, // 2 days
-    'ANALISIS_PRELIMINAR': 7, // 7 days
-    'NOTIFICACION_PROPIETARIO': 3, // 3 days
-    'PERITAJE_TECNICO': 10, // 10 days
-    'DETERMINACION_VALOR': 5, // 5 days
-    'OFERTA_COMPRA': 3, // 3 days
-    'NEGOCIACION': 14, // 14 days
-    'APROBACION_ACUERDO': 5, // 5 days
-    'ELABORACION_ESCRITURA': 7, // 7 days
-    'FIRMA_DOCUMENTOS': 3, // 3 days
-    'REGISTRO_PROPIEDAD': 10, // 10 days
-    'DESEMBOLSO_PAGO': 5, // 5 days
-    'ENTREGA_INMUEBLE': 3, // 3 days
-    'CIERRE_ARCHIVO': 2, // 2 days
-  };
-
   // Add deadline for current stage
-  if (currentCase.currentStage && stageDeadlines[currentCase.currentStage]) {
+  const stage = currentCase.currentStage as keyof typeof STAGE_DEADLINES;
+  if (stage && STAGE_DEADLINES[stage]) {
     const deadlineDate = new Date(currentCase.updatedAt);
-    deadlineDate.setDate(deadlineDate.getDate() + stageDeadlines[currentCase.currentStage]!);
+    deadlineDate.setDate(deadlineDate.getDate() + STAGE_DEADLINES[stage]!);
 
     if (isAfter(deadlineDate, now)) {
       events.push({

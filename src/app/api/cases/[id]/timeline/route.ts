@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { CaseStage } from '@/prisma/client';
 import { logger } from '@/lib/logger';
 import { URLParams } from '@/types';
+import { STAGE_LABELS } from '@/constants/stages';
 
 interface TimelineEvent {
   id: string;
@@ -432,8 +433,8 @@ function buildTimeline(caseData: any, allStages: any[]): TimelineResponse {
   allEvents.push({
     id: 'case-created',
     type: 'stage_start',
-    stage: CaseStage.RECEPCION_SOLICITUD,
-    stageName: 'Recepción de Solicitud',
+    stage: CaseStage.AVALUO,
+    stageName: STAGE_LABELS.AVALUO,
     title: 'Caso creado',
     description: `Caso ${caseData.fileNumber} ha sido creado`,
     timestamp: caseData.createdAt,

@@ -5,6 +5,8 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { logger } from '@/lib/logger';
 import type { CaseStatus, Priority } from '@/prisma/client';
+// Import centralized stage definitions
+import { STAGE_PENDING_REASONS } from '@/constants/stages';
 
 export async function GET(request: NextRequest) {
   try {
@@ -418,27 +420,9 @@ function calculateUrgency(priority: Priority, expectedEndDate: Date | null, stat
   return 'low';
 }
 
+// Use centralized STAGE_PENDING_REASONS from @/constants/stages
 function getPendingReason(stage: string): string {
-  const reasons: Record<string, string> = {
-    'RECEPCION_SOLICITUD': 'Esperando revisión inicial',
-    'VERIFICACION_REQUISITOS': 'Verificando documentación',
-    'CARGA_DOCUMENTOS': 'Esperando carga de documentos',
-    'ASIGNACION_ANALISTA': 'Esperando asignación de analista',
-    'ANALISIS_PRELIMINAR': 'En análisis preliminar',
-    'NOTIFICACION_PROPIETARIO': 'Esperando notificación al propietario',
-    'PERITAJE_TECNICO': 'Esperando peritaje técnico',
-    'DETERMINACION_VALOR': 'En proceso de valoración',
-    'OFERTA_COMPRA': 'Preparando oferta de compra',
-    'NEGOCIACION': 'En negociación',
-    'APROBACION_ACUERDO': 'Esperando aprobación del acuerdo',
-    'ELABORACION_ESCRITURA': 'Elaborando escritura',
-    'FIRMA_DOCUMENTOS': 'Esperando firma de documentos',
-    'REGISTRO_PROPIEDAD': 'En proceso de registro',
-    'DESEMBOLSO_PAGO': 'Procesando pago',
-    'ENTREGA_INMUEBLE': 'Coordinando entrega'
-  };
-
-  return reasons[stage] || 'En proceso';
+  return STAGE_PENDING_REASONS[stage as keyof typeof STAGE_PENDING_REASONS] || 'En proceso';
 }
 
 function calculateDaysInCurrentStage(updatedAt: Date): number {

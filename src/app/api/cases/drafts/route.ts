@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       currency: body.currency || 'DOP',
       // Fix enum values to match database schema
       priority: body.priority || 'MEDIUM',
-      currentStage: body.currentStage || 'RECEPCION_SOLICITUD',
+      currentStage: body.currentStage || 'AVALUO',
       status: body.status || 'PENDIENTE',
       // Handle "UNASSIGNED" values properly
       assignedToId: body.assignedToId === 'UNASSIGNED' ? null : body.assignedToId,

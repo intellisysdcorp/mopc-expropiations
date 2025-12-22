@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { STAGE_ORDER, SPECIAL_STAGES } from '@/constants/stages'
 
 // Enums for validation
 const CaseStatusEnum = z.enum(['PENDIENTE', 'EN_PROGRESO', 'COMPLETADO', 'ARCHIVED', 'SUSPENDED', 'CANCELLED'])
@@ -13,27 +14,7 @@ const ExpropriationReasonEnum = z.enum([
   'otro'
 ])
 const UrgencyLevelEnum = z.enum(['normal', 'urgente', 'inmediata'])
-const CaseStageEnum = z.enum([
-  'RECEPCION_SOLICITUD',
-  'VERIFICACION_REQUISITOS',
-  'CARGA_DOCUMENTOS',
-  'ASIGNACION_ANALISTA',
-  'ANALISIS_PRELIMINAR',
-  'NOTIFICACION_PROPIETARIO',
-  'PERITAJE_TECNICO',
-  'DETERMINACION_VALOR',
-  'OFERTA_COMPRA',
-  'NEGOCIACION',
-  'APROBACION_ACUERDO',
-  'ELABORACION_ESCRITURA',
-  'FIRMA_DOCUMENTOS',
-  'REGISTRO_PROPIEDAD',
-  'DESEMBOLSO_PAGO',
-  'ENTREGA_INMUEBLE',
-  'CIERRE_ARCHIVO',
-  'SUSPENDED',
-  'CANCELLED'
-])
+const CaseStageEnum = z.enum([...STAGE_ORDER, ...SPECIAL_STAGES])
 
 // Base case schema
 export const CaseSchema = z.object({
@@ -51,7 +32,7 @@ export const CaseSchema = z.object({
 
   priority: PriorityEnum.default('MEDIUM'),
   status: CaseStatusEnum.default('PENDIENTE'),
-  currentStage: CaseStageEnum.default('RECEPCION_SOLICITUD'),
+  currentStage: CaseStageEnum.default('AVALUO'),
 
   // Dates
   startDate: z.coerce.date().optional(),

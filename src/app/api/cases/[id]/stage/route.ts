@@ -101,7 +101,7 @@ export async function PUT(
         // Update progress percentage based on stage (special stages keep current progress)
         progressPercentage: calculateProgressPercentage(stage, existingCase.progressPercentage),
         // Update status based on stage
-        status: stage === 'CIERRE_ARCHIVO' ? 'COMPLETADO' :
+        status: stage === 'ENTREGA_CHEQUE' ? 'COMPLETADO' :
                 stage === 'SUSPENDED' ? 'SUSPENDED' :
                 stage === 'CANCELLED' ? 'CANCELLED' :
                 existingCase.status === 'PENDIENTE' ? 'EN_PROGRESO' : existingCase.status

@@ -69,7 +69,7 @@ export function CaseFormModular({
     description: caseData?.description || '',
     status: caseData?.status || 'PENDIENTE',
     priority: (caseData?.priority as 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT') || 'MEDIUM',
-    currentStage: caseData?.currentStage || 'RECEPCION_SOLICITUD',
+    currentStage: caseData?.currentStage || 'AVALUO',
     startDate,
     propertyAddress: caseData?.propertyAddress || '',
     propertyCity: caseData?.propertyCity || '',

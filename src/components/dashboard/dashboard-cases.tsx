@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { calculateProgressPercentage } from '@/lib/stage-utils';
+import { STAGE_LABELS } from '@/constants/stages';
 import {
   Table,
   TableBody,
@@ -132,29 +133,6 @@ function getStatusLabel(status: string): string {
   return labels[status] || status.replace('_', ' ');
 }
 
-function getStageLabel(stage: string): string {
-  const labels: Record<string, string> = {
-    RECEPCION_SOLICITUD: 'Recepción',
-    VERIFICACION_REQUISITOS: 'Verificación',
-    CARGA_DOCUMENTOS: 'Carga Docs',
-    ASIGNACION_ANALISTA: 'Asignación',
-    ANALISIS_PRELIMINAR: 'Análisis',
-    NOTIFICACION_PROPIETARIO: 'Notificación',
-    PERITAJE_TECNICO: 'Peritaje',
-    DETERMINACION_VALOR: 'Valoración',
-    OFERTA_COMPRA: 'Oferta',
-    NEGOCIACION: 'Negociación',
-    APROBACION_ACUERDO: 'Aprobación',
-    ELABORACION_ESCRITURA: 'Escritura',
-    FIRMA_DOCUMENTOS: 'Firma',
-    REGISTRO_PROPIEDAD: 'Registro',
-    DESEMBOLSO_PAGO: 'Pago',
-    ENTREGA_INMUEBLE: 'Entrega',
-    CIERRE_ARCHIVO: 'Cierre'
-  };
-  return labels[stage] || stage.replace(/_/g, ' ');
-}
-
 function CaseTableRow({ caseItem, type }: { caseItem: CaseItem; type: string }) {
   const getUrgencyIcon = () => {
     switch (caseItem.urgency) {
@@ -216,7 +194,7 @@ function CaseTableRow({ caseItem, type }: { caseItem: CaseItem; type: string }) 
             {getStatusLabel(caseItem.status)}
           </Badge>
           <div className="text-xs text-gray-500">
-            {getStageLabel(caseItem.currentStage)}
+            {STAGE_LABELS[caseItem.currentStage as keyof typeof STAGE_LABELS] || caseItem.currentStage}
           </div>
         </div>
       </TableCell>

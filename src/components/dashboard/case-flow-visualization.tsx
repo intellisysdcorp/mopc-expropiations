@@ -21,6 +21,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import clientLogger from '@/lib/client-logger';
+import { STAGE_LABELS, STAGE_COLORS } from '@/constants/stages';
 
 interface FlowNode {
   id: string;
@@ -46,46 +47,6 @@ interface FlowData {
 interface CaseFlowVisualizationProps {
   departmentId?: string;
 }
-
-const STAGE_LABELS: Record<string, string> = {
-  'RECEPCION_SOLICITUD': 'Recepción',
-  'VERIFICACION_REQUISITOS': 'Verificación',
-  'CARGA_DOCUMENTOS': 'Carga Docs',
-  'ASIGNACION_ANALISTA': 'Asignación',
-  'ANALISIS_PRELIMINAR': 'Análisis',
-  'NOTIFICACION_PROPIETARIO': 'Notificación',
-  'PERITAJE_TECNICO': 'Peritaje',
-  'DETERMINACION_VALOR': 'Valoración',
-  'OFERTA_COMPRA': 'Oferta',
-  'NEGOCIACION': 'Negociación',
-  'APROBACION_ACUERDO': 'Aprobación',
-  'ELABORACION_ESCRITURA': 'Escritura',
-  'FIRMA_DOCUMENTOS': 'Firma',
-  'REGISTRO_PROPIEDAD': 'Registro',
-  'DESEMBOLSO_PAGO': 'Pago',
-  'ENTREGA_INMUEBLE': 'Entrega',
-  'CIERRE_ARCHIVO': 'Cierre'
-};
-
-const STAGE_COLORS = {
-  'RECEPCION_SOLICITUD': '#3b82f6',
-  'VERIFICACION_REQUISITOS': '#6366f1',
-  'CARGA_DOCUMENTOS': '#8b5cf6',
-  'ASIGNACION_ANALISTA': '#a855f7',
-  'ANALISIS_PRELIMINAR': '#d946ef',
-  'NOTIFICACION_PROPIETARIO': '#ec4899',
-  'PERITAJE_TECNICO': '#f43f5e',
-  'DETERMINACION_VALOR': '#ef4444',
-  'OFERTA_COMPRA': '#f97316',
-  'NEGOCIACION': '#fb923c',
-  'APROBACION_ACUERDO': '#fbbf24',
-  'ELABORACION_ESCRITURA': '#facc15',
-  'FIRMA_DOCUMENTOS': '#84cc16',
-  'REGISTRO_PROPIEDAD': '#22c55e',
-  'DESEMBOLSO_PAGO': '#10b981',
-  'ENTREGA_INMUEBLE': '#14b8a6',
-  'CIERRE_ARCHIVO': '#06b6d4'
-};
 
 function FlowNodeComponent({ node, onStageClick }: {
   node: FlowNode;
@@ -215,67 +176,67 @@ export function CaseFlowVisualization({ departmentId }: CaseFlowVisualizationPro
     nodes: [
       {
         id: '1',
-        stage: 'RECEPCION_SOLICITUD',
-        stageLabel: 'Recepción',
+        stage: 'AVALUO',
+        stageLabel: 'Avalúo',
         caseCount: 5,
-        avgDuration: 2,
+        avgDuration: 10,
         bottleneckLevel: 'low',
-        description: 'Recepción inicial de solicitudes de expropiación',
-        nextStages: ['VERIFICACION_REQUISITOS'],
-        color: STAGE_COLORS['RECEPCION_SOLICITUD'] || '#3b82f6'
+        description: 'Confirma existencia de título y evalúa valor de inmueble',
+        nextStages: ['REVISION_LEGAL'],
+        color: STAGE_COLORS['AVALUO'] || '#3b82f6'
       },
       {
         id: '2',
-        stage: 'VERIFICACION_REQUISITOS',
-        stageLabel: 'Verificación',
+        stage: 'REVISION_LEGAL',
+        stageLabel: 'Revisión Legal',
         caseCount: 8,
-        avgDuration: 5,
+        avgDuration: 7,
         bottleneckLevel: 'medium',
-        description: 'Verificación de requisitos y documentación básica',
-        nextStages: ['CARGA_DOCUMENTOS'],
-        color: STAGE_COLORS['VERIFICACION_REQUISITOS']
+        description: 'Revisa la legalidad del expediente',
+        nextStages: ['CUMPLIMIENTO_NORMATIVO'],
+        color: STAGE_COLORS['REVISION_LEGAL']
       },
       {
         id: '3',
-        stage: 'CARGA_DOCUMENTOS',
-        stageLabel: 'Carga de Docs',
+        stage: 'VALIDACION_TECNICA',
+        stageLabel: 'Validación Técnica',
         caseCount: 12,
-        avgDuration: 7,
+        avgDuration: 8,
         bottleneckLevel: 'high',
-        description: 'Carga y validación de documentos requeridos',
-        nextStages: ['ASIGNACION_ANALISTA'],
-        color: STAGE_COLORS['CARGA_DOCUMENTOS']
+        description: 'Analiza expediente y validación técnica',
+        nextStages: ['VALIDACION_ADMINISTRATIVA'],
+        color: STAGE_COLORS['VALIDACION_TECNICA']
       },
       {
         id: '4',
-        stage: 'ANALISIS_PRELIMINAR',
-        stageLabel: 'Análisis',
+        stage: 'AUTORIZACION_PAGO',
+        stageLabel: 'Autorización de Pago',
         caseCount: 6,
-        avgDuration: 10,
+        avgDuration: 5,
         bottleneckLevel: 'low',
-        description: 'Análisis preliminar del caso',
-        nextStages: ['PERITAJE_TECNICO'],
-        color: STAGE_COLORS['ANALISIS_PRELIMINAR']
+        description: 'Revisa expediente certificado y elabora libramiento',
+        nextStages: ['REVISION_LIBRAMIENTO'],
+        color: STAGE_COLORS['AUTORIZACION_PAGO']
       },
       {
         id: '5',
-        stage: 'NEGOCIACION',
-        stageLabel: 'Negociación',
+        stage: 'EMISION_PAGO',
+        stageLabel: 'Emisión de Pago',
         caseCount: 4,
-        avgDuration: 15,
+        avgDuration: 3,
         bottleneckLevel: 'critical',
-        description: 'Negociación con propietarios',
-        nextStages: ['APROBACION_ACUERDO'],
-        color: STAGE_COLORS['NEGOCIACION']
+        description: 'Emisión de cheque a beneficiario',
+        nextStages: ['ENTREGA_CHEQUE'],
+        color: STAGE_COLORS['EMISION_PAGO']
       }
     ],
     totalCases: 35,
     avgProcessTime: 45,
     completionRate: 68.5,
-    bottlenecks: ['CARGA_DOCUMENTOS', 'NEGOCIACION'],
+    bottlenecks: ['VALIDACION_TECNICA', 'EMISION_PAGO'],
     recommendations: [
-      'Asignar más personal a la carga de documentos',
-      'Implementar sistema de seguimiento de negociaciones',
+      'Asignar más personal a validación técnica',
+      'Implementar sistema de seguimiento de pagos',
       'Automatizar verificaciones básicas'
     ]
   };
@@ -443,7 +404,7 @@ export function CaseFlowVisualization({ departmentId }: CaseFlowVisualizationPro
                 {dataToDisplay.bottlenecks.map((bottleneck, index) => (
                   <div key={index} className="flex items-center space-x-2">
                     <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                    <span className="text-sm">{STAGE_LABELS[bottleneck] || bottleneck}</span>
+                    <span className="text-sm">{STAGE_LABELS[bottleneck as keyof typeof STAGE_LABELS] || bottleneck}</span>
                   </div>
                 ))}
               </div>

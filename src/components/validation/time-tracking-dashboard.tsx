@@ -37,6 +37,7 @@ import {
   Plus
 } from 'lucide-react';
 import clientLogger from '@/lib/client-logger';
+import { CASE_STAGES } from '@/constants/stages';
 
 // Types
 interface TimeEntry {
@@ -380,12 +381,11 @@ export function TimeTrackingDashboard({
                           <SelectValue placeholder="Select stage" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="RECEPCION_SOLICITUD">Recepción</SelectItem>
-                          <SelectItem value="VERIFICACION_REQUISITOS">Verificación</SelectItem>
-                          <SelectItem value="CARGA_DOCUMENTOS">Carga Documentos</SelectItem>
-                          <SelectItem value="ASIGNACION_ANALISTA">Asignación Analista</SelectItem>
-                          <SelectItem value="ANALISIS_PRELIMINAR">Análisis Preliminar</SelectItem>
-                          {/* Add more stages as needed */}
+                          {CASE_STAGES.filter(stage => !['SUSPENDED', 'CANCELLED'].includes(stage.value)).map(stage => (
+                            <SelectItem key={stage.value} value={stage.value}>
+                              {stage.label}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>

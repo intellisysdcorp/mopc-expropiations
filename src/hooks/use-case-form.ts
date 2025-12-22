@@ -107,7 +107,7 @@ export function useCaseForm(mode: 'create' | 'edit', caseId?: string, initialDat
       title: '',
       description: '',
       priority: 'MEDIUM',
-      currentStage: 'RECEPCION_SOLICITUD',
+      currentStage: 'AVALUO',
       propertyAddress: '',
       propertyCity: '',
       propertyProvince: '',
